@@ -1,0 +1,4 @@
+expression = term | expression '+' term
+term = factor | term '*' factor | term '+' factor
+factor = var | '+' factor
+var = 'a' | '(' expression ')'
