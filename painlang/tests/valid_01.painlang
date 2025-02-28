@@ -1,2 +1,12 @@
 let x = 3;
-let a = 3;
+print(x);
+let z = (x+x)*7;
+print(z);
+x = 1;
+let y = x-2;
+print(y);
+{
+    print(x);
+}
+let p = 3/6;
+print(p);
