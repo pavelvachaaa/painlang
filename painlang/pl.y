@@ -1,22 +1,9 @@
 %{
 #include <stdio.h>
 #include <string.h>
+#include "prints.h"
+#include "symbol_table.h"
 
-// Miluju makra
-//#define DEBUG
-#ifdef DEBUG
-    #define DEBUG_PRINT(fmt, ...) \
-        do { printf(fmt, __VA_ARGS__); } while (0)
-#else
-    #define DEBUG_PRINT(fmt, ...) 
-#endif
-
-
-#define MAX_VARS 100
-typedef struct {
-        char name[32];
-        int value;
-} Variable;
 
 Variable symbolTable[MAX_VARS];
 int varCount = 0;
@@ -63,6 +50,7 @@ int yywrap()
 extern FILE *yyin;
 int main(int argc, char **argv)
 {
+    
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <source_file>\n", argv[0]);
         return 1;
@@ -74,10 +62,11 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    initSymbolTable();
     yyin = file;
-
     yyparse();
     fclose(file);
+    freeSymbolTable();
 
     return 0;
 }
@@ -121,20 +110,20 @@ printStatement: PRINT '(' expression ')'
  
 assignment: IDENTIFIER ASSIGN expression
         {
-            putVar($1, $3);
-            DEBUG_PRINT("-> Assigned variable '%s' = %d\n", $1, $3);
+            setSymbol($1, $3);
+            debug_print("-> Assigned variable '%s' = %d \n", $1, $3);
         };
 
 varDeclaration: DECLARE vardec;
 vardec: IDENTIFIER 
         {
         // Defaultně řekneme, že proměnné jsou nula
-            putVar($1, 0); 
+            setSymbol($1, 0);
         }
         | IDENTIFIER ASSIGN expression
         {
-            putVar($1, $3); 
-            DEBUG_PRINT("-> I just declared variable '%s' = %d\n", $1, $3);
+            setSymbol($1, $3);
+            debug_print("-> I just declared variable '%s' = %d\n", $1, $3);
         }
 
 expression: expression '+' term
@@ -160,13 +149,13 @@ term: term '*' factor
 factor: NUMBER
     { $$ = $1; }
     | IDENTIFIER
-    { $$ = getVar($1); }
+    { $$ = getSymbol($1); }
     | '(' expression ')'
     { $$ = $2; }
 
 
 
-block: '{' statementList '}'
+block: '{' { enterScope();} statementList '}' { exitScope(); };
 empty:;
 %%
 
