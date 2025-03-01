@@ -143,7 +143,11 @@ expression: expression '+' term
     { $$ = $1 - $3; }
     | term
     { $$ = $1; }
-    ;
+    // Když jsou oba operandy konstantní -> můžeme je hned spočítat a nečekat na runtime
+        | NUMBER '+' NUMBER { $$ = $1 + $3; }
+        | NUMBER '-' NUMBER { $$ = $1 - $3; }
+        | NUMBER '*' NUMBER { $$ = $1 * $3; }
+        | NUMBER '/' NUMBER { $$ = $1 / $3; }
 
 term: term '*' factor
     { $$ = $1 * $3; }

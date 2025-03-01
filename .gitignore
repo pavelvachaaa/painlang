@@ -2,3 +2,7 @@ painlang/y.tab.c
 painlang/y.tab.h
 painlang/lex.yy.c
 painlang/pavel1
+**/*/*.o
+painlang/inc/stack
+painlang/bin
+painlang_compiler/
