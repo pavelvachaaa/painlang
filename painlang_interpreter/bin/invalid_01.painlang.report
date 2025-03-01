@@ -1,0 +1,4 @@
+-> Entering new scope
+DECLARE IDENTIFIER ASSIGN NUMBER SEMICOLON -> I just declared variable 'x' = 3
+
+PRINT LB IDENTIFIER -> Exiting scope, returning to scope -1

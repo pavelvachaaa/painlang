@@ -9,7 +9,9 @@ x = 1;
 let y = x-2;
 print(y);
 
-{
-    let pavel = 666;
-    print(prdel);
+
+if (3>4) {
+    print(3);
+} else {
+    print(4);
 }

@@ -1,13 +1,15 @@
 paingram = statementlist
 
 statementlist = statement 
-              | statement ';' statementlist
+              | statement statementlist
 
-statement = assignment
-          | variableDeclaration
-          | printStatement
+statement = assignment ';'
+          | variableDeclaration ';'
+          | printStatement ';'
+          | ifStatement
           | functionDeclaration
           | block
+          | empty
 
 printStatement = "print" "(" expression ")"
 
@@ -42,3 +44,8 @@ factor = var | '+' factor
 var = identifier | constant | '(' expression ')'
 constant = digit | digit constant
 digit = "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"
+ifStatement:  IF '(' condExpression ')' block 
+            | IF '(' condExpression ')' block ELSE block 
+condExpression: expression relop expression;
+relop = '==' | '!=' | '>=' | '<=' | '>' | '<'; 
+empty =

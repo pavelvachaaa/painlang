@@ -4,36 +4,6 @@
 #include "prints.h"
 #include "symbol_table.h"
 
-
-Variable symbolTable[MAX_VARS];
-int varCount = 0;
-
-void putVar(char* name, int value) {
-    for (int i = 0; i < varCount; i++) {
-        if (strcmp(symbolTable[i].name, name) == 0) {
-            symbolTable[i].value = value; 
-            return;
-        }
-    }
-    
-    if (varCount < MAX_VARS) {
-        strcpy(symbolTable[varCount].name, name);
-        symbolTable[varCount].value = value;
-        varCount++;
-    }
-}
-
-int getVar(char *name) {
-    for (int i = 0; i < varCount; i++) {
-        if (strcmp(symbolTable[i].name, name) == 0) {
-            return symbolTable[i].value;
-        }
-    }
-    printf("Error: Undefined variable name: %s\n", name);
-    return 0;
-}
-
-
 int yylex();
 int yyparse();
 
@@ -73,15 +43,13 @@ int main(int argc, char **argv)
 
 %}
 
-
-
-
 %union {
     int num;
     char *str;
 }
 
-%token <num> NUMBER DECLARE <str> IDENTIFIER ASSIGN SEMICOLON PRINT
+%token <num> NUMBER DECLARE <str> IDENTIFIER ASSIGN SEMICOLON PRINT IF ELSE
+%token EQUALS NOT_EQUALS GREAT_OR_EQUALS LESS_OR_EQUALS GREATER_THAN LESS_THAN
 %type <num> expression term factor
 %left '+' '-'
 %left '*' '/'
@@ -90,14 +58,15 @@ int main(int argc, char **argv)
 paingram: statementList;
 
 statementList: statement 
-            | statement SEMICOLON statementList
+            | statement statementList
             ;
 
 // všechny takový keywordy jako ify a printy, ...
-statement: assignment
-        | varDeclaration
+statement: assignment SEMICOLON
+        | varDeclaration SEMICOLON
 //        |  funDeclaration
-        | printStatement
+        | ifStatement
+        | printStatement SEMICOLON
         | block
         | empty // Jinak narazí kvulí <<ĘOF>> při čtení ze souboru
         ;
@@ -117,7 +86,7 @@ assignment: IDENTIFIER ASSIGN expression
 varDeclaration: DECLARE vardec;
 vardec: IDENTIFIER 
         {
-        // Defaultně řekneme, že proměnné jsou nula
+            // Defaultně řekneme, že proměnné jsou nula
             setSymbol($1, 0);
         }
         | IDENTIFIER ASSIGN expression
@@ -133,10 +102,10 @@ expression: expression '+' term
     | term
     { $$ = $1; }
     // Když jsou oba operandy konstantní -> můžeme je hned spočítat a nečekat na runtime
-        | NUMBER '+' NUMBER { $$ = $1 + $3; }
-        | NUMBER '-' NUMBER { $$ = $1 - $3; }
-        | NUMBER '*' NUMBER { $$ = $1 * $3; }
-        | NUMBER '/' NUMBER { $$ = $1 / $3; }
+    | NUMBER '+' NUMBER { $$ = $1 + $3; }
+    | NUMBER '-' NUMBER { $$ = $1 - $3; }
+    | NUMBER '*' NUMBER { $$ = $1 * $3; }
+    | NUMBER '/' NUMBER { $$ = $1 / $3; }
 
 term: term '*' factor
     { $$ = $1 * $3; }
@@ -154,6 +123,10 @@ factor: NUMBER
     { $$ = $2; }
 
 
+ifStatement:  IF '(' condExpression ')' block 
+            | IF '(' condExpression ')' block ELSE block 
+condExpression: expression relop expression;
+relop: EQUALS | NOT_EQUALS | GREAT_OR_EQUALS | LESS_OR_EQUALS | GREATER_THAN | LESS_THAN; 
 
 block: '{' { enterScope();} statementList '}' { exitScope(); };
 empty:;

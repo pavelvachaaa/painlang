@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "config.h"
-
 void debug_print(const char *format, ...)
 {
 #ifdef PRINTS_DEBUG
