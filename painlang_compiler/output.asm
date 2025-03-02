@@ -4,6 +4,7 @@ section .data
 section .bss
     ; Variables are declared here
     x resq 1
+    y resq 1
 section .text
     global main
     extern printf
@@ -13,37 +14,27 @@ main:
     mov rbp, rsp
 
     ; Declare variable x
-    ; Load constant 0
-    mov rax, 0
+    ; Load constant 128
+    mov rax, 128
     mov [x], rax
-    ; Load variable x
-    mov rax, [x]
-    push rax
-    ; Load constant 1
-    mov rax, 1
-    mov rbx, rax
-    pop rax
-    cmp rax, rbx
-    jg L0
-    jmp L1
-L0:
-    ; Load constant 1
-    mov rax, 1
+    ; Declare variable y
+    ; Load constant 256
+    mov rax, 256
+    mov [y], rax
+    ; Load constant 123
+    mov rax, 123
     ; Print value in rax
     mov rsi, rax
     mov rdi, format_int
     call printf wrt ..plt
     add rsp, 8
-    jmp L2
-L1:
-    ; Load constant 2
-    mov rax, 2
+    ; Load constant 999
+    mov rax, 999
     ; Print value in rax
     mov rsi, rax
     mov rdi, format_int
     call printf wrt ..plt
     add rsp, 8
-L2:
 
     ; Return from main
     mov rax, 0

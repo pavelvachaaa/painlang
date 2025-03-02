@@ -5,7 +5,7 @@
 #include "prints.h"
 #include "./inc/symbol_table.h"
 #include "./inc/ast.h"
-
+#include "./inc/ir.c"
 
 int yylex();
 int yyparse();
@@ -19,7 +19,6 @@ int yywrap() {
 
 extern FILE *yyin;
 
-// The root of our AST
 ASTNode *ast_root = NULL;
 
 int main(int argc, char **argv) {
@@ -39,11 +38,18 @@ int main(int argc, char **argv) {
     yyparse();
     fclose(file);
     
-    // Generate code
     const char *output_file = (argc == 3) ? argv[2] : "output.asm";
+
+    SymbolTable *table;
+    init_symbol_table(table);
+    // Tohle asi udělam raději #define -> nejsem si jistý jestli to zanechává semantiku správně - neodladil jsem to
+    optimize_ast(ast_root, table);
+
+    // TODO: Z AST vygenerovat TAC (IR)
+
+
     generate_nasm_code(ast_root, output_file);
     
-    // Clean up
     free_ast(ast_root);
     freeSymbolTable();
     

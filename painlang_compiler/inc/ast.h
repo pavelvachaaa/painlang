@@ -98,6 +98,19 @@ struct ASTNode
     } data;
 };
 
+typedef struct {
+    char *name;
+    int value;
+    int is_constant;
+} SymbolEntry;
+
+typedef struct {
+    SymbolEntry *entries;
+    int count;
+} SymbolTable;
+
+
+
 ASTNode *create_program_node(ASTNode **statements, int count);
 ASTNode *create_statement_list_node(ASTNode **statements, int count);
 ASTNode *create_var_declaration_node(char *name, ASTNode *init_expr);
@@ -108,6 +121,8 @@ ASTNode *create_binary_op_node(BinaryOpType op, ASTNode *left, ASTNode *right);
 ASTNode *create_variable_node(char *name);
 ASTNode *create_number_node(int value);
 ASTNode *create_condition_node(CondOpType op, ASTNode *left, ASTNode *right);
+ASTNode *optimize_ast(ASTNode *node, SymbolTable* table);
+void init_symbol_table(SymbolTable *table);
 
 void free_ast(ASTNode *node);
 

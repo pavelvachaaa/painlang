@@ -240,7 +240,7 @@ void generate_nasm_code(ASTNode *root, const char *output_file)
             ASTNode *stmt = root->data.statement_list.statements[i];
             if (stmt->type == NODE_VAR_DECLARATION)
             {
-                fprintf(fp, "    %s resq 1\n", stmt->data.var_declaration.var_name); // For 8-byte variables (pointers, 64-bit integers)
+                fprintf(fp, "    %s resq 1\n", stmt->data.var_declaration.var_name); 
 
             }
         }
