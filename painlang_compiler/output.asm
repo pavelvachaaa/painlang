@@ -7,10 +7,10 @@ section .bss
     bra resq 1
     b resq 1
     t0 resq 1
-    t1 resq 1
     x resq 1
     y resq 1
     t2 resq 1
+    t1 resq 1
 
 section .text
     global main
@@ -98,11 +98,6 @@ L0:
     ; Loading parameter 0
     mov rax, 31
     mov rdi, rax
-
-    ; IR: t1 = call fuck, 1
-    ; Calling function fuck with 1 parameters
-    call fuck
-    mov [t1], rax
 
     ; IR: print b
     ; Vypiš hodnotu 

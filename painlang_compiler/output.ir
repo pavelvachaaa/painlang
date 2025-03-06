@@ -10,7 +10,6 @@ return bra
 end function fuck
 L0:
 param 31
-t1 = call fuck, 1
 print b
 x = 128
 y = 256

@@ -206,11 +206,9 @@ static void generate_function_prologue(FILE *file, IRInstruction *instr)
     fprintf(file, "    push r14\n");
     fprintf(file, "    push r15\n");
 
-    // Handle parameters (in x86_64 calling convention, first 6 args in registers)
     // rdi, rsi, rdx, rcx, r8, r9, then stack
     for (int i = 0; i < param_count && i < 6; i++)
     {
-        // Store register arguments to stack locations
         switch (i)
         {
         case 0:
@@ -234,7 +232,6 @@ static void generate_function_prologue(FILE *file, IRInstruction *instr)
         }
     }
 
-    // Parameters beyond the 6th are on the stack and can be accessed relative to rbp
 }
 
 static void generate_function_epilogue(FILE *file, IRInstruction *instr)
@@ -245,14 +242,12 @@ static void generate_function_epilogue(FILE *file, IRInstruction *instr)
     fprintf(file, "%s_epilogue:\n", func_name);
     fprintf(file, "    ; Function epilogue for %s\n", func_name);
 
-    // Restore callee-saved registers in reverse order
     fprintf(file, "    pop r15\n");
     fprintf(file, "    pop r14\n");
     fprintf(file, "    pop r13\n");
     fprintf(file, "    pop r12\n");
     fprintf(file, "    pop rbx\n");
 
-    // Function return - restore stack and return
     fprintf(file, "    mov rsp, rbp\n");
     fprintf(file, "    pop rbp\n");
     fprintf(file, "    ret\n");
@@ -270,14 +265,10 @@ static void generate_function_call(FILE *file, IRInstruction *instr)
 
     fprintf(file, "    ; Calling function %s with %d parameters\n", func_name, param_count);
 
-    // In this simplified model, we assume parameters were pushed using IR_PARAM instructions
-    // before this call instruction, so we don't need to handle them here
-
-    // The x86_64 calling convention uses registers for the first 6 arguments
-    // We'll make the actual call
+   // Zatím předpokládáme IR_PRAM , abychom to nemuseli řešitu tu
     fprintf(file, "    call %s\n", func_name);
 
-    // After return, the result is in rax, move it to the result variable
+    // přesuneme výsledek volání // TODO: Pozor na var x = func
     fprintf(file, "    mov %s, rax\n", result_str);
 }
 
@@ -286,15 +277,12 @@ static void generate_parameter(FILE *file, IRInstruction *instr)
     char arg_str[64];
     get_nasm_operand(instr->arg1, arg_str, 0);
 
-    // We're building a list of parameters in reverse order in ir.c
-    // so we push them here in the right order
 
-    // Using static counter to track which parameter this is
+    // List v irc je opačně 
     static int param_index = 0;
 
     fprintf(file, "    ; Loading parameter %d\n", param_index);
 
-    // Load the parameter value
     if (instr->arg1.type == OPERAND_LITERAL)
     {
         fprintf(file, "    mov rax, %s\n", arg_str);
@@ -304,7 +292,6 @@ static void generate_parameter(FILE *file, IRInstruction *instr)
         fprintf(file, "    mov rax, %s\n", arg_str);
     }
 
-    // Place in appropriate register according to x86_64 calling convention
     switch (param_index)
     {
     case 0:
@@ -326,14 +313,12 @@ static void generate_parameter(FILE *file, IRInstruction *instr)
         fprintf(file, "    mov r9, rax\n");
         break;
     default:
-        // Parameters beyond the 6th go on the stack
         fprintf(file, "    push rax\n");
     }
 
     param_index++;
 
-    // Reset param_index after a call instruction
-    // This needs to be coordinated with the IR_CALL handler
+
 }
 
 static void generate_return(FILE *file, IRInstruction *instr)
@@ -343,7 +328,6 @@ static void generate_return(FILE *file, IRInstruction *instr)
 
     fprintf(file, "    ; Return statement\n");
 
-    // Load return value into rax
     if (instr->arg1.type == OPERAND_LITERAL)
     {
         fprintf(file, "    mov rax, %s\n", arg1_str);
@@ -353,9 +337,7 @@ static void generate_return(FILE *file, IRInstruction *instr)
         fprintf(file, "    mov rax, %s\n", arg1_str);
     }
 
-    // Jump to function epilogue
-    // We need to determine the current function name
-    // This requires tracking the current function context
+
     fprintf(file, "    jmp current_function_epilogue\n");
 }
 

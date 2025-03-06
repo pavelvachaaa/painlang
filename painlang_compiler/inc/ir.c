@@ -135,30 +135,26 @@ void generate_function_declaration_ir(ASTNode *node, IRProgram *program)
     free(func_name);
 }
 
-// Generate IR for function calls
 IROperand generate_function_call_ir(ASTNode *node, IRProgram *program)
 {
     if (!node || node->type != NODE_FUNCTION_CALL)
         return ir_none();
 
-    // Process arguments in reverse order (calling convention)
+    // prej konvence opačně
     for (int i = node->data.function_call.arg_count - 1; i >= 0; i--)
     {
         IROperand arg = generate_expression_ir(node->data.function_call.arguments[i], program);
         ir_add_instruction(program, IR_PARAM, ir_none(), arg, ir_none());
     }
 
-    // Create temp for result
     IROperand result = ir_temp(program);
 
-    // Generate call instruction
     ir_add_instruction(program, IR_CALL, result, ir_variable(node->data.function_call.name),
                        ir_literal(node->data.function_call.arg_count));
 
     return result;
 }
 
-// Generate IR for return statements
 void generate_return_ir(ASTNode *node, IRProgram *program)
 {
     if (!node || node->type != NODE_RETURN)
