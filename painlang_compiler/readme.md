@@ -17,3 +17,8 @@ Překladač zatím umí pouze `x86_64` pro získání executable a následné sp
 ```bash
 nasm -f elf64 output.asm -o output.o && gcc -no-pie output.o -o output && ./output
 ```
+
+Bez použítí `gcc` by bylo nutné ještě nalinkovat `libc` ručně:
+```bash
+ld output.o -o output -lc --dynamic-linker /lib64/ld-linux-x86-64.so.2
+```

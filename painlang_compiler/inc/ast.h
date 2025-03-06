@@ -15,7 +15,10 @@ typedef enum
     NODE_BINARY_OP,
     NODE_VARIABLE,
     NODE_NUMBER,
-    NODE_CONDITION
+    NODE_CONDITION,
+    NODE_FUNCTION_DECLARATION,
+    NODE_FUNCTION_CALL,
+    NODE_RETURN
 } NodeType;
 
 typedef enum
@@ -104,6 +107,28 @@ struct ASTNode
             ASTNode *left;
             ASTNode *right;
         } condition;
+
+        struct
+        {
+            char *name;
+            char **param_names;
+            int param_count;
+            ASTNode *body;
+        } function_declaration;
+
+        struct
+        {
+            char *name;
+            ASTNode **arguments;
+            int arg_count;
+        } function_call;
+        
+        struct
+        {
+            ASTNode *expr;
+        } return_statement;
+
+
     } data;
 };
 
@@ -132,11 +157,30 @@ ASTNode *create_number_node(int value);
 ASTNode *create_condition_node(CondOpType op, ASTNode *left, ASTNode *right);
 ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTNode *update, ASTNode *body); 
 
+
+
+typedef struct {
+    char *name;
+    char **param_names;
+    int param_count;
+    SymbolTable local_symbols;
+} FunctionEntry;
+
+typedef struct {
+    FunctionEntry *entries;
+    int count;
+} FunctionTable;
+
+ASTNode *create_function_declaration_node(char *name, char **param_names, int param_count, ASTNode *body);
+ASTNode *create_function_call_node(char *name, ASTNode **arguments, int arg_count);
+ASTNode *create_return_node(ASTNode *expr);
+void init_function_table(FunctionTable *table);
+FunctionEntry *lookup_function(FunctionTable *table, const char *name);
+
+
 ASTNode *optimize_ast(ASTNode *node, SymbolTable* table);
 void init_symbol_table(SymbolTable *table);
 
 void free_ast(ASTNode *node);
-
-void generate_nasm_code(ASTNode *node, const char *output_file);
 
 #endif // AST_H

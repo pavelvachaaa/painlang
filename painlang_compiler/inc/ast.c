@@ -3,7 +3,79 @@
 #include <string.h>
 #include "ast.h"
 
-ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTNode *update, ASTNode *body) {
+ASTNode *create_function_declaration_node(char *name, char **param_names, int param_count, ASTNode *body)
+{
+    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
+    node->type = NODE_FUNCTION_DECLARATION;
+    node->data.function_declaration.name = strdup(name);
+    node->data.function_declaration.param_count = param_count;
+
+    if (param_count > 0)
+    {
+        node->data.function_declaration.param_names = (char **)malloc(sizeof(char *) * param_count);
+        for (int i = 0; i < param_count; i++)
+        {
+            node->data.function_declaration.param_names[i] = strdup(param_names[i]);
+        }
+    }
+    else
+    {
+        node->data.function_declaration.param_names = NULL;
+    }
+
+    node->data.function_declaration.body = body;
+
+    return node;
+}
+
+ASTNode *create_function_call_node(char *name, ASTNode **arguments, int arg_count)
+{
+    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
+    node->type = NODE_FUNCTION_CALL;
+    node->data.function_call.name = strdup(name);
+    node->data.function_call.arg_count = arg_count;
+
+    if (arg_count > 0)
+    {
+        node->data.function_call.arguments = arguments;
+    }
+    else
+    {
+        node->data.function_call.arguments = NULL;
+    }
+
+    return node;
+}
+
+ASTNode *create_return_node(ASTNode *expr)
+{
+    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
+    node->type = NODE_RETURN;
+    node->data.return_statement.expr = expr;
+
+    return node;
+}
+
+void init_function_table(FunctionTable *table)
+{
+    table->entries = NULL;
+    table->count = 0;
+}
+
+FunctionEntry *lookup_function(FunctionTable *table, const char *name)
+{
+    for (int i = 0; i < table->count; i++)
+    {
+        if (strcmp(table->entries[i].name, name) == 0)
+        {
+            return &table->entries[i];
+        }
+    }
+    return NULL;
+}
+
+ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTNode *update, ASTNode *body)
+{
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
     node->type = NODE_FOR_LOOP;
     node->data.for_loop.init_expression = init_expression;
@@ -13,7 +85,6 @@ ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTN
 
     return node;
 }
-
 
 ASTNode *create_program_node(ASTNode **statements, int count)
 {
@@ -308,6 +379,38 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
     case NODE_VARIABLE:
         return replace_variables(node, table);
 
+    // case NODE_FUNCTION_DECLARATION:
+    //  {
+    //     // Uděláme si scope, ve kterým budeme pracovat
+    //     SymbolTable function_table;
+    //     init_symbol_table(&function_table);
+
+    //     for (int i = 0; i < node->data.function_declaration.param_count; i++)
+    //     {
+    //         // set_variable(&function_table, node->data.function_declaration.param_names[i], 0, 0);
+    //     }
+
+    //     // node->data.function_declaration.body = optimize_ast(node->data.function_declaration.body, &function_table);
+    //     break;
+    //  }
+       
+
+    // case NODE_FUNCTION_CALL:
+    //     // výrazy v argumentech
+    //     for (int i = 0; i < node->data.function_call.arg_count; i++)
+    //     {
+    //         node->data.function_call.arguments[i] = optimize_ast(node->data.function_call.arguments[i], table);
+    //     }
+    //     break;
+
+    // case NODE_RETURN:
+    //     // Zjednoduš return výraz
+    //     if (node->data.return_statement.expr)
+    //     {
+    //         node->data.return_statement.expr = optimize_ast(node->data.return_statement.expr, table);
+    //     }
+    //     break;
+
     default:
         break;
     }
@@ -372,7 +475,39 @@ void free_ast(ASTNode *node)
         free_ast(node->data.condition.left);
         free_ast(node->data.condition.right);
         break;
-    }
 
+    case NODE_FUNCTION_DECLARATION:
+        free(node->data.function_declaration.name);
+        if (node->data.function_declaration.param_names)
+        {
+            for (int i = 0; i < node->data.function_declaration.param_count; i++)
+            {
+                free(node->data.function_declaration.param_names[i]);
+            }
+            free(node->data.function_declaration.param_names);
+        }
+        free_ast(node->data.function_declaration.body);
+        break;
+
+    case NODE_FUNCTION_CALL:
+        free(node->data.function_call.name);
+        if (node->data.function_call.arguments)
+        {
+            for (int i = 0; i < node->data.function_call.arg_count; i++)
+            {
+                free_ast(node->data.function_call.arguments[i]);
+            }
+            free(node->data.function_call.arguments);
+        }
+        break;
+
+    case NODE_RETURN:
+        if (node->data.return_statement.expr)
+        {
+            free_ast(node->data.return_statement.expr);
+        }
+        break;
+    
+    }
     free(node);
 }

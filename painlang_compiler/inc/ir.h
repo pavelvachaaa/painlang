@@ -23,7 +23,11 @@ typedef enum
     IR_GREATER_EQ,   // x = y >= z
     IR_PRINT,        // print x
     IR_PARAM,        // param x
-    IR_RETURN        // return x
+
+    IR_CALL,         // x = call f, n
+    IR_RETURN,       // return x
+    IR_PROLOGUE,     // function f(n):
+    IR_EPILOGUE      // end function f
 } IROp;
 
 typedef enum
@@ -75,6 +79,11 @@ IROperand ir_none();
 int ir_new_label(IRProgram *program);
 
 void ir_add_instruction(IRProgram *program, IROp op, IROperand result, IROperand arg1, IROperand arg2);
+
+// Pro funkce
+void generate_function_declaration_ir(ASTNode *node, IRProgram *program);
+IROperand generate_function_call_ir(ASTNode *node, IRProgram *program);
+void generate_return_ir(ASTNode *node, IRProgram *program);
 
 
 // Pro IR z AST

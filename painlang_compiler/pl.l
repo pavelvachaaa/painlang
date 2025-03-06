@@ -8,6 +8,9 @@
 
 %%
 ;                                                   {debug_print("SEMICOLON "); return SEMICOLON;};
+,                                             {debug_print("RETURN "); return ',';};
+return                                             {debug_print("RETURN "); return RETURN;};
+function                                             {debug_print("FUNCTION "); return FUNCTION;};
 let                                                 {debug_print("DECLARE "); return DECLARE;};
 print                                               {debug_print("PRINT "); return PRINT;};
 for                                                 {debug_print("FOR "); return FOR;};

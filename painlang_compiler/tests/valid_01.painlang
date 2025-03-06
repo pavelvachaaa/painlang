@@ -1,13 +1,18 @@
+function fuck(bra) {
+    print(bra);
+    print(1);
+    let b = 300;
+    bra = bra + b;
+    return bra;
+}
+
+fuck(31);
+
+print(b);
+
 let x = 128;
 let y = 256;
 
-for (let i = 0; i < 10; i = i + 1) {
-    for (let j = 0; j < 10; j = j+1) {
-        for (let k = 0; k < 10; k = k+1) {
-            print(i*j-k);
-        }
-    }
-}
 
 if ( x+y > 2 ) {
     if (y > 3 ) {
