@@ -110,7 +110,8 @@
 #include "prints.h"
 #include "./inc/symbol_table.h"
 #include "./inc/ast.h"
-#include "./inc/ir.c"
+#include "./inc/ir.h"
+#include <unistd.h>
 
 int yylex();
 int yyparse();
@@ -126,37 +127,93 @@ extern FILE *yyin;
 
 ASTNode *ast_root = NULL;
 
+
+void print_usage(const char *prog_name) {
+    fprintf(stderr, "Použití: %s -i input_file [-o output-file] [-O] [-m ir_file]  \n", prog_name);
+}
+
 int main(int argc, char **argv) {
-    if (argc != 2 && argc != 3) {
-        fprintf(stderr, "Usage: %s <source_file> [<output_file>]\n", argv[0]);
-        return 1;
+    const char *output_file = NULL;
+    const char *ir_file = NULL;
+    const char *input_file = NULL;
+    
+    int optimizeLevel = 0;
+
+    int opt;
+    while ((opt = getopt(argc, argv, "i:o:m:O")) != -1) {
+        switch (opt) {
+            case 'm': // mezikod
+                ir_file = optarg;
+                break;
+            case 'i':
+                input_file = optarg;
+                break;
+            case 'o':
+                output_file = optarg;
+                break;
+            case 'O':
+                optimizeLevel = 1;
+                break;
+            default:
+                print_usage(argv[0]);
+                return EXIT_FAILURE;
+        }
+    }
+
+    if (!input_file) {
+        fprintf(stderr, "Error: Potřebuji vstupní soubor.\n");
+        print_usage(argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    if(!output_file) {
+        output_file = "output.asm";
     }
     
-    FILE *file = fopen(argv[1], "r");
+    if(!ir_file) {
+        ir_file = "output.ir";
+    }
+
+    FILE *file = fopen(input_file, "r");
     if (!file) {
-        perror("Error opening the input file");
-        return 1;
+        perror("ale vole");
+        return EXIT_FAILURE;
     }
-    
-    initSymbolTable();
+
     yyin = file;
     yyparse();
     fclose(file);
+
+    // ten level pak passovat do funkce a podle toho rozhodovat jak optimalizovat
+    if (optimizeLevel == 1) {
+        SymbolTable *table = malloc(sizeof(SymbolTable));
+        if(!table) {
+            fprintf(stderr,"ale notak");
+            return EXIT_FAILURE;
+        }
+
+        init_symbol_table(table);
+        optimize_ast(ast_root, table);
+    }
+
+    // IR reprezentace a struktura
+    IRProgram *program = malloc(sizeof(IRProgram));
+    if (!program) {
+        fprintf(stderr,"dopíči už");
+        return EXIT_FAILURE;
+    }
+
+    ir_init(program);
+    generate_ir_from_ast(ast_root, program);
+    output_ir_to_file(program, ir_file);
+
+    //NASM
+    generate_nasm_from_ir(program, output_file);
+    //generate_nasm_code(ast_root, output_file);
     
-    const char *output_file = (argc == 3) ? argv[2] : "output.asm";
-
-    SymbolTable *table;
-    init_symbol_table(table);
-    // Tohle asi udělam raději #define -> nejsem si jistý jestli to zanechává semantiku správně - neodladil jsem to
-    optimize_ast(ast_root, table);
-
-    // TODO: Z AST vygenerovat TAC (IR)
-
-
-    generate_nasm_code(ast_root, output_file);
-    
+    ir_free(program);
     free_ast(ast_root);
-    freeSymbolTable();
+    //freeSymbolTable();
     
     return 0;
 }
@@ -182,7 +239,7 @@ int main(int argc, char **argv) {
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 60 "pl.y"
+#line 117 "pl.y"
 {
     int num;
     char *str;
@@ -190,7 +247,7 @@ typedef union YYSTYPE
     CondOpType cond_op;
 }
 /* Line 193 of yacc.c.  */
-#line 194 "y.tab.c"
+#line 251 "y.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -203,7 +260,7 @@ typedef union YYSTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 207 "y.tab.c"
+#line 264 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -502,11 +559,11 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    80,    80,    86,    92,   110,   114,   118,   122,   126,
-     130,   136,   143,   150,   156,   161,   168,   172,   176,   181,
-     185,   189,   193,   199,   203,   207,   213,   217,   221,   227,
-     231,   237,   243,   247,   251,   255,   259,   263,   269,   269,
-     269,   275
+       0,   137,   137,   143,   149,   167,   171,   175,   179,   183,
+     187,   193,   200,   207,   213,   218,   225,   229,   233,   238,
+     242,   246,   250,   256,   260,   264,   270,   274,   278,   284,
+     288,   294,   300,   304,   308,   312,   316,   320,   326,   326,
+     326,   332
 };
 #endif
 
@@ -1453,14 +1510,14 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 81 "pl.y"
+#line 138 "pl.y"
     {
         ast_root = (yyvsp[(1) - (1)].node);
     }
     break;
 
   case 3:
-#line 87 "pl.y"
+#line 144 "pl.y"
     {
         ASTNode **statements = malloc(sizeof(ASTNode*));
         statements[0] = (yyvsp[(1) - (1)].node);
@@ -1469,7 +1526,7 @@ yyreduce:
     break;
 
   case 4:
-#line 93 "pl.y"
+#line 150 "pl.y"
     {
         // přidáme příkaz na začátek a uděláme pro něj místo
         int count = (yyvsp[(2) - (2)].node)->data.statement_list.statement_count + 1;
@@ -1488,49 +1545,49 @@ yyreduce:
     break;
 
   case 5:
-#line 111 "pl.y"
+#line 168 "pl.y"
     {
         (yyval.node) = (yyvsp[(1) - (2)].node);
     }
     break;
 
   case 6:
-#line 115 "pl.y"
+#line 172 "pl.y"
     {
         (yyval.node) = (yyvsp[(1) - (2)].node);
     }
     break;
 
   case 7:
-#line 119 "pl.y"
+#line 176 "pl.y"
     {
         (yyval.node) = (yyvsp[(1) - (1)].node);
     }
     break;
 
   case 8:
-#line 123 "pl.y"
+#line 180 "pl.y"
     {
         (yyval.node) = (yyvsp[(1) - (2)].node);
     }
     break;
 
   case 9:
-#line 127 "pl.y"
+#line 184 "pl.y"
     {
         (yyval.node) = (yyvsp[(1) - (1)].node);
     }
     break;
 
   case 10:
-#line 131 "pl.y"
+#line 188 "pl.y"
     {
         (yyval.node) = NULL;
     }
     break;
 
   case 11:
-#line 137 "pl.y"
+#line 194 "pl.y"
     {
         (yyval.node) = create_print_node((yyvsp[(3) - (4)].node));
         debug_print("Created PRINT node\n");
@@ -1538,7 +1595,7 @@ yyreduce:
     break;
 
   case 12:
-#line 144 "pl.y"
+#line 201 "pl.y"
     {
         (yyval.node) = create_assignment_node((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].node));
         debug_print("Created ASSIGNMENT node for '%s'\n", (yyvsp[(1) - (3)].str));
@@ -1546,14 +1603,14 @@ yyreduce:
     break;
 
   case 13:
-#line 151 "pl.y"
+#line 208 "pl.y"
     {
         (yyval.node) = (yyvsp[(2) - (2)].node);
     }
     break;
 
   case 14:
-#line 157 "pl.y"
+#line 214 "pl.y"
     {
         (yyval.node) = create_var_declaration_node((yyvsp[(1) - (1)].str), NULL);
         debug_print("Created VAR_DECLARATION node for '%s' with no init\n", (yyvsp[(1) - (1)].str));
@@ -1561,7 +1618,7 @@ yyreduce:
     break;
 
   case 15:
-#line 162 "pl.y"
+#line 219 "pl.y"
     {
         (yyval.node) = create_var_declaration_node((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].node));
         debug_print("Created VAR_DECLARATION node for '%s' with init\n", (yyvsp[(1) - (3)].str));
@@ -1569,171 +1626,171 @@ yyreduce:
     break;
 
   case 16:
-#line 169 "pl.y"
+#line 226 "pl.y"
     {
         (yyval.node) = create_binary_op_node(OP_ADD, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node));
     }
     break;
 
   case 17:
-#line 173 "pl.y"
+#line 230 "pl.y"
     {
         (yyval.node) = create_binary_op_node(OP_SUBTRACT, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node));
     }
     break;
 
   case 18:
-#line 177 "pl.y"
+#line 234 "pl.y"
     {
         (yyval.node) = (yyvsp[(1) - (1)].node);
     }
     break;
 
   case 19:
-#line 182 "pl.y"
+#line 239 "pl.y"
     {
         (yyval.node) = create_number_node((yyvsp[(1) - (3)].num) + (yyvsp[(3) - (3)].num));
     }
     break;
 
   case 20:
-#line 186 "pl.y"
+#line 243 "pl.y"
     {
         (yyval.node) = create_number_node((yyvsp[(1) - (3)].num) - (yyvsp[(3) - (3)].num));
     }
     break;
 
   case 21:
-#line 190 "pl.y"
+#line 247 "pl.y"
     {
         (yyval.node) = create_number_node((yyvsp[(1) - (3)].num) * (yyvsp[(3) - (3)].num));
     }
     break;
 
   case 22:
-#line 194 "pl.y"
+#line 251 "pl.y"
     {
         (yyval.node) = create_number_node((yyvsp[(1) - (3)].num) / (yyvsp[(3) - (3)].num));
     }
     break;
 
   case 23:
-#line 200 "pl.y"
+#line 257 "pl.y"
     {
         (yyval.node) = create_binary_op_node(OP_MULTIPLY, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node));
     }
     break;
 
   case 24:
-#line 204 "pl.y"
+#line 261 "pl.y"
     {
         (yyval.node) = create_binary_op_node(OP_DIVIDE, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node));
     }
     break;
 
   case 25:
-#line 208 "pl.y"
+#line 265 "pl.y"
     {
         (yyval.node) = (yyvsp[(1) - (1)].node);
     }
     break;
 
   case 26:
-#line 214 "pl.y"
+#line 271 "pl.y"
     {
         (yyval.node) = create_number_node((yyvsp[(1) - (1)].num));
     }
     break;
 
   case 27:
-#line 218 "pl.y"
+#line 275 "pl.y"
     {
         (yyval.node) = create_variable_node((yyvsp[(1) - (1)].str));
     }
     break;
 
   case 28:
-#line 222 "pl.y"
+#line 279 "pl.y"
     {
         (yyval.node) = (yyvsp[(2) - (3)].node);
     }
     break;
 
   case 29:
-#line 228 "pl.y"
+#line 285 "pl.y"
     {
         (yyval.node) = create_if_node((yyvsp[(3) - (5)].node), (yyvsp[(5) - (5)].node), NULL);
     }
     break;
 
   case 30:
-#line 232 "pl.y"
+#line 289 "pl.y"
     {
         (yyval.node) = create_if_node((yyvsp[(3) - (7)].node), (yyvsp[(5) - (7)].node), (yyvsp[(7) - (7)].node));
     }
     break;
 
   case 31:
-#line 238 "pl.y"
+#line 295 "pl.y"
     {
         (yyval.node) = create_condition_node((yyvsp[(2) - (3)].cond_op), (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node));
     }
     break;
 
   case 32:
-#line 244 "pl.y"
+#line 301 "pl.y"
     {
         (yyval.cond_op) = COND_EQUALS;
     }
     break;
 
   case 33:
-#line 248 "pl.y"
+#line 305 "pl.y"
     {
         (yyval.cond_op) = COND_NOT_EQUALS;
     }
     break;
 
   case 34:
-#line 252 "pl.y"
+#line 309 "pl.y"
     {
         (yyval.cond_op) = COND_GREATER_OR_EQUALS;
     }
     break;
 
   case 35:
-#line 256 "pl.y"
+#line 313 "pl.y"
     {
         (yyval.cond_op) = COND_LESS_OR_EQUALS;
     }
     break;
 
   case 36:
-#line 260 "pl.y"
+#line 317 "pl.y"
     {
         (yyval.cond_op) = COND_GREATER_THAN;
     }
     break;
 
   case 37:
-#line 264 "pl.y"
+#line 321 "pl.y"
     {
         (yyval.cond_op) = COND_LESS_THAN;
     }
     break;
 
   case 38:
-#line 269 "pl.y"
+#line 326 "pl.y"
     { enterScope(); }
     break;
 
   case 39:
-#line 269 "pl.y"
+#line 326 "pl.y"
     { exitScope(); }
     break;
 
   case 40:
-#line 270 "pl.y"
+#line 327 "pl.y"
     {
         (yyval.node) = (yyvsp[(3) - (5)].node);
     }
@@ -1741,7 +1798,7 @@ yyreduce:
 
 
 /* Line 1267 of yacc.c.  */
-#line 1745 "y.tab.c"
+#line 1802 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1955,5 +2012,5 @@ yyreturn:
 }
 
 
-#line 277 "pl.y"
+#line 334 "pl.y"
 

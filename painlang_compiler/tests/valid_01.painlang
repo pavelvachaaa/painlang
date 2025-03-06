@@ -7,7 +7,8 @@ if ( x+y > 2 ) {
     } else {
         print(288);
     }
-    print(999);
+    x = 323;
+    print(x*1000);
 } else {
     print(666);
 }

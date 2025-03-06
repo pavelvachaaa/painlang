@@ -5,7 +5,8 @@
 #include "prints.h"
 #include "./inc/symbol_table.h"
 #include "./inc/ast.h"
-#include "./inc/ir.c"
+#include "./inc/ir.h"
+#include <unistd.h>
 
 int yylex();
 int yyparse();
@@ -21,37 +22,93 @@ extern FILE *yyin;
 
 ASTNode *ast_root = NULL;
 
+
+void print_usage(const char *prog_name) {
+    fprintf(stderr, "Použití: %s -i input_file [-o output-file] [-O] [-m ir_file]  \n", prog_name);
+}
+
 int main(int argc, char **argv) {
-    if (argc != 2 && argc != 3) {
-        fprintf(stderr, "Usage: %s <source_file> [<output_file>]\n", argv[0]);
-        return 1;
+    const char *output_file = NULL;
+    const char *ir_file = NULL;
+    const char *input_file = NULL;
+    
+    int optimizeLevel = 0;
+
+    int opt;
+    while ((opt = getopt(argc, argv, "i:o:m:O")) != -1) {
+        switch (opt) {
+            case 'm': // mezikod
+                ir_file = optarg;
+                break;
+            case 'i':
+                input_file = optarg;
+                break;
+            case 'o':
+                output_file = optarg;
+                break;
+            case 'O':
+                optimizeLevel = 1;
+                break;
+            default:
+                print_usage(argv[0]);
+                return EXIT_FAILURE;
+        }
+    }
+
+    if (!input_file) {
+        fprintf(stderr, "Error: Potřebuji vstupní soubor.\n");
+        print_usage(argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    if(!output_file) {
+        output_file = "output.asm";
     }
     
-    FILE *file = fopen(argv[1], "r");
+    if(!ir_file) {
+        ir_file = "output.ir";
+    }
+
+    FILE *file = fopen(input_file, "r");
     if (!file) {
-        perror("Error opening the input file");
-        return 1;
+        perror("ale vole");
+        return EXIT_FAILURE;
     }
-    
-    initSymbolTable();
+
     yyin = file;
     yyparse();
     fclose(file);
+
+    // ten level pak passovat do funkce a podle toho rozhodovat jak optimalizovat
+    if (optimizeLevel == 1) {
+        SymbolTable *table = malloc(sizeof(SymbolTable));
+        if(!table) {
+            fprintf(stderr,"ale notak");
+            return EXIT_FAILURE;
+        }
+
+        init_symbol_table(table);
+        optimize_ast(ast_root, table);
+    }
+
+    // IR reprezentace a struktura
+    IRProgram *program = malloc(sizeof(IRProgram));
+    if (!program) {
+        fprintf(stderr,"dopíči už");
+        return EXIT_FAILURE;
+    }
+
+    ir_init(program);
+    generate_ir_from_ast(ast_root, program);
+    output_ir_to_file(program, ir_file);
+
+    //NASM
+    generate_nasm_from_ir(program, output_file);
+    //generate_nasm_code(ast_root, output_file);
     
-    const char *output_file = (argc == 3) ? argv[2] : "output.asm";
-
-    SymbolTable *table;
-    init_symbol_table(table);
-    // Tohle asi udělam raději #define -> nejsem si jistý jestli to zanechává semantiku správně - neodladil jsem to
-    optimize_ast(ast_root, table);
-
-    // TODO: Z AST vygenerovat TAC (IR)
-
-
-    generate_nasm_code(ast_root, output_file);
-    
+    ir_free(program);
     free_ast(ast_root);
-    freeSymbolTable();
+    //freeSymbolTable();
     
     return 0;
 }

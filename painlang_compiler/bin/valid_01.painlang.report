@@ -1,0 +1,29 @@
+-> Entering new scope
+DECLARE IDENTIFIER ASSIGN NUMBER SEMICOLON Created VAR_DECLARATION node for 'x' with init
+
+DECLARE IDENTIFIER ASSIGN NUMBER SEMICOLON Created VAR_DECLARATION node for 'y' with init
+
+
+IF LB IDENTIFIER PLUSOP IDENTIFIER GREATER_THANNUMBER RB LBR -> Entering new scope
+
+IF LB IDENTIFIER GREATER_THANNUMBER RB LBR -> Entering new scope
+
+PRINT LB NUMBER RB Created PRINT node
+SEMICOLON 
+RBR -> Exiting scope, returning to scope 1
+ELSE LBR -> Entering new scope
+
+PRINT LB NUMBER RB Created PRINT node
+SEMICOLON 
+RBR -> Exiting scope, returning to scope 1
+
+PRINT LB NUMBER RB Created PRINT node
+SEMICOLON 
+RBR -> Exiting scope, returning to scope 0
+ELSE LBR -> Entering new scope
+
+PRINT LB NUMBER RB Created PRINT node
+SEMICOLON 
+RBR -> Exiting scope, returning to scope 0
+Generated NASM code in output.asm
+-> Exiting scope, returning to scope -1
