@@ -1,9 +1,12 @@
 let x = 128;
 let y = 256;
 
-let i;
-for ( i = 0; x < 10; x = x + 1) {
-    print(x);
+for (let i = 0; i < 10; i = i + 1) {
+    for (let j = 0; j < 10; j = j+1) {
+        for (let k = 0; k < 10; k = k+1) {
+            print(i*j-k);
+        }
+    }
 }
 
 if ( x+y > 2 ) {

@@ -235,19 +235,45 @@ void generate_statement_ir(ASTNode *node, IRProgram *program)
     }
 
     case NODE_FOR_LOOP:
+    {
+        int start_label = ir_new_label(program);
+        int end_label = ir_new_label(program);
+
+        // TODO: Pozor deklarace vs assingment
+        generate_statement_ir(node->data.for_loop.init_expression, program);
+        // Label na začátek loopu
+        ir_add_instruction(program, IR_LABEL, ir_literal(start_label), ir_none(), ir_none());
+
+        // Když už neplatí popdmínka skoč dopiči
+        IROperand condition = generate_condition_ir(node->data.for_loop.condition, program);
+        ir_add_instruction(program, IR_JUMPFALSE, ir_literal(end_label), condition, ir_none());
+
+        // Tělo loopu
+        generate_statement_ir(node->data.for_loop.body, program);
+
+        // TODO: Do gramatiky pak přidat += a ++
+        generate_statement_ir(node->data.for_loop.update, program);
+
+        ir_add_instruction(program, IR_JUMP, ir_literal(start_label), ir_none(), ir_none());
+
+        // Label na vyskočení z loopu
+        ir_add_instruction(program, IR_LABEL, ir_literal(end_label), ir_none(), ir_none());
+
         // TODO: Pozor může tam být assingment i declaration
         // IROperand iP = ir_variable(node->data.for_loop.init_expression->data.assignment.var_name);
         // int startLoop = ir_new_label(program);
-        
-    // Tkahle nějak by se dala zakodovat for loop;
-    // i = 0
-    // L1:
-    // if i >= 10 goto L2
-    // print i
-    // i = i + 1
-    // goto L1
-    // L2:
+
+        // Tkahle nějak by se dala zakodovat for loop;
+        // i = 0
+        // L1:
+        // if i >= 10 goto L2
+        // print i
+        // i = i + 1
+        // goto L1
+        // L2:
+
         break;
+    }
 
     case NODE_STATEMENT_LIST:
     {
