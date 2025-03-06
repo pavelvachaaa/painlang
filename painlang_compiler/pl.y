@@ -122,12 +122,13 @@ int main(int argc, char **argv) {
 }
 
 %token <num> NUMBER DECLARE
-%token <str> IDENTIFIER ASSIGN SEMICOLON PRINT IF ELSE
+%token <str> IDENTIFIER ASSIGN SEMICOLON PRINT IF ELSE FOR
 %token EQUALS NOT_EQUALS GREAT_OR_EQUALS LESS_OR_EQUALS GREATER_THAN LESS_THAN
 
 %type <node> program statementList statement assignment varDeclaration vardec
 %type <node> printStatement expression term factor ifStatement block
 %type <node> condExpression
+%type <node> forLoop forInitExpression
 %type <cond_op> relop
 
 %left '+' '-'
@@ -184,6 +185,7 @@ statement: assignment SEMICOLON
     {
         $$ = $1;
     }
+    | forLoop
     | empty
     {
         $$ = NULL;
@@ -222,6 +224,16 @@ vardec: IDENTIFIER
     }
     ;
 
+forLoop: FOR '(' forInitExpression SEMICOLON condExpression SEMICOLON assignment ')' block
+    {
+        $$ = create_for_loop_node($3, $5, $7, $9);
+        debug_print("Created FOR_LOOP node\n");
+    }
+    ;
+
+forInitExpression: assignment { $$ = $1; }
+       | varDeclaration { $$ = $1; }
+       ;
 expression: expression '+' term
     {
         $$ = create_binary_op_node(OP_ADD, $1, $3);

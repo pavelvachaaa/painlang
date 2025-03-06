@@ -9,6 +9,7 @@ statement = assignment ';'
           | ifStatement
           | functionDeclaration
           | block
+          | forLoop
           | empty
 
 printStatement = "print" "(" expression ")"
@@ -27,7 +28,8 @@ arglist = identifier
 
 
 block = '{' statementlist '}'
-
+forLoop = "for" '(' forInitExpression ';' condExpression ';' assignment ')' block
+forInitExpression = assignment | varDeclaration
 assignment = identifier '=' expression
 identifier = letter {letter} 
 letter = "A" | "B" | "C" | "D" | "E" | "F" | "G"

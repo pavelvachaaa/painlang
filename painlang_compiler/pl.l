@@ -10,6 +10,7 @@
 ;                                                   {debug_print("SEMICOLON "); return SEMICOLON;};
 let                                                 {debug_print("DECLARE "); return DECLARE;};
 print                                               {debug_print("PRINT "); return PRINT;};
+for                                                 {debug_print("FOR "); return FOR;};
 if                                                  {debug_print("IF "); return IF;};
 else                                                {debug_print("ELSE "); return ELSE;};
 ([1-9][0-9]*|0)                                     { yylval.num = atoi(yytext); debug_print("NUMBER "); return NUMBER; };

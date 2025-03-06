@@ -9,6 +9,7 @@ typedef enum
     NODE_STATEMENT_LIST,
     NODE_VAR_DECLARATION,
     NODE_ASSIGNMENT,
+    NODE_FOR_LOOP,
     NODE_PRINT,
     NODE_IF,
     NODE_BINARY_OP,
@@ -91,6 +92,14 @@ struct ASTNode
 
         struct
         {
+            ASTNode *init_expression; // deklarace proměnné
+            ASTNode *condition; 
+            ASTNode *update;
+            ASTNode *body;
+        } for_loop;
+
+        struct
+        {
             CondOpType op;
             ASTNode *left;
             ASTNode *right;
@@ -121,6 +130,8 @@ ASTNode *create_binary_op_node(BinaryOpType op, ASTNode *left, ASTNode *right);
 ASTNode *create_variable_node(char *name);
 ASTNode *create_number_node(int value);
 ASTNode *create_condition_node(CondOpType op, ASTNode *left, ASTNode *right);
+ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTNode *update, ASTNode *body); 
+
 ASTNode *optimize_ast(ASTNode *node, SymbolTable* table);
 void init_symbol_table(SymbolTable *table);
 

@@ -3,6 +3,18 @@
 #include <string.h>
 #include "ast.h"
 
+ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTNode *update, ASTNode *body) {
+    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
+    node->type = NODE_FOR_LOOP;
+    node->data.for_loop.init_expression = init_expression;
+    node->data.for_loop.condition = condition;
+    node->data.for_loop.update = update;
+    node->data.for_loop.body = body;
+
+    return node;
+}
+
+
 ASTNode *create_program_node(ASTNode **statements, int count)
 {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));

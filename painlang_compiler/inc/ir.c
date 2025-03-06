@@ -234,6 +234,21 @@ void generate_statement_ir(ASTNode *node, IRProgram *program)
         break;
     }
 
+    case NODE_FOR_LOOP:
+        // TODO: Pozor může tam být assingment i declaration
+        // IROperand iP = ir_variable(node->data.for_loop.init_expression->data.assignment.var_name);
+        // int startLoop = ir_new_label(program);
+        
+    // Tkahle nějak by se dala zakodovat for loop;
+    // i = 0
+    // L1:
+    // if i >= 10 goto L2
+    // print i
+    // i = i + 1
+    // goto L1
+    // L2:
+        break;
+
     case NODE_STATEMENT_LIST:
     {
         for (int i = 0; i < node->data.statement_list.statement_count; i++)
