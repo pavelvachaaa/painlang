@@ -8,8 +8,11 @@ if(z == 129) {
 }
 
 let pavel = 0;
-for(let i = 0;i < 10;i=i+1) {
-    print(pavel);
+let i;
+for(i = 0;i < 10;i=i+1) {
+    {
+        print(pavel);
+    }
 }
 
 let karate = 123;

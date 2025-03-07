@@ -4,6 +4,7 @@
 #include <string.h>
 #include "prints.h"
 #include "./inc/ast.h"
+#include "./inc/ast_printer.h"
 #include "./inc/ir.h"
 #include <unistd.h>
 
@@ -92,6 +93,8 @@ int main(int argc, char **argv) {
     if (optimizeLevel == 1) {
         optimize_program(ast_root,table);
     }
+
+    print_ast(ast_root);
     
     // IR reprezentace a struktura
     IRProgram *program = malloc(sizeof(IRProgram));

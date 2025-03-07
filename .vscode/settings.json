@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "stdio.h": "c",
-        "ir.h": "c"
+        "ir.h": "c",
+        "ast.h": "c"
     }
 }
