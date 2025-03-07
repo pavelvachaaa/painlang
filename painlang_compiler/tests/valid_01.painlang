@@ -1,22 +1,18 @@
 let x = 128;
-let y = 256;
+let z = x+1;
 
-for (let i = 0; i < 10; i = i + 1) {
-    for (let j = 0; j < 10; j = j+1) {
-        for (let k = 0; k < 10; k = k+1) {
-            print(i*j-k);
-        }
-    }
+let b = 329;
+
+if(z == 129) {
+    print(x+z);
 }
 
-if ( x+y > 2 ) {
-    if (y > 3 ) {
-        print(123);
-    } else {
-        print(288);
-    }
-    x = 323;
-    print(x*1000);
-} else {
-    print(666);
+let pavel = 0;
+for(let i = 0;i < 10;i=i+1) {
+    print(pavel);
 }
+
+let karate = 123;
+let judo = karate - 123;
+print(karate+judo+1);
+

@@ -3,17 +3,16 @@
 #include <string.h>
 #include "ast.h"
 
-ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTNode *update, ASTNode *body) {
+ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTNode *update, ASTNode *body)
+{
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
     node->type = NODE_FOR_LOOP;
     node->data.for_loop.init_expression = init_expression;
     node->data.for_loop.condition = condition;
     node->data.for_loop.update = update;
     node->data.for_loop.body = body;
-
     return node;
 }
-
 
 ASTNode *create_program_node(ASTNode **statements, int count)
 {
@@ -105,52 +104,18 @@ ASTNode *create_condition_node(CondOpType op, ASTNode *left, ASTNode *right)
     return node;
 }
 
-void init_symbol_table(SymbolTable *table)
-{
-    table->entries = NULL;
-    table->count = 0;
-}
-
-SymbolEntry *lookup_variable(SymbolTable *table, const char *name)
-{
-    for (int i = 0; i < table->count; i++)
-    {
-        if (strcmp(table->entries[i].name, name) == 0)
-        {
-            return &table->entries[i];
-        }
-    }
-    return NULL;
-}
-
-void set_variable(SymbolTable *table, const char *name, int value, int is_constant)
-{
-    SymbolEntry *entry = lookup_variable(table, name);
-    if (entry)
-    {
-        entry->value = value;
-        entry->is_constant = is_constant;
-    }
-    else
-    {
-        table->count++;
-        table->entries = realloc(table->entries, table->count * sizeof(SymbolEntry));
-        table->entries[table->count - 1].name = strdup(name);
-        table->entries[table->count - 1].value = value;
-        table->entries[table->count - 1].is_constant = is_constant;
-    }
-}
-
 ASTNode *evaluate_expression(ASTNode *node, SymbolTable *table)
 {
+    printf("ALE VOLEEEE");
+
     if (!node)
         return NULL;
 
-    // Proměnná byla konstantní hodnota -> let x = 0;
+    printf("ALE VOLEEEE");
     if (node->type == NODE_VARIABLE)
     {
         SymbolEntry *entry = lookup_variable(table, node->data.variable.name);
-        if (entry && entry->is_constant)
+        if (entry)
         {
             return create_number_node(entry->value);
         }
@@ -203,8 +168,9 @@ ASTNode *replace_variables(ASTNode *node, SymbolTable *table)
     // nahrazujeme v ifu proměnné za čísla
     if (node->type == NODE_VARIABLE)
     {
+        printf("KáMO");
         SymbolEntry *entry = lookup_variable(table, node->data.variable.name);
-        if (entry && entry->is_constant)
+        if (entry && entry->is_initialized)
         {
             return create_number_node(entry->value);
         }
@@ -255,6 +221,8 @@ ASTNode *evaluate_condition(ASTNode *condition, SymbolTable *table)
     return condition;
 }
 
+void mark_modified_variables(ASTNode *node, SymbolTable *table);
+
 // CPG optimalizování
 ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
 {
@@ -263,36 +231,7 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
 
     switch (node->type)
     {
-    case NODE_VAR_DECLARATION:
-        // Máš konstantní hodnout?
-        if (node->data.var_declaration.init_expr && node->data.var_declaration.init_expr->type == NODE_NUMBER)
-        {
-            set_variable(table, node->data.var_declaration.var_name, node->data.var_declaration.init_expr->data.number.value, 1);
-        }
-        break;
-
-    case NODE_ASSIGNMENT:
-        if (node->data.assignment.value->type == NODE_NUMBER)
-        {
-            set_variable(table, node->data.assignment.var_name, node->data.assignment.value->data.number.value, 1);
-        }
-        else
-        {
-            set_variable(table, node->data.assignment.var_name, 0, 0); // Nejsi konstantní
-        }
-        break;
-
-    case NODE_IF:
-        node->data.if_statement.condition = evaluate_condition(node->data.if_statement.condition, table);
-        if (node->data.if_statement.condition->type == NODE_NUMBER)
-        {
-            int condition_value = node->data.if_statement.condition->data.number.value;
-            free_ast(node->data.if_statement.condition);
-            return condition_value ? optimize_ast(node->data.if_statement.if_block, table)
-                                   : optimize_ast(node->data.if_statement.else_block, table);
-        }
-        break;
-
+    case NODE_PROGRAM:
     case NODE_STATEMENT_LIST:
         for (int i = 0; i < node->data.statement_list.statement_count; i++)
         {
@@ -300,20 +239,277 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         }
         break;
 
+    case NODE_VAR_DECLARATION:
+        if (node->data.var_declaration.init_expr)
+        {
+            node->data.var_declaration.init_expr = optimize_ast(node->data.var_declaration.init_expr, table);
+
+            if (node->data.var_declaration.init_expr->type == NODE_NUMBER)
+            {
+                int value = node->data.var_declaration.init_expr->data.number.value;
+                set_variable(table, node->data.var_declaration.var_name, value, 1);
+            }
+            else
+            {
+                set_variable(table, node->data.var_declaration.var_name, 0, 0);
+            }
+        }
+        break;
+
+    case NODE_ASSIGNMENT:
+        node->data.assignment.value = optimize_ast(node->data.assignment.value, table);
+
+        SymbolEntry *entry = lookup_variable(table, node->data.assignment.var_name);
+        if (entry && entry->is_modified_in_loop)
+        {
+            set_variable(table, node->data.assignment.var_name, 0, 0);
+            break;
+        }
+
+        if (node->data.assignment.value->type == NODE_NUMBER)
+        {
+            int value = node->data.assignment.value->data.number.value;
+            set_variable(table, node->data.assignment.var_name, value, 1);
+        }
+        else
+        {
+            set_variable(table, node->data.assignment.var_name, 0, 0);
+        }
+        break;
+
+    case NODE_PRINT:
+        node->data.print.expr = optimize_ast(node->data.print.expr, table);
+        break;
+
+    case NODE_IF:
+        node->data.if_statement.condition = optimize_ast(node->data.if_statement.condition, table);
+
+        if (node->data.if_statement.condition->type == NODE_NUMBER)
+        {
+            int condition_value = node->data.if_statement.condition->data.number.value;
+            ASTNode *result = NULL;
+
+            if (condition_value)
+            {
+                if (node->data.if_statement.if_block)
+                {
+                    result = optimize_ast(node->data.if_statement.if_block, table);
+                }
+            }
+            else
+            {
+                if (node->data.if_statement.else_block)
+                {
+                    result = optimize_ast(node->data.if_statement.else_block, table);
+                }
+            }
+
+            ASTNode *condition = node->data.if_statement.condition;
+            ASTNode *if_block = node->data.if_statement.if_block;
+            ASTNode *else_block = node->data.if_statement.else_block;
+
+            node->data.if_statement.condition = NULL;
+            node->data.if_statement.if_block = NULL;
+            node->data.if_statement.else_block = NULL;
+
+            free_ast(node);
+
+            if (condition_value)
+            {
+                free_ast(else_block);
+            }
+            else
+            {
+                free_ast(if_block);
+            }
+
+            free_ast(condition);
+
+            return result ? result : create_statement_list_node(NULL, 0);
+        }
+        else
+        {
+            if (node->data.if_statement.if_block)
+            {
+                node->data.if_statement.if_block = optimize_ast(node->data.if_statement.if_block, table);
+            }
+            if (node->data.if_statement.else_block)
+            {
+                node->data.if_statement.else_block = optimize_ast(node->data.if_statement.else_block, table);
+            }
+        }
+        break;
+
     case NODE_BINARY_OP:
         node->data.binary_op.left = optimize_ast(node->data.binary_op.left, table);
         node->data.binary_op.right = optimize_ast(node->data.binary_op.right, table);
+
+        if (node->data.binary_op.left->type == NODE_NUMBER &&
+            node->data.binary_op.right->type == NODE_NUMBER)
+        {
+            int left = node->data.binary_op.left->data.number.value;
+            int right = node->data.binary_op.right->data.number.value;
+            int result = 0;
+
+            switch (node->data.binary_op.op)
+            {
+            case OP_ADD:
+                result = left + right;
+                break;
+            case OP_SUBTRACT:
+                result = left - right;
+                break;
+            case OP_MULTIPLY:
+                result = left * right;
+                break;
+            case OP_DIVIDE:
+                if (right != 0)
+                    result = left / right;
+                else
+                    return node;
+                break;
+            }
+
+            ASTNode *number_node = create_number_node(result);
+
+            ASTNode *left_node = node->data.binary_op.left;
+            ASTNode *right_node = node->data.binary_op.right;
+
+            node->data.binary_op.left = NULL;
+            node->data.binary_op.right = NULL;
+
+            free_ast(node);
+            free_ast(left_node);
+            free_ast(right_node);
+
+            return number_node;
+        }
         break;
 
     case NODE_VARIABLE:
-        return replace_variables(node, table);
+    {
+        SymbolEntry *entry = lookup_variable(table, node->data.variable.name);
+        if (entry && entry->is_initialized && !entry->is_modified_in_loop)
+        {
+            ASTNode *number_node = create_number_node(entry->value);
 
-    default:
+            free(node->data.variable.name);
+            free(node);
+
+            return number_node;
+        }
+    }
+    break;
+
+    case NODE_CONDITION:
+        node->data.condition.left = optimize_ast(node->data.condition.left, table);
+        node->data.condition.right = optimize_ast(node->data.condition.right, table);
+
+        // Tady můžeme eliminovat rovnou jednu branch..
+        if (node->data.condition.left->type == NODE_NUMBER &&
+            node->data.condition.right->type == NODE_NUMBER)
+        {
+            int left = node->data.condition.left->data.number.value;
+            int right = node->data.condition.right->data.number.value;
+            int result = 0;
+
+            switch (node->data.condition.op)
+            {
+            case COND_GREATER_THAN:
+                result = left > right;
+                break;
+            case COND_LESS_THAN:
+                result = left < right;
+                break;
+            case COND_EQUALS:
+                result = left == right;
+                break;
+            case COND_NOT_EQUALS:
+                result = left != right;
+                break;
+            case COND_GREATER_OR_EQUALS:
+                result = left >= right;
+                break;
+            case COND_LESS_OR_EQUALS:
+                result = left <= right;
+                break;
+            }
+
+            ASTNode *number_node = create_number_node(result);
+
+            ASTNode *left_node = node->data.condition.left;
+            ASTNode *right_node = node->data.condition.right;
+
+            node->data.condition.left = NULL;
+            node->data.condition.right = NULL;
+
+            free_ast(node);
+            free_ast(left_node);
+            free_ast(right_node);
+
+            return number_node;
+        }
+        break;
+
+    case NODE_FOR_LOOP:
+    {
+        SymbolTable loop_table;
+        init_symbol_table(&loop_table);
+
+        // Překopírijeme si tabulku
+        for (int i = 0; i < table->count; i++)
+        {
+            set_variable(&loop_table, table->entries[i].name,
+                         table->entries[i].value,
+                         table->entries[i].is_initialized);
+        }
+
+        if (node->data.for_loop.init_expression)
+        {
+            node->data.for_loop.init_expression = optimize_ast(node->data.for_loop.init_expression, &loop_table);
+        }
+
+        if (node->data.for_loop.update)
+        {
+            mark_modified_variables(node->data.for_loop.update, &loop_table);
+        }
+
+        if (node->data.for_loop.body)
+        {
+            mark_modified_variables(node->data.for_loop.body, &loop_table);
+        }
+
+        // Mám to jako optimalizaci... ale bez toho is_modified_loop to budě dělat píčoviny
+        // Takže to pak dát někde při setování...
+        for (int i = 0; i < loop_table.count; i++)
+        {
+            if (loop_table.entries[i].is_modified_in_loop)
+            {
+                SymbolEntry *main_entry = lookup_variable(table, loop_table.entries[i].name);
+                if (main_entry)
+                {
+                    main_entry->is_modified_in_loop = 1;
+                    main_entry->is_initialized = 0; // Přezdívka pro konsantu to moje is_initiliazed
+                }
+            }
+        }
+
+        // if (node->data.for_loop.update)
+        //  {
+        //      node->data.for_loop.update = optimize_ast(node->data.for_loop.update, &loop_table);
+        // }
+
+        // TODO: Mazat loop, když bude vždycky neplatná podmínka
         break;
     }
+
+    case NODE_NUMBER:
+        // Numbers are already optimized
+        break;
+    }
+
     return node;
 }
-
 void free_ast(ASTNode *node)
 {
     if (!node)
@@ -375,4 +571,199 @@ void free_ast(ASTNode *node)
     }
 
     free(node);
+}
+
+void mark_modified_variables(ASTNode *node, SymbolTable *table)
+{
+    if (!node)
+        return;
+
+    switch (node->type)
+    {
+    case NODE_ASSIGNMENT:
+    {
+        SymbolEntry *entry = lookup_variable(table, node->data.assignment.var_name);
+        if (entry)
+        {
+            entry->is_modified_in_loop = 1;
+            entry->is_initialized = 0;
+        }
+        else
+        {
+            set_variable(table, node->data.assignment.var_name, 0, 0);
+            entry = lookup_variable(table, node->data.assignment.var_name);
+            if (entry)
+            {
+                entry->is_modified_in_loop = 1;
+            }
+        }
+
+        mark_modified_variables(node->data.assignment.value, table);
+    }
+    break;
+
+    case NODE_VAR_DECLARATION:
+    {
+        SymbolEntry *entry = lookup_variable(table, node->data.var_declaration.var_name);
+        if (entry)
+        {
+            entry->is_modified_in_loop = 1;
+            entry->is_initialized = 0;
+        }
+        else
+        {
+            set_variable(table, node->data.var_declaration.var_name, 0, 0);
+            entry = lookup_variable(table, node->data.var_declaration.var_name);
+            if (entry)
+            {
+                entry->is_modified_in_loop = 1;
+            }
+        }
+
+        if (node->data.var_declaration.init_expr)
+        {
+            mark_modified_variables(node->data.var_declaration.init_expr, table);
+        }
+    }
+    break;
+
+    case NODE_STATEMENT_LIST:
+        for (int i = 0; i < node->data.statement_list.statement_count; i++)
+        {
+            mark_modified_variables(node->data.statement_list.statements[i], table);
+        }
+        break;
+
+    case NODE_IF:
+        mark_modified_variables(node->data.if_statement.condition, table);
+        if (node->data.if_statement.if_block)
+        {
+            mark_modified_variables(node->data.if_statement.if_block, table);
+        }
+        if (node->data.if_statement.else_block)
+        {
+            mark_modified_variables(node->data.if_statement.else_block, table);
+        }
+        break;
+
+    case NODE_FOR_LOOP:
+        if (node->data.for_loop.init_expression)
+        {
+            mark_modified_variables(node->data.for_loop.init_expression, table);
+        }
+        if (node->data.for_loop.condition)
+        {
+            mark_modified_variables(node->data.for_loop.condition, table);
+        }
+        if (node->data.for_loop.update)
+        {
+            mark_modified_variables(node->data.for_loop.update, table);
+        }
+        if (node->data.for_loop.body)
+        {
+            mark_modified_variables(node->data.for_loop.body, table);
+        }
+        break;
+
+    case NODE_BINARY_OP:
+        mark_modified_variables(node->data.binary_op.left, table);
+        mark_modified_variables(node->data.binary_op.right, table);
+        break;
+
+    case NODE_CONDITION:
+        mark_modified_variables(node->data.condition.left, table);
+        mark_modified_variables(node->data.condition.right, table);
+        break;
+
+    case NODE_PRINT:
+        mark_modified_variables(node->data.print.expr, table);
+        break;
+
+    default:
+        break;
+    }
+}
+
+void remove_unused_variables(ASTNode *node, SymbolTable *table)
+{
+    if (!node)
+        return;
+
+    if (node->type == NODE_VAR_DECLARATION)
+    {
+        SymbolEntry *entry = lookup_variable(table, node->data.var_declaration.var_name);
+        if (entry && !entry->is_used)
+        {
+            free_ast(node);
+            return;
+        }
+    }
+
+    if (node->type == NODE_BINARY_OP)
+    {
+        remove_unused_variables(node->data.binary_op.left, table);
+        remove_unused_variables(node->data.binary_op.right, table);
+    }
+
+    if (node->type == NODE_CONDITION)
+    {
+        remove_unused_variables(node->data.condition.left, table);
+        remove_unused_variables(node->data.condition.right, table);
+    }
+
+    if (node->type == NODE_ASSIGNMENT)
+    {
+        remove_unused_variables(node->data.assignment.value, table);
+    }
+
+    if (node->type == NODE_PRINT)
+    {
+        remove_unused_variables(node->data.print.expr, table);
+    }
+
+    if (node->type == NODE_FOR_LOOP)
+    {
+        remove_unused_variables(node->data.for_loop.init_expression, table);
+        remove_unused_variables(node->data.for_loop.condition, table);
+        remove_unused_variables(node->data.for_loop.update, table);
+        remove_unused_variables(node->data.for_loop.body, table);
+    }
+
+    if (node->type == NODE_STATEMENT_LIST)
+    {
+        ASTNode **new_statements = (ASTNode **)malloc(sizeof(ASTNode *) * node->data.statement_list.statement_count);
+        int new_count = 0;
+
+        for (int i = 0; i < node->data.statement_list.statement_count; ++i)
+        {
+            ASTNode *stmt = node->data.statement_list.statements[i];
+            if (stmt->type == NODE_VAR_DECLARATION)
+            {
+                SymbolEntry *entry = lookup_variable(table, stmt->data.var_declaration.var_name);
+                if (entry && entry->is_used)
+                {
+                    new_statements[new_count++] = stmt;
+                }
+                else
+                {
+                    free_ast(stmt);
+                }
+            }
+            else
+            {
+                new_statements[new_count++] = stmt;
+            }
+        }
+
+        free(node->data.statement_list.statements);
+        node->data.statement_list.statements = new_statements;
+        node->data.statement_list.statement_count = new_count;
+    }
+}
+
+// passnout optimizeLevel a podle toho dělat jednotlivé optimalizace
+ASTNode *optimize_program(ASTNode *node, SymbolTable *table)
+{
+    optimize_ast(node, table);
+    remove_unused_variables(node, table);
 }

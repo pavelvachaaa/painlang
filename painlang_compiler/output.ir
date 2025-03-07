@@ -1,33 +1,11 @@
-x = 128
-y = 256
+print 257
 i = 0
 L0:
 t0 = i < 10
 if t0 == 0 goto L1
-j = 0
-L2:
-t1 = j < 10
-if t1 == 0 goto L3
-k = 0
-L4:
-t2 = k < 10
-if t2 == 0 goto L5
-t3 = i * j
-t4 = t3 - k
-print t4
-t5 = k + 1
-k = t5
-goto L4
-L5:
-t6 = j + 1
-j = t6
-goto L2
-L3:
-t7 = i + 1
-i = t7
+print pavel
+t1 = i + 1
+i = t1
 goto L0
 L1:
-print 123
-x = 323
-t8 = x * 1000
-print t8
+print 124

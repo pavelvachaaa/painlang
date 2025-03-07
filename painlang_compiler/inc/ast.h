@@ -2,6 +2,7 @@
 #define AST_H
 
 #include <stdlib.h>
+#include "symbol_table.h"
 
 typedef enum
 {
@@ -107,18 +108,6 @@ struct ASTNode
     } data;
 };
 
-typedef struct {
-    char *name;
-    int value;
-    int is_constant;
-} SymbolEntry;
-
-typedef struct {
-    SymbolEntry *entries;
-    int count;
-} SymbolTable;
-
-
 
 ASTNode *create_program_node(ASTNode **statements, int count);
 ASTNode *create_statement_list_node(ASTNode **statements, int count);
@@ -133,7 +122,7 @@ ASTNode *create_condition_node(CondOpType op, ASTNode *left, ASTNode *right);
 ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTNode *update, ASTNode *body); 
 
 ASTNode *optimize_ast(ASTNode *node, SymbolTable* table);
-void init_symbol_table(SymbolTable *table);
+ASTNode *optimize_program(ASTNode *node, SymbolTable *table);
 
 void free_ast(ASTNode *node);
 

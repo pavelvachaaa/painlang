@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "prints.h"
-#include "./inc/symbol_table.h"
 #include "./inc/ast.h"
 #include "./inc/ir.h"
 #include <unistd.h>
@@ -26,8 +25,18 @@ ASTNode *ast_root = NULL;
 void print_usage(const char *prog_name) {
     fprintf(stderr, "Použití: %s -i input_file [-o output-file] [-O] [-m ir_file]  \n", prog_name);
 }
-
+SymbolTable *table = NULL;
 int main(int argc, char **argv) {
+        table = malloc(sizeof(SymbolTable));
+        if(!table) {
+            fprintf(stderr,"ale notak");
+            return EXIT_FAILURE;
+        }
+
+        init_symbol_table(table);
+
+
+    
     const char *output_file = NULL;
     const char *ir_file = NULL;
     const char *input_file = NULL;
@@ -81,16 +90,9 @@ int main(int argc, char **argv) {
 
     // ten level pak passovat do funkce a podle toho rozhodovat jak optimalizovat
     if (optimizeLevel == 1) {
-        SymbolTable *table = malloc(sizeof(SymbolTable));
-        if(!table) {
-            fprintf(stderr,"ale notak");
-            return EXIT_FAILURE;
-        }
-
-        init_symbol_table(table);
-        optimize_ast(ast_root, table);
+        optimize_program(ast_root,table);
     }
-
+    
     // IR reprezentace a struktura
     IRProgram *program = malloc(sizeof(IRProgram));
     if (!program) {
@@ -201,6 +203,12 @@ printStatement: PRINT '(' expression ')'
 
 assignment: IDENTIFIER ASSIGN expression
     {
+        // Jinak je problém s for loopem sakra
+        // if(!lookup_variable(table, $1)) {
+        //     printf("\n Proměnná %s neexistuje!\n", $1);
+        //     return 1;
+        // }
+
         $$ = create_assignment_node($1, $3);
         debug_print("Created ASSIGNMENT node for '%s'\n", $1);
     }
@@ -335,7 +343,7 @@ relop: EQUALS
     }
     ;
 
-block: '{' { enterScope(); } statementList '}' { exitScope(); }
+block: '{' {  } statementList '}' {  }
     {
         $$ = $3;
     }

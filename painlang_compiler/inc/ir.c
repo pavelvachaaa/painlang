@@ -17,14 +17,16 @@ IROperand ir_literal(int value)
     IROperand operand;
     operand.type = OPERAND_LITERAL;
     operand.value.literal = value;
+    operand.is_initialized = 1;
     return operand;
 }
 
-IROperand ir_variable(const char *name)
+IROperand ir_variable(const char *name, int is_initialized)
 {
     IROperand operand;
     operand.type = OPERAND_VARIABLE;
     operand.value.variable = strdup(name);
+    operand.is_initialized = is_initialized;
     return operand;
 }
 
@@ -33,6 +35,7 @@ IROperand ir_temp(IRProgram *program)
     IROperand operand;
     operand.type = OPERAND_TEMP;
     operand.value.temp_number = program->temp_counter++;
+    operand.is_initialized = 0;
     return operand;
 }
 
@@ -121,7 +124,7 @@ IROperand generate_expression_ir(ASTNode *node, IRProgram *program)
 
     case NODE_VARIABLE:
     {
-        return ir_variable(node->data.variable.name);
+        return ir_variable(node->data.variable.name, 0);
     }
 
     case NODE_BINARY_OP:
@@ -179,18 +182,20 @@ void generate_statement_ir(ASTNode *node, IRProgram *program)
     {
         if (node->data.var_declaration.init_expr)
         {
-            IROperand expr = generate_expression_ir(node->data.var_declaration.init_expr, program);
-            IROperand var = ir_variable(node->data.var_declaration.var_name);
-
-            ir_add_instruction(program, IR_ASSIGN, var, expr, ir_none());
+            IROperand init_value = generate_expression_ir(node->data.var_declaration.init_expr, program);
+            IROperand var = ir_variable(node->data.var_declaration.var_name, 1);
+            ir_add_instruction(program, IR_ASSIGN, var, init_value, ir_none());
         }
+
         break;
     }
 
     case NODE_ASSIGNMENT:
     {
+
         IROperand expr = generate_expression_ir(node->data.assignment.value, program);
-        IROperand var = ir_variable(node->data.assignment.var_name);
+
+        IROperand var = ir_variable(node->data.assignment.var_name, 1);
 
         ir_add_instruction(program, IR_ASSIGN, var, expr, ir_none());
         break;

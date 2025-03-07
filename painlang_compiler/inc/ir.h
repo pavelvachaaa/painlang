@@ -45,6 +45,8 @@ typedef struct
         int temp_number;
         int label_number;
     } value;
+    int is_initialized;
+
 } IROperand;
 
 typedef struct
@@ -53,7 +55,7 @@ typedef struct
     IROperand result;
     IROperand arg1;
     IROperand arg2;
-} IRInstruction; // TAC 
+} IRInstruction; // TAC
 
 typedef struct
 {
@@ -65,9 +67,8 @@ typedef struct
 
 void ir_init(IRProgram *program);
 
-
 IROperand ir_literal(int value);
-IROperand ir_variable(const char *name);
+IROperand ir_variable(const char *name, int is_initialized);
 IROperand ir_temp(IRProgram *program);
 IROperand ir_label(IRProgram *program);
 IROperand ir_none();
@@ -75,7 +76,6 @@ IROperand ir_none();
 int ir_new_label(IRProgram *program);
 
 void ir_add_instruction(IRProgram *program, IROp op, IROperand result, IROperand arg1, IROperand arg2);
-
 
 // Pro IR z AST
 IROperand generate_expression_ir(ASTNode *node, IRProgram *program);
