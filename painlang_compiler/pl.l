@@ -10,6 +10,8 @@
 ;                                                   {debug_print("SEMICOLON "); return SEMICOLON;};
 let                                                 {debug_print("DECLARE "); return DECLARE;};
 print                                               {debug_print("PRINT "); return PRINT;};
+function                                               {debug_print("FUNCTION "); return FUNCTION;};
+return                                               {debug_print("RETURN "); return RETURN;};
 for                                                 {debug_print("FOR "); return FOR;};
 if                                                  {debug_print("IF "); return IF;};
 else                                                {debug_print("ELSE "); return ELSE;};
@@ -22,7 +24,7 @@ else                                                {debug_print("ELSE "); retur
 "<="                                                {debug_print("LESS_OR_EQUALS" ); return LESS_OR_EQUALS;};
 ">"                                                 {debug_print("GREATER_THAN" ); return GREATER_THAN;};
 "<"                                                 {debug_print("LESS_THAN" ); return LESS_THAN;};
-
+","                                                 {debug_print("," ); return ',';};
 =                                                   {debug_print("ASSIGN "); return ASSIGN;};
 
 

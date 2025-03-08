@@ -22,8 +22,14 @@ typedef enum
     IR_LESS_EQ,      // x = y <= z
     IR_GREATER_EQ,   // x = y >= z
     IR_PRINT,        // print x
-    IR_PARAM,        // param x
-    IR_RETURN        // return x
+
+    IR_PROLOGUE,
+    IR_EPILOGUE,
+    IR_PARAM,
+    IR_CALL,
+    IR_RETURN,
+    IR_ARG
+
 } IROp;
 
 typedef enum

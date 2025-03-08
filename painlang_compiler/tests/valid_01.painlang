@@ -1,21 +1,19 @@
-let x = 128;
-let z = x+1;
-
-let b = 329;
-
-if(z == 129) {
-    print(x+z);
-}
-
 let pavel = 0;
-let i;
+let z = 3;
 for(i = 0;i < 10;i=i+1) {
-    {
-        print(pavel);
-    }
+        
+    pavel = pavel + 1; 
+    print(pavel);
+    let x = 32;
 }
 
-let karate = 123;
-let judo = karate - 123;
-print(karate+judo+1);
 
+print(pavel);
+
+
+function tomrdej(de, ment) {
+    print(de);
+    return de+5;
+}
+
+tomrdej(3, 9);

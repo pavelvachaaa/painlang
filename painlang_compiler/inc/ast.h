@@ -16,7 +16,11 @@ typedef enum
     NODE_BINARY_OP,
     NODE_VARIABLE,
     NODE_NUMBER,
-    NODE_CONDITION
+    NODE_CONDITION,
+
+    NODE_FUNCTION_DECLARATION,
+    NODE_FUNCTION_CALL,
+    NODE_RETURN,
 } NodeType;
 
 typedef enum
@@ -53,7 +57,7 @@ struct ASTNode
         struct
         {
             char *var_name;
-            ASTNode *init_expr; 
+            ASTNode *init_expr;
         } var_declaration;
 
         struct
@@ -71,7 +75,7 @@ struct ASTNode
         {
             ASTNode *condition;
             ASTNode *if_block;
-            ASTNode *else_block; 
+            ASTNode *else_block;
         } if_statement;
 
         struct
@@ -94,7 +98,7 @@ struct ASTNode
         struct
         {
             ASTNode *init_expression; // deklarace proměnné
-            ASTNode *condition; 
+            ASTNode *condition;
             ASTNode *update;
             ASTNode *body;
         } for_loop;
@@ -105,9 +109,28 @@ struct ASTNode
             ASTNode *left;
             ASTNode *right;
         } condition;
+
+        struct
+        {
+            char *name;
+            char **param_names;
+            int param_count;
+            ASTNode *body;
+        } function_declaration;
+
+        struct
+        {
+            char *func_name;
+            ASTNode **arguments;
+            int argument_count;
+        } function_call;
+
+        struct
+        {
+            ASTNode *expr;
+        } return_statement;
     } data;
 };
-
 
 ASTNode *create_program_node(ASTNode **statements, int count);
 ASTNode *create_statement_list_node(ASTNode **statements, int count);
@@ -119,9 +142,13 @@ ASTNode *create_binary_op_node(BinaryOpType op, ASTNode *left, ASTNode *right);
 ASTNode *create_variable_node(char *name);
 ASTNode *create_number_node(int value);
 ASTNode *create_condition_node(CondOpType op, ASTNode *left, ASTNode *right);
-ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTNode *update, ASTNode *body); 
+ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTNode *update, ASTNode *body);
 
-ASTNode *optimize_ast(ASTNode *node, SymbolTable* table);
+ASTNode *create_function_declaration_node(char *name, char **param_names, int param_count, ASTNode *body);
+ASTNode *create_function_call_node(char *name, ASTNode **arguments, int arg_count);
+ASTNode *create_return_node(ASTNode *expr);
+
+ASTNode *optimize_ast(ASTNode *node, SymbolTable *table);
 ASTNode *optimize_program(ASTNode *node, SymbolTable *table);
 
 void free_ast(ASTNode *node);

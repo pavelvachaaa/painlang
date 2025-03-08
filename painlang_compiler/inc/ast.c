@@ -3,6 +3,49 @@
 #include <string.h>
 #include "ast.h"
 
+ASTNode *create_function_declaration_node(char *name, char **param_names, int param_count, ASTNode *body)
+{
+    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
+    node->type = NODE_FUNCTION_DECLARATION;
+    node->data.function_declaration.name = strdup(name);
+    node->data.function_declaration.param_count = param_count;
+
+    if (param_count > 0)
+    {
+        node->data.function_declaration.param_names = (char **)malloc(sizeof(char *) * param_count);
+        for (int i = 0; i < param_count; i++)
+        {
+            node->data.function_declaration.param_names[i] = strdup(param_names[i]);
+        }
+    }
+    else
+    {
+        node->data.function_declaration.param_names = NULL;
+    }
+
+    node->data.function_declaration.body = body;
+
+    return node;
+}
+
+ASTNode *create_function_call_node(char *name, ASTNode **arguments, int arg_count)
+{
+    ASTNode *node = malloc(sizeof(ASTNode));
+    node->type = NODE_FUNCTION_CALL;
+    node->data.function_call.func_name = strdup(name);
+    node->data.function_call.arguments = arguments;
+    node->data.function_call.argument_count = arg_count;
+    return node;
+}
+
+ASTNode *create_return_node(ASTNode *expr)
+{
+    ASTNode *node = malloc(sizeof(ASTNode));
+    node->type = NODE_RETURN;
+    node->data.return_statement.expr = expr;
+    return node;
+}
+
 ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTNode *update, ASTNode *body)
 {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
@@ -222,6 +265,7 @@ ASTNode *evaluate_condition(ASTNode *condition, SymbolTable *table)
 }
 
 void mark_modified_variables(ASTNode *node, SymbolTable *table);
+void remove_unused_variables(ASTNode *node, SymbolTable *table);
 
 // CPG optimalizování
 ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
@@ -485,14 +529,18 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         {
             if (loop_table.entries[i].is_modified_in_loop)
             {
+                // TODO: Promyslet to s těma zasranejme scopama a vnitřní tabulkou for loopu
                 SymbolEntry *main_entry = lookup_variable(table, loop_table.entries[i].name);
                 if (main_entry)
                 {
                     main_entry->is_modified_in_loop = 1;
+                    main_entry->is_used = 1;
                     main_entry->is_initialized = 0; // Přezdívka pro konsantu to moje is_initiliazed
                 }
             }
         }
+
+        remove_unused_variables(node->data.for_loop.body, &loop_table);
 
         // if (node->data.for_loop.update)
         //  {
@@ -510,6 +558,7 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
 
     return node;
 }
+
 void free_ast(ASTNode *node)
 {
     if (!node)
@@ -582,6 +631,7 @@ void mark_modified_variables(ASTNode *node, SymbolTable *table)
     {
     case NODE_ASSIGNMENT:
     {
+
         SymbolEntry *entry = lookup_variable(table, node->data.assignment.var_name);
         if (entry)
         {
@@ -590,6 +640,7 @@ void mark_modified_variables(ASTNode *node, SymbolTable *table)
         }
         else
         {
+
             set_variable(table, node->data.assignment.var_name, 0, 0);
             entry = lookup_variable(table, node->data.assignment.var_name);
             if (entry)

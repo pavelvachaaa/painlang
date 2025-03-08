@@ -2,7 +2,6 @@
 
 #include "ast_printer.h"
 
-
 void print_ast_helper(ASTNode *node, int indent)
 {
     if (!node)
@@ -65,8 +64,22 @@ void print_ast_helper(ASTNode *node, int indent)
         print_ast_helper(node->data.condition.left, indent + 1);
         print_ast_helper(node->data.condition.right, indent + 1);
         break;
+    case NODE_FUNCTION_DECLARATION:
+        printf("Function declaration: %s param_count: %d \n", node->data.function_declaration.name, node->data.function_declaration.param_count);
+        print_ast_helper(node->data.function_declaration.body, indent + 1);
+        break;
+
+    case NODE_FUNCTION_CALL:
+        printf("Function call: %s param_count: %d \n", node->data.function_call.func_name, node->data.function_call.argument_count);
+        print_ast_helper(node->data.function_call.arguments, indent + 1);
+        break;
+    case NODE_RETURN:
+        printf("Return statement \n");
+        print_ast_helper(node->data.return_statement.expr, indent + 1);
+
+        break;
     default:
-        printf("Unknown Node\n");
+        printf("print_ast_helper: Unkown node \n");
         break;
     }
 }

@@ -3,10 +3,11 @@ section .data
     format_int db "%d", 10, 0  ; Formát pro print 
 
 section .bss
+    pavel resq 1
     i resq 1
     t0 resq 1
-    pavel resq 1
     t1 resq 1
+    t2 resq 1
 
 section .text
     global main
@@ -16,12 +17,11 @@ main:
     push rbp
     mov rbp, rsp
 
-    ; IR: print 257
-    ; Vypiš hodnotu 
-    mov rsi, 257
-    mov rdi, format_int
-    xor rax, rax
-    call printf wrt ..plt
+    ; IR: pavel = 0
+    ; Načti konstantu 0
+    mov rax, 0
+    ; Ulož do [pavel]
+    mov [pavel], rax
 
     ; IR: i = 0
     ; Načti konstantu 0
@@ -49,6 +49,20 @@ L0:
     cmp rax, 0
     je L1
 
+    ; IR: t1 = pavel + 1
+    ; Načti proměnnou [pavel]
+    mov rax, [pavel]
+    ; Sečti konstantu 1
+    add rax, 1
+    ; Ulož do [t1]
+    mov [t1], rax
+
+    ; IR: pavel = t1
+    ; Načti proměnnou [t1]
+    mov rax, [t1]
+    ; Ulož do [pavel]
+    mov [pavel], rax
+
     ; IR: print pavel
     ; Vypiš hodnotu 
     mov rsi, [pavel]
@@ -56,17 +70,17 @@ L0:
     xor rax, rax
     call printf wrt ..plt
 
-    ; IR: t1 = i + 1
+    ; IR: t2 = i + 1
     ; Načti proměnnou [i]
     mov rax, [i]
     ; Sečti konstantu 1
     add rax, 1
-    ; Ulož do [t1]
-    mov [t1], rax
+    ; Ulož do [t2]
+    mov [t2], rax
 
-    ; IR: i = t1
-    ; Načti proměnnou [t1]
-    mov rax, [t1]
+    ; IR: i = t2
+    ; Načti proměnnou [t2]
+    mov rax, [t2]
     ; Ulož do [i]
     mov [i], rax
 
@@ -77,9 +91,9 @@ L0:
     ; IR: L1:
 L1:
 
-    ; IR: print 124
+    ; IR: print pavel
     ; Vypiš hodnotu 
-    mov rsi, 124
+    mov rsi, [pavel]
     mov rdi, format_int
     xor rax, rax
     call printf wrt ..plt

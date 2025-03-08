@@ -1,1 +1,2 @@
 #define PRINTS_DEBUG
+#define MAX_SCOPES 30

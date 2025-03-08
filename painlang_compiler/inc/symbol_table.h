@@ -39,3 +39,5 @@ void enter_scope(SymbolTable *table);
 void exit_scope(SymbolTable *table);
 
 void print_symbol_table(SymbolTable *table);
+
+void free_symbol_table(SymbolTable *table);

@@ -124,17 +124,28 @@ int main(int argc, char **argv) {
     char *str;
     ASTNode *node;
     CondOpType cond_op;
+    struct {
+        char **names;
+        int count;
+    } param_list; // Pak to asi mergnout do sebe... Nebo taky ne ten param list musí být prostě jen var_declaration
+    struct {
+        ASTNode **args;
+        int count;
+    } arg_list;
 }
 
 %token <num> NUMBER DECLARE
-%token <str> IDENTIFIER ASSIGN SEMICOLON PRINT IF ELSE FOR
+%token <str> IDENTIFIER ASSIGN SEMICOLON PRINT IF ELSE FOR FUNCTION RETURN
 %token EQUALS NOT_EQUALS GREAT_OR_EQUALS LESS_OR_EQUALS GREATER_THAN LESS_THAN
 
 %type <node> program statementList statement assignment varDeclaration vardec
 %type <node> printStatement expression term factor ifStatement block
+%type <node> funDeclaration functionCall returnStatement
 %type <node> condExpression
 %type <node> forLoop forInitExpression
 %type <cond_op> relop
+%type <param_list> parameterList parameters
+%type <arg_list> argumentList arguments
 
 %left '+' '-'
 %left '*' '/'
@@ -191,6 +202,9 @@ statement: assignment SEMICOLON
         $$ = $1;
     }
     | forLoop
+    | funDeclaration
+    | functionCall SEMICOLON
+    | returnStatement SEMICOLON
     | empty
     {
         $$ = NULL;
@@ -346,11 +360,90 @@ relop: EQUALS
     }
     ;
 
-block: '{' {  } statementList '}' {  }
+block: '{' { enter_scope(table); } statementList '}' { exit_scope(table);  }
     {
         $$ = $3;
     }
     ;
+
+
+
+funDeclaration: FUNCTION IDENTIFIER '(' parameterList ')' block 
+{
+    // ten count kvůli tomu, že pojedeme scope odznova a potřebuji vědět kolik jich bude..
+    $$ = create_function_declaration_node($2, $4.names, $4.count, $6);
+    debug_print("Created FUNCTION_DECLARATION node for '%s' with %d parameters\n", $2, $4.count);
+
+};
+
+parameterList: parameters
+    {
+        $$ = $1;
+    }
+    | 
+    {
+        $$.names = NULL;
+        $$.count = 0;    
+    }
+    ;
+
+parameters: IDENTIFIER
+    {
+        $$.names = malloc(sizeof(char*));
+        $$.names[0] = $1;
+        $$.count = 1;
+    }
+    | IDENTIFIER ',' parameters
+    {
+      $$.names = malloc(sizeof(char*) * ($3.count + 1));
+        $$.names[0] = $1;
+        memcpy($$.names + 1, $3.names, sizeof(char*) * $3.count);
+        $$.count = $3.count + 1;
+        free($3.names);
+    }
+    ;
+
+functionCall: IDENTIFIER '(' argumentList ')'
+    {
+        $$ = create_function_call_node($1, $3.args, $3.count);
+        debug_print("Created FUNCTION_CALL node for '%s' with %d arguments\n", $1, $3.count);
+    }
+    ;
+
+argumentList: arguments
+    {
+        $$ = $1;
+    }
+    | 
+    {
+        $$.args = NULL;
+        $$.count = 0;
+    }
+    ;
+
+arguments: expression
+    {
+        $$.args = malloc(sizeof(ASTNode*));
+        $$.args[0] = $1;
+        $$.count = 1;
+    }
+    | expression ',' arguments
+    {
+        $$.args = malloc(sizeof(ASTNode*) * ($3.count + 1));
+        $$.args[0] = $1;
+        memcpy($$.args + 1, $3.args, sizeof(ASTNode*) * $3.count);
+        $$.count = $3.count + 1;
+        free($3.args);
+    }
+    ;
+
+returnStatement: RETURN expression
+{
+    $$ = create_return_node($2);
+    debug_print("Created RETURN node\n");
+}
+
+
 
 empty:
     ;
