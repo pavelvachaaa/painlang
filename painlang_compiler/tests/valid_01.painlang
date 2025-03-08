@@ -1,5 +1,10 @@
 let pavel = 0;
 let z = 3;
+
+
+/*
+Scope nescopuje
+*/
 for(i = 0;i < 10;i=i+1) {
         
     pavel = pavel + 1; 
@@ -16,4 +21,7 @@ function tomrdej(de, ment) {
     return de+5;
 }
 
-tomrdej(3, 9);
+let krtek = 3;
+// TODO: Jakmile je proměnná z for loopu, tak optimizer to není schopný optimalizovat
+// TODO: Mark as used když se to používá jako argument nebo ji optimizer zničí
+tomrdej(krtek+3, 47+9);

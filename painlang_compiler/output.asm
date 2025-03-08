@@ -4,10 +4,13 @@ section .data
 
 section .bss
     pavel resq 1
+    z resq 1
     i resq 1
     t0 resq 1
     t1 resq 1
+    x resq 1
     t2 resq 1
+    krtek resq 1
 
 section .text
     global main
@@ -22,6 +25,12 @@ main:
     mov rax, 0
     ; Ulož do [pavel]
     mov [pavel], rax
+
+    ; IR: z = 3
+    ; Načti konstantu 3
+    mov rax, 3
+    ; Ulož do [z]
+    mov [z], rax
 
     ; IR: i = 0
     ; Načti konstantu 0
@@ -70,6 +79,12 @@ L0:
     xor rax, rax
     call printf wrt ..plt
 
+    ; IR: x = 32
+    ; Načti konstantu 32
+    mov rax, 32
+    ; Ulož do [x]
+    mov [x], rax
+
     ; IR: t2 = i + 1
     ; Načti proměnnou [i]
     mov rax, [i]
@@ -97,6 +112,12 @@ L1:
     mov rdi, format_int
     xor rax, rax
     call printf wrt ..plt
+
+    ; IR: krtek = 3
+    ; Načti konstantu 3
+    mov rax, 3
+    ; Ulož do [krtek]
+    mov [krtek], rax
 
     ; Ukončit program 
     mov rax, 0

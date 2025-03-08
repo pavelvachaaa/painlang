@@ -71,7 +71,10 @@ void print_ast_helper(ASTNode *node, int indent)
 
     case NODE_FUNCTION_CALL:
         printf("Function call: %s param_count: %d \n", node->data.function_call.func_name, node->data.function_call.argument_count);
-        print_ast_helper(node->data.function_call.arguments, indent + 1);
+        for (int i = 0; i < node->data.function_call.argument_count; i++)
+        {
+            print_ast_helper(node->data.function_call.arguments[i], indent + 1);
+        }
         break;
     case NODE_RETURN:
         printf("Return statement \n");

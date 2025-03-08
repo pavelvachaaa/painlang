@@ -7,6 +7,11 @@
 %}
 
 %%
+
+"//".*               { debug_print("SL-COMMENT"); }
+"/*"[^*]*"*"([^/][^*]*"*"[^/])*"/" { debug_print("ML-COMMENT"); }
+
+
 ;                                                   {debug_print("SEMICOLON "); return SEMICOLON;};
 let                                                 {debug_print("DECLARE "); return DECLARE;};
 print                                               {debug_print("PRINT "); return PRINT;};

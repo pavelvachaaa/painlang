@@ -8,6 +8,8 @@ statement = assignment ';'
           | printStatement ';'
           | ifStatement
           | functionDeclaration
+          | functionCall
+          | returnStatement
           | block
           | forLoop
           | empty
@@ -18,15 +20,15 @@ variableDeclaration = 'let' vardec
 vardec = identifier
            | identifier '=' expression
 
-functionDeclaration = identifier '();' functionbody
-                        | identifier '(' arglist ');' functionbody
-functionbody = variableDeclaration block
-                 | block
-
+functionDeclaration = 'function' identifier '(' parameterList ')'  block
+parameterLis = parameters | empty
+parameters = identifier | identifier ',' parameters
+functionCall = identifier  '(' argumentList ')'
+argumentList = arguments
+arguments = expression | expression ',' arguments
+returnStatement = 'return' expression
 arglist = identifier 
             | identifier , arglist
-
-
 block = '{' statementlist '}'
 forLoop = "for" '(' forInitExpression ';' condExpression ';' assignment ')' block
 forInitExpression = assignment | varDeclaration

@@ -445,6 +445,15 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
     }
     break;
 
+    case NODE_FUNCTION_CALL:
+        // výrazy v argumentech
+        for (int i = 0; i < node->data.function_call.argument_count; i++)
+        {
+            printf("Ahoj světe");
+            node->data.function_call.arguments[i] = optimize_ast(node->data.function_call.arguments[i], table);
+        }
+        break;
+
     case NODE_CONDITION:
         node->data.condition.left = optimize_ast(node->data.condition.left, table);
         node->data.condition.right = optimize_ast(node->data.condition.right, table);
