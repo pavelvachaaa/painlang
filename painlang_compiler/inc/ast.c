@@ -293,6 +293,10 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
                 int value = node->data.var_declaration.init_expr->data.number.value;
                 set_variable(table, node->data.var_declaration.var_name, value, 1);
             }
+            // else if (node->data.var_declaration.init_expr->type == NODE_FUNCTION_CALL)
+            // {
+            //     set_is_used(table, node->data.var_declaration.var_name);
+            // }
             else
             {
                 set_variable(table, node->data.var_declaration.var_name, 0, 0);
@@ -442,6 +446,12 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
 
             return number_node;
         }
+    }
+    break;
+
+    case NODE_FUNCTION_DECLARATION:
+    {
+        // add_function(table, node->data.function_declaration.name, node->data.function_declaration.param_count);
     }
     break;
 
@@ -751,6 +761,7 @@ void remove_unused_variables(ASTNode *node, SymbolTable *table)
 
     if (node->type == NODE_VAR_DECLARATION)
     {
+
         SymbolEntry *entry = lookup_variable(table, node->data.var_declaration.var_name);
         if (entry && !entry->is_used)
         {
@@ -797,7 +808,8 @@ void remove_unused_variables(ASTNode *node, SymbolTable *table)
         for (int i = 0; i < node->data.statement_list.statement_count; ++i)
         {
             ASTNode *stmt = node->data.statement_list.statements[i];
-            if (stmt->type == NODE_VAR_DECLARATION)
+            // stmt->data.var_declaration.init_expr->type != NODE_FUNCTION_CALL automaticky in-used když se deklaruješ z function callu
+            if (stmt->type == NODE_VAR_DECLARATION && stmt->data.var_declaration.init_expr->type != NODE_FUNCTION_CALL)
             {
                 SymbolEntry *entry = lookup_variable(table, stmt->data.var_declaration.var_name);
                 if (entry && entry->is_used)

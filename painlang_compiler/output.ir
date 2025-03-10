@@ -1,16 +1,110 @@
-pavel = 0
-z = 3
-i = 0
-L0:
-t0 = i < 10
-if t0 == 0 goto L1
-t1 = pavel + 1
-pavel = t1
-print pavel
-x = 32
-t2 = i + 1
-i = t2
 goto L0
 L1:
-print pavel
-krtek = 3
+function pow(2):
+param base
+param exp
+result = 1
+i = 0
+L2:
+t0 = i < exp
+if t0 == 0 goto L3
+t1 = result * base
+result = t1
+t2 = i + 1
+i = t2
+goto L2
+L3:
+return result
+end function pow
+L4:
+function printFib(1):
+param n
+t3 = n < 1
+if t3 == 0 goto L5
+return 0
+L5:
+prev1 = 1
+prev2 = 0
+i = 1
+L7:
+t4 = i <= n
+if t4 == 0 goto L8
+t5 = i > 2
+if t5 == 0 goto L9
+t6 = prev1 + prev2
+curr = t6
+prev2 = prev1
+prev1 = curr
+print curr
+goto L10
+L9:
+t7 = i == 1
+if t7 == 0 goto L11
+print prev1
+goto L12
+L11:
+t8 = i == 2
+if t8 == 0 goto L13
+print prev2
+L13:
+L12:
+L10:
+t9 = i + 1
+i = t9
+goto L7
+L8:
+end function printFib
+L15:
+function factorial(1):
+param n
+fact = 1
+i = 1
+L16:
+t10 = i <= n
+if t10 == 0 goto L17
+t11 = fact * i
+fact = t11
+t12 = i + 1
+i = t12
+goto L16
+L17:
+return fact
+end function factorial
+L18:
+function combineFunction(3):
+param base
+param fact1
+param exp
+arg base
+arg exp
+t13 = call pow, 2
+fr1 = t13
+arg fact1
+t14 = call factorial, 1
+fr2 = t14
+t15 = fr1 * fr2
+return t15
+end function combineFunction
+L0:
+arg 2
+arg 6
+t16 = call pow, 2
+vysledek = t16
+arg 2
+arg 6
+t17 = call pow, 2
+vysledek2 = t17
+t18 = vysledek + vysledek2
+print t18
+arg 10
+t19 = call printFib, 1
+arg 5
+t20 = call factorial, 1
+factVyledek = t20
+print factVyledek
+arg 2
+arg 5
+arg 3
+t21 = call combineFunction, 3
+cFRes = t21
+print cFRes

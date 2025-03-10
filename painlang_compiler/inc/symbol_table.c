@@ -10,8 +10,50 @@
 void init_symbol_table(SymbolTable *table)
 {
     table->entries = NULL;
+    table->functions = NULL;
+    table->countF = 0;
     table->count = 0;
     table->current_scope = 0;
+}
+
+void add_function(SymbolTable *table, const char *name, int number_of_params)
+{
+    FunctionEntry *entry = lookup_function(table, name);
+    if (entry)
+    {
+        fprintf(stderr, "Error: Tahle funkce již existuje");
+        return;
+    }
+
+    printf("Funkce declaration vole: %s \n", name);
+    table->functions = realloc(table->functions, sizeof(FunctionEntry) * (table->countF + 1));
+    table->functions[table->countF].name = strdup(name);
+    table->functions[table->countF].number_of_params = number_of_params;
+    table->countF++;
+}
+
+FunctionEntry *lookup_function(SymbolTable *table, const char *name)
+{
+
+    if (table->functions == NULL && table->countF > 0)
+    {
+        return NULL;
+    }
+
+    for (int i = table->countF - 1; i >= 0; i--)
+    {
+        if (table->functions[i].name == NULL)
+        {
+            continue;
+        }
+
+        if (strcmp(table->functions[i].name, name) == 0)
+        {
+            return &table->functions[i];
+        }
+    }
+
+    return NULL;
 }
 
 void enter_scope(SymbolTable *table)
@@ -97,6 +139,18 @@ SymbolEntry *lookup_variable_all_scopes(SymbolTable *table, const char *name)
         }
     }
     return NULL;
+}
+void set_is_used(SymbolTable *table, const char *name)
+{
+    SymbolEntry *entry = lookup_variable(table, name);
+    if (!entry)
+    {
+        fprintf(stderr, "Error: proměnná neexistuje");
+        set_variable(table, name, 0, 0);
+        return;
+    }
+
+    set_is_used(table, name);
 }
 
 void set_variable(SymbolTable *table, const char *name, int value, int is_initialized)

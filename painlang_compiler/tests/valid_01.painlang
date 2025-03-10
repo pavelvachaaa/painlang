@@ -1,27 +1,80 @@
-let pavel = 0;
-let z = 3;
+// Funkce umocňuje základ požadovanným exponentem
+function pow(base, exp) {
+    let result = 1;
+    for(let i = 0; i < exp; i = i +1) {
+        result = result * base;
+    }
 
+    return result;
+}
+
+// BRUUUH function
+function printFib(n) {
+     if (n < 1) {
+        return 0;
+    }
+  
+    let prev1 = 1;
+    let prev2 = 0;
+
+    for (let i = 1; i <= n; i = i + 1) {
+          
+        if (i > 2) {
+            let curr = prev1 + prev2;
+            prev2 = prev1;
+            prev1 = curr;
+            print(curr);
+        } else { 
+            // TODO: Dodělat do jazyka elseif :Dd 
+            if (i == 1) {
+                print(prev1);
+            } else {
+                if (i == 2) {
+                    print(prev2);
+                }
+            }
+          
+        }
+        
+    }
+}
+ 
+
+function factorial(n) {
+   let fact = 1;
+
+    for (let i = 1; i <= n; i = i + 1) {
+        fact = fact * i;
+    }
+
+    return fact;
+}
 
 /*
-Scope nescopuje
+Komentář test
+base = základ
+fact1 = faktorial kolika?
+exp = exponent
 */
-for(i = 0;i < 10;i=i+1) {
-        
-    pavel = pavel + 1; 
-    print(pavel);
-    let x = 32;
+function combineFunction(base, fact1, exp) {
+    let fr1 = pow(base, exp);
+    let fr2 = factorial(fact1);
+
+    return fr1 * fr2;
 }
 
+let vysledek = pow(2,6);
+let vysledek2 = pow(2,6);
 
-print(pavel);
+
+// Výsledek by měl být 128
+print(vysledek+vysledek2);
 
 
-function tomrdej(de, ment) {
-    print(de);
-    return de+5;
-}
+printFib(10);
 
-let krtek = 3;
-// TODO: Jakmile je proměnná z for loopu, tak optimizer to není schopný optimalizovat
-// TODO: Mark as used když se to používá jako argument nebo ji optimizer zničí
-tomrdej(krtek+3, 47+9);
+let factVyledek = factorial(5);
+print(factVyledek);
+
+let cFRes = combineFunction(2,5,3);
+print(cFRes);

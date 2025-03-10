@@ -4,6 +4,8 @@
 #include "ast.h"
 #include "ir.h"
 
+IROperand generate_function_call_ir(ASTNode *node, IRProgram *program);
+
 void ir_init(IRProgram *program)
 {
     program->instructions = NULL;
@@ -139,6 +141,21 @@ IROperand generate_expression_ir(ASTNode *node, IRProgram *program)
         return result;
     }
 
+    case NODE_FUNCTION_CALL:
+    {
+        // Zde bude hnodta z RAX
+        IROperand result = generate_function_call_ir(node, program);
+
+        IROperand *args = malloc(sizeof(IROperand) * node->data.function_call.argument_count);
+        for (int i = 0; i < node->data.function_call.argument_count; i++)
+        {
+            args[i] = generate_expression_ir(node->data.function_call.arguments[i], program);
+        }
+
+        free(args);
+        return result;
+    }
+
     default:
         fprintf(stderr, "To by tu být nemělo: %d\n", node->type);
         return ir_none();
@@ -171,6 +188,66 @@ IROperand generate_condition_ir(ASTNode *node, IRProgram *program)
     }
 }
 
+void generate_function_declaration_ir(ASTNode *node, IRProgram *program)
+{
+    if (!node || node->type != NODE_FUNCTION_DECLARATION)
+        return;
+
+    // Entry point funkce
+    ir_add_instruction(program, IR_LABEL, ir_literal(ir_new_label(program)), ir_none(), ir_none());
+
+    char *func_name = strdup(node->data.function_declaration.name);
+    int param_count = node->data.function_declaration.param_count;
+    ir_add_instruction(program, IR_PROLOGUE, ir_variable(func_name, 0), ir_literal(param_count), ir_none());
+
+    // V RESULtu JE INDEX parametru!!! (důležite pro codegen)
+    for (int i = 0; i < param_count; i++)
+    {
+        char *param_name = node->data.function_declaration.param_names[i];
+        ir_add_instruction(program, IR_PARAM, ir_literal(i), ir_variable(param_name, 0), ir_none());
+    }
+
+    if (node->data.function_declaration.body)
+    {
+        generate_statement_ir(node->data.function_declaration.body, program);
+    }
+
+    ir_add_instruction(program, IR_EPILOGUE, ir_variable(func_name, 0), ir_none(), ir_none());
+    free(func_name);
+}
+
+IROperand generate_function_call_ir(ASTNode *node, IRProgram *program)
+{
+    if (!node || node->type != NODE_FUNCTION_CALL)
+        return ir_none();
+
+    // INDEX ARGUMENTU JE V ARG2 DULEZITY PRO CODEGEN!!!
+    // LITERAL NEBO VAR NAME JE v resultu
+    for (int i = 0; i < node->data.function_call.argument_count; i++)
+    {
+        IROperand arg_value = generate_expression_ir(node->data.function_call.arguments[i], program);
+        ir_add_instruction(program, IR_ARG, arg_value, ir_none(), ir_literal(i));
+    }
+
+    // Výsledek funkce bude v tomhle tempu
+    IROperand result = ir_temp(program);
+
+    ir_add_instruction(program, IR_CALL, result,
+                       ir_variable(node->data.function_call.func_name, 0),
+                       ir_literal(node->data.function_call.argument_count));
+
+    return result;
+}
+
+void generate_return_ir(ASTNode *node, IRProgram *program)
+{
+    if (!node || node->type != NODE_RETURN)
+        return;
+
+    IROperand expr = generate_expression_ir(node->data.return_statement.expr, program);
+    ir_add_instruction(program, IR_RETURN, ir_none(), expr, ir_none());
+}
+
 void generate_statement_ir(ASTNode *node, IRProgram *program)
 {
     if (!node)
@@ -178,6 +255,7 @@ void generate_statement_ir(ASTNode *node, IRProgram *program)
 
     switch (node->type)
     {
+
     case NODE_VAR_DECLARATION:
     {
         if (node->data.var_declaration.init_expr)
@@ -190,6 +268,13 @@ void generate_statement_ir(ASTNode *node, IRProgram *program)
         break;
     }
 
+    case NODE_FUNCTION_CALL:
+        generate_function_call_ir(node, program);
+        break;
+
+    case NODE_RETURN:
+        generate_return_ir(node,program);
+        break;
     case NODE_ASSIGNMENT:
     {
 
@@ -299,24 +384,40 @@ void generate_ir_from_ast(ASTNode *node, IRProgram *program)
 {
     if (!node)
         return;
+    // Skočíme za všechny funkční deklarace
+    int entry_label = ir_new_label(program);
+    ir_add_instruction(program, IR_JUMP, ir_literal(entry_label), ir_none(), ir_none());
 
-    if (node->type == NODE_PROGRAM || node->type == NODE_STATEMENT_LIST)
+    // Přesuneme veškeré funkce, co máme a dáme je na začátek
+    for (int i = 0; i < node->data.statement_list.statement_count; i++)
     {
-        for (int i = 0; i < node->data.statement_list.statement_count; i++)
+        ASTNode *stmt = node->data.statement_list.statements[i];
+        if (stmt->type == NODE_FUNCTION_DECLARATION)
         {
-            generate_statement_ir(node->data.statement_list.statements[i], program);
+            generate_function_declaration_ir(stmt, program);
         }
     }
-    else
+
+    // Label pro start
+    ir_add_instruction(program, IR_LABEL, ir_literal(entry_label), ir_none(), ir_none());
+
+    // Vygenerujeme zbytek
+    for (int i = 0; i < node->data.statement_list.statement_count; i++)
     {
-        generate_statement_ir(node, program);
+        ASTNode *stmt = node->data.statement_list.statements[i];
+        if (stmt->type != NODE_FUNCTION_DECLARATION)
+        {
+            generate_statement_ir(stmt, program);
+        }
     }
 }
 
 char *get_operand_string(IROperand operand, char *buffer)
 {
+    // printf("VOLEEE: %d \n", operand.type);
     switch (operand.type)
     {
+
     case OPERAND_LITERAL:
         sprintf(buffer, "%d", operand.value.literal);
         break;
@@ -353,6 +454,24 @@ void output_ir_to_file(IRProgram *program, const char *filename)
 
         switch (instr->op)
         {
+        case IR_PROLOGUE:
+            fprintf(file, "function %s(%d):\n", // počet argumentů..
+                    instr->result.value.variable,
+                    instr->arg1.value.literal);
+            break;
+
+        case IR_CALL:
+            fprintf(file, "%s = call %s, %d\n",
+                    get_operand_string(instr->result, result_str),
+                    get_operand_string(instr->arg1, arg1_str),
+                    instr->arg2.value.literal);
+            break;
+
+        case IR_EPILOGUE:
+            fprintf(file, "end function %s\n",
+                    instr->result.value.variable);
+            break;
+
         case IR_LABEL:
             fprintf(file, "L%d:\n", instr->result.value.literal);
             break;
@@ -455,6 +574,9 @@ void output_ir_to_file(IRProgram *program, const char *filename)
 
         case IR_PARAM:
             fprintf(file, "param %s\n", get_operand_string(instr->arg1, arg1_str));
+            break;
+        case IR_ARG:
+            fprintf(file, "arg %s\n", get_operand_string(instr->result, arg1_str));
             break;
 
         case IR_RETURN:

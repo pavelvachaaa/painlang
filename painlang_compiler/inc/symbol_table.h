@@ -23,10 +23,18 @@ typedef struct
     // int is_const;
 } SymbolEntry;
 
+// Je to taková slátanina, chtělo by to vrazit do symbolentry... se symboltype function
+typedef struct {
+    char *name;
+    int number_of_params;
+} FunctionEntry;
+
 typedef struct
 {
     SymbolEntry *entries;
+    FunctionEntry *functions;
     int count;
+    int countF;
     int current_scope;
 } SymbolTable;
 
@@ -37,6 +45,12 @@ SymbolEntry *lookup_variable_all_scopes(SymbolTable *table, const char *name);
 void set_variable(SymbolTable *table, const char *name, int value, int is_initialized);
 void enter_scope(SymbolTable *table);
 void exit_scope(SymbolTable *table);
+
+void add_function(SymbolTable *table, const char *name, int number_of_params);
+FunctionEntry *lookup_function(SymbolTable *table, const char *name);
+
+void set_is_used(SymbolTable *table,const char *name);
+
 
 void print_symbol_table(SymbolTable *table);
 

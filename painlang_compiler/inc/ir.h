@@ -69,6 +69,10 @@ typedef struct
     int instruction_count;
     int temp_counter;
     int label_counter;
+    // TODO: Pak smazat asi
+    int current_param_index;  // pozice parametru
+    int current_arg_index;    // argumentu
+    char *current_function;   // V jaké funkci jsem
 } IRProgram;
 
 void ir_init(IRProgram *program);
@@ -91,7 +95,7 @@ IROperand generate_condition_ir(ASTNode *node, IRProgram *program);
 // Pro dev účely
 void generate_ir_from_ast(ASTNode *node, IRProgram *program);
 void output_ir_to_file(IRProgram *program, const char *filename);
-void generate_nasm_from_ir(IRProgram *program, const char *output_file);
+void generate_nasm_from_ir(IRProgram *program, SymbolTable *table, const char *output_file);
 
 void ir_free(IRProgram *program);
 

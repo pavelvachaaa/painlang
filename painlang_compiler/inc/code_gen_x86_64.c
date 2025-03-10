@@ -3,6 +3,7 @@
 #include <string.h>
 #include "ast.h"
 #include "ir.h"
+#include "instruction_printer.h"
 
 typedef struct
 {
@@ -305,8 +306,163 @@ static void generate_print(FILE *file, IRInstruction *instr)
     fprintf(file, "    call printf wrt ..plt\n");
 }
 
-void generate_nasm_from_ir(IRProgram *program, const char *output_file)
+void generate_function_start(FILE *file, IRInstruction *instr)
 {
+    char func_name[64];
+    sprintf(func_name, "%s", instr->result.value.variable);
+    int param_count = instr->arg1.value.literal;
+
+    fprintf(file, "%s:\n", func_name);
+    fprintf(file, "    push rbp\n");
+    fprintf(file, "    mov rbp, rsp\n");
+
+    fprintf(file, "    sub rsp, 64\n"); // Alokuj 64 bajtů
+}
+
+void generate_function_end(FILE *file, IRInstruction *instr)
+{
+    fprintf(file, "    ; Function epilogue\n");
+    fprintf(file, "    mov rsp, rbp\n");
+    fprintf(file, "    pop rbp\n");
+    fprintf(file, "    ret\n");
+}
+
+void generate_param(FILE *file, IRInstruction *instr)
+{
+    // Get parameter index from result.value.literal
+    int param_index = instr->result.value.literal;
+    const char *reg_names[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+
+    if (instr->arg1.type == OPERAND_VARIABLE)
+    {
+        char *param_name = instr->arg1.value.variable;
+
+        if (param_index < 6)
+        {
+            // Registr do lokální
+            fprintf(file, " ; Parametr %s v registru %s\n", param_name, reg_names[param_index]);
+            fprintf(file, " mov [%s], %s\n", param_name, reg_names[param_index]);
+        }
+        else
+        {
+            // STACK neotestováno pořádně!!!
+            int stack_offset = (param_index - 6) * 8 + 16;
+            fprintf(file, " ; Parametr %s ze stacku [rbp+%d]\n", param_name, stack_offset);
+            fprintf(file, " mov rax, [rbp+%d]\n", stack_offset);
+            fprintf(file, " mov [%s], rax\n", param_name);
+        }
+    }
+    else if (instr->arg1.type == OPERAND_LITERAL)
+    {
+        int literal_value = instr->arg1.value.literal;
+
+        if (param_index < 6)
+        {
+            fprintf(file, " ; Hodnota %d z registru %s\n", literal_value, reg_names[param_index]);
+            fprintf(file, " mov %s, %d\n", reg_names[param_index], literal_value);
+        }
+        else
+        {
+            int stack_offset = (param_index - 6) * 8 + 16;
+            fprintf(file, " ; Hodnota %d pushnutá na stack\n", literal_value);
+            fprintf(file, " mov rax, %d\n", literal_value);
+            fprintf(file, " mov [rbp+%d], rax\n", stack_offset);
+        }
+    }
+    else
+    {
+        printf("Type: %d\n", instr->arg1.type);
+        print_ir_instruction(*instr);
+    }
+}
+
+void generate_arg(FILE *file, IRInstruction *instr)
+{
+    int arg_index = instr->arg2.value.literal;
+
+    print_ir_instruction(*instr);
+
+
+    if (instr->arg1.type != OPERAND_NONE)
+    {
+        generate_load_operand(file, instr->arg1);
+    }
+    else if (instr->result.type != OPERAND_NONE)
+    {
+        generate_load_operand(file, instr->result);
+    }
+    else
+    {
+        fprintf(file, " ; ERROR: Neplatný operand \n");
+        return;
+    }
+
+    const char *reg_names[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+    if (arg_index < 6)
+    {
+        fprintf(file, "     ; Argument %d v registru %s\n", arg_index, reg_names[arg_index]);
+        fprintf(file, "     mov %s, rax\n", reg_names[arg_index]);
+    }
+    else
+    {
+      // Všechno po 6 argumentu je zásobník už..
+        fprintf(file, "     ; Argument %d pushnutý na stack\n", arg_index);
+        fprintf(file, "     push rax\n");
+    }
+}
+
+void generate_call(FILE *file, IRInstruction *instr)
+{
+    char *func_name = instr->arg1.value.variable;
+    int arg_count = instr->arg2.value.literal;
+
+    fprintf(file, "    ; Align stack 16 bytes \n");
+    // Kolik vís bude na stacku??
+    int stack_args = arg_count > 6 ? arg_count - 6 : 0;
+    // 16 byte alingment na sudý/lichý počty argumentů
+    if (stack_args % 2 == 1)
+    {
+        fprintf(file, "    sub rsp, 8\n");
+    }
+
+    fprintf(file, "    ; Call function %s\n", func_name);
+    fprintf(file, "    call %s\n", func_name);
+
+    // Musíme vyčistit staack, když se tam pushovalo
+    if (stack_args > 0)
+    {
+        fprintf(file, "    ; Mažu %d argumentů ze stacku\n", stack_args);
+        fprintf(file, "    add rsp, %d\n", stack_args * 8 + (stack_args % 2 == 1 ? 8 : 0));
+    }
+
+    char result_str[64];
+    get_nasm_operand(instr->result, result_str, 1);
+    fprintf(file, "    ; Ulož hodnotu z rax\n");
+    fprintf(file, "    mov %s, rax\n", result_str);
+}
+
+static void generate_return(FILE *file, IRInstruction *instr)
+{
+    // V raxu by měla potom být hodnota returnnu
+    if (instr->arg1.type != OPERAND_NONE)
+    {
+        generate_load_operand(file, instr->arg1);
+    }
+    else
+    {
+        fprintf(file, "    ; Void return (rax = 0)\n");
+        fprintf(file, "    xor rax, rax\n");
+    }
+
+    fprintf(file, "    ; Return from function\n");
+    fprintf(file, "    mov rsp, rbp\n");
+    fprintf(file, "    pop rbp\n");
+    fprintf(file, "    ret\n");
+}
+
+void generate_nasm_from_ir(IRProgram *program, SymbolTable *table, const char *output_file)
+{
+
     FILE *file = fopen(output_file, "w");
     if (!file)
     {
@@ -316,6 +472,9 @@ void generate_nasm_from_ir(IRProgram *program, const char *output_file)
 
     VariableList variables;
     init_variable_list(&variables);
+
+    // Funkce, která se zpracovává (Pak hodit do IRProgramu)
+    char current_function[64] = "";
 
     // Vytvoření seznamu proměnných
     for (int i = 0; i < program->instruction_count; i++)
@@ -365,6 +524,13 @@ void generate_nasm_from_ir(IRProgram *program, const char *output_file)
     fprintf(file, "section .bss\n");
     for (int i = 0; i < variables.count; i++)
     {
+        // Nechceme proměnné labely pro funkce (pak se to cyklí jak debil)
+        FunctionEntry *entry = lookup_function(table, variables.variables[i]);
+        if (entry)
+        {
+            continue;
+        }
+
         fprintf(file, "    %s resq 1\n", variables.variables[i]);
     }
 
@@ -383,9 +549,23 @@ void generate_nasm_from_ir(IRProgram *program, const char *output_file)
     fprintf(file, "    global main\n");
     fprintf(file, "    extern printf\n\n");
 
-    fprintf(file, "main:\n");
-    fprintf(file, "    push rbp\n");
-    fprintf(file, "    mov rbp, rsp\n\n");
+    int has_main = 0;
+    for (int i = 0; i < program->instruction_count; i++)
+    {
+        IRInstruction *instr = &program->instructions[i];
+        if (instr->op == IR_PROLOGUE && strcmp(instr->result.value.variable, "main") == 0)
+        {
+            has_main = 1;
+            break;
+        }
+    }
+
+    if (!has_main)
+    {
+        fprintf(file, "main:\n");
+        fprintf(file, "    push rbp\n");
+        fprintf(file, "    mov rbp, rsp\n\n");
+    }
 
     // Vezmi každou instrukci z lineární IR a generuj instrukce
     for (int i = 0; i < program->instruction_count; i++)
@@ -400,6 +580,18 @@ void generate_nasm_from_ir(IRProgram *program, const char *output_file)
 
         switch (instr->op)
         {
+        case IR_PROLOGUE:
+            fprintf(file, "    ; IR: function %s(%s)\n", result_str, arg1_str);
+            strcpy(current_function, instr->result.value.variable);
+            break;
+        case IR_EPILOGUE:
+            fprintf(file, "    ; IR: end function %s\n", result_str);
+            strcpy(current_function, "");
+            break;
+        case IR_PARAM:
+            fprintf(file, "    ; IR: param %s\n", arg1_str);
+            break;
+
         case IR_ASSIGN:
             fprintf(file, "    ; IR: %s = %s\n", result_str, arg1_str);
             break;
@@ -452,6 +644,31 @@ void generate_nasm_from_ir(IRProgram *program, const char *output_file)
 
         switch (instr->op)
         {
+
+        case IR_PARAM:
+            generate_param(file, instr);
+            break;
+
+        case IR_ARG:
+            generate_arg(file, instr);
+            break;
+
+        case IR_PROLOGUE:
+            generate_function_start(file, instr);
+            break;
+
+        case IR_EPILOGUE:
+            generate_function_end(file, instr);
+            break;
+
+        case IR_CALL:
+            generate_call(file, instr);
+            break;
+
+        case IR_RETURN:
+            generate_return(file, instr);
+            break;
+
         case IR_LABEL:
             fprintf(file, "L%d:\n", instr->result.value.literal);
             break;

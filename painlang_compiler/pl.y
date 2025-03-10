@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
         optimize_program(ast_root,table);
     }
 
-    print_ast(ast_root);
+    // print_ast(ast_root);
     
     // IR reprezentace a struktura
     IRProgram *program = malloc(sizeof(IRProgram));
@@ -108,8 +108,7 @@ int main(int argc, char **argv) {
     output_ir_to_file(program, ir_file);
 
     //NASM
-    generate_nasm_from_ir(program, output_file);
-    //generate_nasm_code(ast_root, output_file);
+    generate_nasm_from_ir(program, table, output_file);
     
     ir_free(program);
     free_ast(ast_root);
@@ -316,6 +315,10 @@ factor: NUMBER
     {
         $$ = $2;
     }
+     | functionCall 
+    {
+        $$ = $1;
+    }
     ;
 
 ifStatement: IF '(' condExpression ')' block
@@ -373,6 +376,9 @@ funDeclaration: FUNCTION IDENTIFIER '(' parameterList ')' block
     // ten count kvůli tomu, že pojedeme scope odznova a potřebuji vědět kolik jich bude..
     $$ = create_function_declaration_node($2, $4.names, $4.count, $6);
     debug_print("Created FUNCTION_DECLARATION node for '%s' with %d parameters\n", $2, $4.count);
+    // Zaeviduju tě, ale pozor v optimalitaci zkontrolovat jestli se volá a kdyžtak odstranit
+    add_function(table, $2, $4.count);
+
 
 };
 
