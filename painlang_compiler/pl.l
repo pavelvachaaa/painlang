@@ -33,6 +33,10 @@ else                                                {debug_print("ELSE "); retur
 =                                                   {debug_print("ASSIGN "); return ASSIGN;};
 
 
+"+="                                                { return PLUS_ASSIGN; }
+"-="                                                { return MINUS_ASSIGN; }
+"*="                                                { return MULT_ASSIGN; }
+"/="                                                { return DIV_ASSIGN; }
 "++"                                                  {debug_print("++"); return DOUBLE_PLUS;};
 "--"                                                  {debug_print("--"); return DOUBLE_MINUS;};
 "-"                                                 {debug_print("MINUSOP "); return '-';}

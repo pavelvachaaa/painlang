@@ -382,7 +382,6 @@ void generate_arg(FILE *file, IRInstruction *instr)
 
     print_ir_instruction(*instr);
 
-
     if (instr->arg1.type != OPERAND_NONE)
     {
         generate_load_operand(file, instr->arg1);
@@ -405,7 +404,7 @@ void generate_arg(FILE *file, IRInstruction *instr)
     }
     else
     {
-      // Všechno po 6 argumentu je zásobník už..
+        // Všechno po 6 argumentu je zásobník už..
         fprintf(file, "     ; Argument %d pushnutý na stack\n", arg_index);
         fprintf(file, "     push rax\n");
     }

@@ -9,6 +9,13 @@ typedef enum
     SYMBOL_ARG,
 } SymbolType;
 
+typedef enum
+{
+    TYPE_NUMBER,
+    TYPE_STRING,
+    TYPE_BOOLEAN
+} SymbolDataType;
+
 typedef struct
 {
     char *name;
@@ -17,14 +24,16 @@ typedef struct
     int is_modified_in_loop;
     int is_used;
     SymbolType type;
-    int scope_level; // Tohle je tak messy až to není pěkný 
+    SymbolDataType data_type;
+    int scope_level; // Tohle je tak messy až to není pěkný
     // Viděl jsem v nějakých implementacích, že tam měli něco jako block owner struct pointer..  ale to je mimo můj scope už
 
     // int is_const;
 } SymbolEntry;
 
 // Je to taková slátanina, chtělo by to vrazit do symbolentry... se symboltype function
-typedef struct {
+typedef struct
+{
     char *name;
     int number_of_params;
 } FunctionEntry;
@@ -49,8 +58,7 @@ void exit_scope(SymbolTable *table);
 void add_function(SymbolTable *table, const char *name, int number_of_params);
 FunctionEntry *lookup_function(SymbolTable *table, const char *name);
 
-void set_is_used(SymbolTable *table,const char *name);
-
+void set_is_used(SymbolTable *table, const char *name);
 
 void print_symbol_table(SymbolTable *table);
 

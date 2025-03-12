@@ -36,8 +36,10 @@ section .bss
     t17 resq 1
     t18 resq 1
     t19 resq 1
+    more resq 1
     t20 resq 1
     t21 resq 1
+    t22 resq 1
 
 section .text
     global main
@@ -649,6 +651,38 @@ L21:
     ; IR: L0:
 L0:
 
+    ; IR: Neznám tě 21
+    ; Načti konstantu 2
+    mov rax, 2
+     ; Argument 0 v registru rdi
+     mov rdi, rax
+
+    ; IR: Neznám tě 21
+    ; Načti konstantu 10
+    mov rax, 10
+     ; Argument 1 v registru rsi
+     mov rsi, rax
+
+    ; IR: Neznám tě 19
+    ; Align stack 16 bytes 
+    ; Call function pow
+    call pow
+    ; Ulož hodnotu z rax
+    mov [t19], rax
+
+    ; IR: more = t19
+    ; Načti proměnnou [t19]
+    mov rax, [t19]
+    ; Ulož do [more]
+    mov [more], rax
+
+    ; IR: print more
+    ; Vypiš hodnotu 
+    mov rsi, [more]
+    mov rdi, format_int
+    xor rax, rax
+    call printf wrt ..plt
+
     ; IR: i = 1
     ; Načti konstantu 1
     mov rax, 1
@@ -679,9 +713,28 @@ L0:
     ; Ulož do [i]
     mov [i], rax
 
-    ; IR: print 3
+    ; IR: i = 0
+    ; Načti konstantu 0
+    mov rax, 0
+    ; Ulož do [i]
+    mov [i], rax
+
+    ; IR: print 0
     ; Vypiš hodnotu 
-    mov rsi, 3
+    mov rsi, 0
+    mov rdi, format_int
+    xor rax, rax
+    call printf wrt ..plt
+
+    ; IR: i = 10
+    ; Načti konstantu 10
+    mov rax, 10
+    ; Ulož do [i]
+    mov [i], rax
+
+    ; IR: print 10
+    ; Vypiš hodnotu 
+    mov rsi, 10
     mov rdi, format_int
     xor rax, rax
     call printf wrt ..plt
@@ -695,7 +748,7 @@ L0:
     ; IR: L22:
 L22:
 
-    ; IR: t19 = z < 10
+    ; IR: t20 = z < 10
     ; Načti proměnnou [z]
     mov rax, [z]
     ; Porovnej
@@ -703,12 +756,12 @@ L22:
     cmp rax, rbx
     setl al
     movzx rax, al
-    ; Ulož do [t19]
-    mov [t19], rax
+    ; Ulož do [t20]
+    mov [t20], rax
 
-    ; IR: if t19 == 0 goto L23
+    ; IR: if t20 == 0 goto L23
     ; Skoč když false
-    mov rax, [t19]
+    mov rax, [t20]
     cmp rax, 0
     je L23
 
@@ -719,17 +772,17 @@ L22:
     xor rax, rax
     call printf wrt ..plt
 
-    ; IR: t20 = z + 1
+    ; IR: t21 = z + 1
     ; Načti proměnnou [z]
     mov rax, [z]
     ; Sečti konstantu 1
     add rax, 1
-    ; Ulož do [t20]
-    mov [t20], rax
+    ; Ulož do [t21]
+    mov [t21], rax
 
-    ; IR: z = t20
-    ; Načti proměnnou [t20]
-    mov rax, [t20]
+    ; IR: z = t21
+    ; Načti proměnnou [t21]
+    mov rax, [t21]
     ; Ulož do [z]
     mov [z], rax
 
@@ -751,7 +804,7 @@ L23:
     ; Call function neco
     call neco
     ; Ulož hodnotu z rax
-    mov [t21], rax
+    mov [t22], rax
 
     ; Ukončit program 
     mov rax, 0
