@@ -63,6 +63,7 @@ function combineFunction(base, fact1, exp) {
     return fr1 * fr2;
 }
 
+/*
 let vysledek = pow(2,6);
 let vysledek2 = pow(2,6);
 
@@ -78,3 +79,31 @@ print(factVyledek);
 
 let cFRes = combineFunction(2,5,3);
 print(cFRes);
+*/
+
+let i = 0;
+i++;
+i++;
+i++;
+i++;
+i--;
+print(i);
+
+for(let z = 0; z < 10;z++) {
+    print(z);
+}
+
+function neco(z) {
+
+    for(let i = 10; i >= 0; i--) {
+        print(z-i);
+    }
+
+    return 0;
+}
+
+neco(50);
+
+
+
+

@@ -33,6 +33,8 @@ else                                                {debug_print("ELSE "); retur
 =                                                   {debug_print("ASSIGN "); return ASSIGN;};
 
 
+"++"                                                  {debug_print("++"); return DOUBLE_PLUS;};
+"--"                                                  {debug_print("--"); return DOUBLE_MINUS;};
 "-"                                                 {debug_print("MINUSOP "); return '-';}
 "{"                                                 {debug_print("LBR "); return '{';}
 "}"                                                 {debug_print("RBR "); return '}';}

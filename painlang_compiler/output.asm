@@ -31,16 +31,13 @@ section .bss
     t14 resq 1
     fr2 resq 1
     t15 resq 1
+    z resq 1
     t16 resq 1
-    vysledek resq 1
     t17 resq 1
-    vysledek2 resq 1
     t18 resq 1
     t19 resq 1
     t20 resq 1
-    factVyledek resq 1
     t21 resq 1
-    cFRes resq 1
 
 section .text
     global main
@@ -560,150 +557,201 @@ combineFunction:
     pop rbp
     ret
 
-    ; IR: L0:
-L0:
+    ; IR: L19:
+L19:
 
-    ; IR: Neznám tě 21
-    ; Načti konstantu 2
-    mov rax, 2
-     ; Argument 0 v registru rdi
-     mov rdi, rax
+    ; IR: function neco(1)
+neco:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 64
 
-    ; IR: Neznám tě 21
-    ; Načti konstantu 6
-    mov rax, 6
-     ; Argument 1 v registru rsi
-     mov rsi, rax
+    ; IR: param z
+ ; Parametr z v registru rdi
+ mov [z], rdi
 
-    ; IR: Neznám tě 19
-    ; Align stack 16 bytes 
-    ; Call function pow
-    call pow
-    ; Ulož hodnotu z rax
+    ; IR: i = 10
+    ; Načti konstantu 10
+    mov rax, 10
+    ; Ulož do [i]
+    mov [i], rax
+
+    ; IR: L20:
+L20:
+
+    ; IR: t16 = i >= 0
+    ; Načti proměnnou [i]
+    mov rax, [i]
+    ; Porovnej
+    mov rbx, 0
+    cmp rax, rbx
+    setge al
+    movzx rax, al
+    ; Ulož do [t16]
     mov [t16], rax
 
-    ; IR: vysledek = t16
-    ; Načti proměnnou [t16]
+    ; IR: if t16 == 0 goto L21
+    ; Skoč když false
     mov rax, [t16]
-    ; Ulož do [vysledek]
-    mov [vysledek], rax
+    cmp rax, 0
+    je L21
 
-    ; IR: Neznám tě 21
-    ; Načti konstantu 2
-    mov rax, 2
-     ; Argument 0 v registru rdi
-     mov rdi, rax
-
-    ; IR: Neznám tě 21
-    ; Načti konstantu 6
-    mov rax, 6
-     ; Argument 1 v registru rsi
-     mov rsi, rax
-
-    ; IR: Neznám tě 19
-    ; Align stack 16 bytes 
-    ; Call function pow
-    call pow
-    ; Ulož hodnotu z rax
+    ; IR: t17 = z - i
+    ; Načti proměnnou [z]
+    mov rax, [z]
+    ; Odečti proměnnou [i]
+    sub rax, [i]
+    ; Ulož do [t17]
     mov [t17], rax
 
-    ; IR: vysledek2 = t17
-    ; Načti proměnnou [t17]
-    mov rax, [t17]
-    ; Ulož do [vysledek2]
-    mov [vysledek2], rax
+    ; IR: print t17
+    ; Vypiš hodnotu 
+    mov rsi, [t17]
+    mov rdi, format_int
+    xor rax, rax
+    call printf wrt ..plt
 
-    ; IR: t18 = vysledek + vysledek2
-    ; Načti proměnnou [vysledek]
-    mov rax, [vysledek]
-    ; Sečti proměnnou [vysledek2]
-    add rax, [vysledek2]
+    ; IR: t18 = i - 1
+    ; Načti proměnnou [i]
+    mov rax, [i]
+    ; Odečti konstantu 1
+    sub rax, 1
     ; Ulož do [t18]
     mov [t18], rax
 
-    ; IR: print t18
-    ; Vypiš hodnotu 
-    mov rsi, [t18]
-    mov rdi, format_int
-    xor rax, rax
-    call printf wrt ..plt
+    ; IR: i = t18
+    ; Načti proměnnou [t18]
+    mov rax, [t18]
+    ; Ulož do [i]
+    mov [i], rax
 
-    ; IR: Neznám tě 21
-    ; Načti konstantu 10
-    mov rax, 10
-     ; Argument 0 v registru rdi
-     mov rdi, rax
+    ; IR: goto L20
+    ; Skoč 
+    jmp L20
 
-    ; IR: Neznám tě 19
-    ; Align stack 16 bytes 
-    ; Call function printFib
-    call printFib
-    ; Ulož hodnotu z rax
-    mov [t19], rax
+    ; IR: L21:
+L21:
 
-    ; IR: Neznám tě 21
-    ; Načti konstantu 5
-    mov rax, 5
-     ; Argument 0 v registru rdi
-     mov rdi, rax
+    ; IR: Neznám tě 20
+    ; Načti konstantu 0
+    mov rax, 0
+    ; Return from function
+    mov rsp, rbp
+    pop rbp
+    ret
 
-    ; IR: Neznám tě 19
-    ; Align stack 16 bytes 
-    ; Call function factorial
-    call factorial
-    ; Ulož hodnotu z rax
-    mov [t20], rax
+    ; IR: end function neco
+    ; Function epilogue
+    mov rsp, rbp
+    pop rbp
+    ret
 
-    ; IR: factVyledek = t20
-    ; Načti proměnnou [t20]
-    mov rax, [t20]
-    ; Ulož do [factVyledek]
-    mov [factVyledek], rax
+    ; IR: L0:
+L0:
 
-    ; IR: print factVyledek
-    ; Vypiš hodnotu 
-    mov rsi, [factVyledek]
-    mov rdi, format_int
-    xor rax, rax
-    call printf wrt ..plt
+    ; IR: i = 1
+    ; Načti konstantu 1
+    mov rax, 1
+    ; Ulož do [i]
+    mov [i], rax
 
-    ; IR: Neznám tě 21
+    ; IR: i = 2
     ; Načti konstantu 2
     mov rax, 2
-     ; Argument 0 v registru rdi
-     mov rdi, rax
+    ; Ulož do [i]
+    mov [i], rax
 
-    ; IR: Neznám tě 21
-    ; Načti konstantu 5
-    mov rax, 5
-     ; Argument 1 v registru rsi
-     mov rsi, rax
-
-    ; IR: Neznám tě 21
+    ; IR: i = 3
     ; Načti konstantu 3
     mov rax, 3
-     ; Argument 2 v registru rdx
-     mov rdx, rax
+    ; Ulož do [i]
+    mov [i], rax
 
-    ; IR: Neznám tě 19
-    ; Align stack 16 bytes 
-    ; Call function combineFunction
-    call combineFunction
-    ; Ulož hodnotu z rax
-    mov [t21], rax
+    ; IR: i = 4
+    ; Načti konstantu 4
+    mov rax, 4
+    ; Ulož do [i]
+    mov [i], rax
 
-    ; IR: cFRes = t21
-    ; Načti proměnnou [t21]
-    mov rax, [t21]
-    ; Ulož do [cFRes]
-    mov [cFRes], rax
+    ; IR: i = 3
+    ; Načti konstantu 3
+    mov rax, 3
+    ; Ulož do [i]
+    mov [i], rax
 
-    ; IR: print cFRes
+    ; IR: print 3
     ; Vypiš hodnotu 
-    mov rsi, [cFRes]
+    mov rsi, 3
     mov rdi, format_int
     xor rax, rax
     call printf wrt ..plt
+
+    ; IR: z = 0
+    ; Načti konstantu 0
+    mov rax, 0
+    ; Ulož do [z]
+    mov [z], rax
+
+    ; IR: L22:
+L22:
+
+    ; IR: t19 = z < 10
+    ; Načti proměnnou [z]
+    mov rax, [z]
+    ; Porovnej
+    mov rbx, 10
+    cmp rax, rbx
+    setl al
+    movzx rax, al
+    ; Ulož do [t19]
+    mov [t19], rax
+
+    ; IR: if t19 == 0 goto L23
+    ; Skoč když false
+    mov rax, [t19]
+    cmp rax, 0
+    je L23
+
+    ; IR: print z
+    ; Vypiš hodnotu 
+    mov rsi, [z]
+    mov rdi, format_int
+    xor rax, rax
+    call printf wrt ..plt
+
+    ; IR: t20 = z + 1
+    ; Načti proměnnou [z]
+    mov rax, [z]
+    ; Sečti konstantu 1
+    add rax, 1
+    ; Ulož do [t20]
+    mov [t20], rax
+
+    ; IR: z = t20
+    ; Načti proměnnou [t20]
+    mov rax, [t20]
+    ; Ulož do [z]
+    mov [z], rax
+
+    ; IR: goto L22
+    ; Skoč 
+    jmp L22
+
+    ; IR: L23:
+L23:
+
+    ; IR: Neznám tě 21
+    ; Načti konstantu 50
+    mov rax, 50
+     ; Argument 0 v registru rdi
+     mov rdi, rax
+
+    ; IR: Neznám tě 19
+    ; Align stack 16 bytes 
+    ; Call function neco
+    call neco
+    ; Ulož hodnotu z rax
+    mov [t21], rax
 
     ; Ukončit program 
     mov rax, 0

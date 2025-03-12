@@ -134,8 +134,8 @@ int main(int argc, char **argv) {
 }
 
 %token <num> NUMBER DECLARE
-%token <str> IDENTIFIER ASSIGN SEMICOLON PRINT IF ELSE FOR FUNCTION RETURN
-%token EQUALS NOT_EQUALS GREAT_OR_EQUALS LESS_OR_EQUALS GREATER_THAN LESS_THAN
+%token <str> IDENTIFIER ASSIGN SEMICOLON PRINT IF ELSE FOR FUNCTION RETURN 
+%token EQUALS NOT_EQUALS GREAT_OR_EQUALS LESS_OR_EQUALS GREATER_THAN LESS_THAN DOUBLE_PLUS DOUBLE_MINUS
 
 %type <node> program statementList statement assignment varDeclaration vardec
 %type <node> printStatement expression term factor ifStatement block
@@ -227,6 +227,27 @@ assignment: IDENTIFIER ASSIGN expression
 
         $$ = create_assignment_node($1, $3);
         debug_print("Created ASSIGNMENT node for '%s'\n", $1);
+    } 
+    // TODO: Vyřešit jinak (funguje to, ale single assingmenty jsou takový weird (zkusit to nějak převést na expressions))
+    // NEBO to pak optimalzovat v AST
+    | IDENTIFIER DOUBLE_PLUS
+    {
+        ASTNode* varNode = create_variable_node($1);
+        ASTNode* one = create_number_node(1);
+
+        ASTNode* binaryOp = create_binary_op_node(OP_ADD, varNode, one);
+      
+      $$ = create_assignment_node($1, binaryOp);
+        debug_print("Created ASSIGNMENT node with ++ for '%s'\n", $1);
+    }
+    | IDENTIFIER DOUBLE_MINUS
+    {
+        ASTNode* varNode = create_variable_node($1);
+        ASTNode* one = create_number_node(1);
+
+        ASTNode* binaryOp = create_binary_op_node(OP_SUBTRACT, varNode, one);
+        $$ = create_assignment_node($1, binaryOp);
+        debug_print("Created ASSIGNMENT node with -- for '%s'\n", $1);
     }
     ;
 
@@ -301,6 +322,7 @@ term: term '*' factor
     {
         $$ = $1;
     }
+ 
     ;
 
 factor: NUMBER

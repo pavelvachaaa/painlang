@@ -85,26 +85,36 @@ fr2 = t14
 t15 = fr1 * fr2
 return t15
 end function combineFunction
+L19:
+function neco(1):
+param z
+i = 10
+L20:
+t16 = i >= 0
+if t16 == 0 goto L21
+t17 = z - i
+print t17
+t18 = i - 1
+i = t18
+goto L20
+L21:
+return 0
+end function neco
 L0:
-arg 2
-arg 6
-t16 = call pow, 2
-vysledek = t16
-arg 2
-arg 6
-t17 = call pow, 2
-vysledek2 = t17
-t18 = vysledek + vysledek2
-print t18
-arg 10
-t19 = call printFib, 1
-arg 5
-t20 = call factorial, 1
-factVyledek = t20
-print factVyledek
-arg 2
-arg 5
-arg 3
-t21 = call combineFunction, 3
-cFRes = t21
-print cFRes
+i = 1
+i = 2
+i = 3
+i = 4
+i = 3
+print 3
+z = 0
+L22:
+t19 = z < 10
+if t19 == 0 goto L23
+print z
+t20 = z + 1
+z = t20
+goto L22
+L23:
+arg 50
+t21 = call neco, 1
