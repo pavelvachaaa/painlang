@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "ast.h"
-#include "ir.h"
-#include "instruction_printer.h"
+#include "../ast/ast.h"
+#include "../ir/ir.h"
+#include "./printers/ir/instruction_printer.h"
 
 typedef struct
 {
@@ -65,6 +65,9 @@ static void get_operand_as_string(IROperand operand, char *buffer)
     case OPERAND_VARIABLE:
         sprintf(buffer, "%s", operand.value.variable);
         break;
+    case OPERAND_STRING_LITERAL:
+        sprintf(buffer, "'%s'", operand.value.string_literal);
+        break;
     case OPERAND_TEMP:
         sprintf(buffer, "t%d", operand.value.temp_number);
         break;
@@ -81,11 +84,22 @@ static void get_nasm_operand(IROperand operand, char *buffer, int is_dest)
 {
     switch (operand.type)
     {
+
     case OPERAND_LITERAL:
         sprintf(buffer, "%d", operand.value.literal);
         break;
     case OPERAND_VARIABLE:
-        sprintf(buffer, "[%s]", operand.value.variable);
+        // if (operand.data_type == TYPE_NUMBER)
+        // {
+        //     sprintf(buffer, "[%s]", operand.value.variable);
+        // }
+        // else
+        // {
+            sprintf(buffer, "%s", operand.value.variable);
+        // }
+        break;
+    case OPERAND_STRING_LITERAL:
+        sprintf(buffer, "%s", operand.value.string_literal);
         break;
     case OPERAND_TEMP:
         sprintf(buffer, "[t%d]", operand.value.temp_number);
@@ -114,6 +128,11 @@ static void generate_load_operand(FILE *file, IROperand operand)
         fprintf(file, "    ; Načti proměnnou %s\n", operand_str);
         fprintf(file, "    mov rax, %s\n", operand_str);
     }
+    else if (operand.type == OPERAND_STRING_LITERAL)
+    {
+        fprintf(file, "    ; Load string literal address\n");
+        fprintf(file, "    mov rax, %s\n", operand_str);
+    }
 }
 
 static void generate_store_operand(FILE *file, IROperand operand)
@@ -130,8 +149,23 @@ static void generate_store_operand(FILE *file, IROperand operand)
 
 static void generate_assignment(FILE *file, IRInstruction *instr)
 {
-    generate_load_operand(file, instr->arg1);
-    generate_store_operand(file, instr->result);
+    if (instr->arg1.type == OPERAND_STRING_LITERAL &&
+        (instr->result.type == OPERAND_VARIABLE || instr->result.type == OPERAND_TEMP))
+    {
+        char result_str[64];
+        get_nasm_operand(instr->result, result_str, 1);
+        char arg1_str[64];
+        get_nasm_operand(instr->arg1, arg1_str, 0);
+
+        fprintf(file, "    ; Přiřadit string address\n");
+        fprintf(file, "    mov rax, %s\n", arg1_str);
+        fprintf(file, "    mov %s, rax\n", result_str);
+    }
+    else
+    {
+        generate_load_operand(file, instr->arg1);
+        generate_store_operand(file, instr->result);
+    }
 }
 
 static void generate_add(FILE *file, IRInstruction *instr)
@@ -298,12 +332,43 @@ static void generate_print(FILE *file, IRInstruction *instr)
 {
     char arg1_str[64];
     get_nasm_operand(instr->arg1, arg1_str, 0);
-
-    fprintf(file, "    ; Vypiš hodnotu \n");
-    fprintf(file, "    mov rsi, %s\n", arg1_str);
-    fprintf(file, "    mov rdi, format_int\n");
-    fprintf(file, "    xor rax, rax\n"); // Clear rax for printf
-    fprintf(file, "    call printf wrt ..plt\n");
+    print_ir_instruction(*instr);
+    if (instr->arg1.type == OPERAND_STRING_LITERAL)
+    {
+        fprintf(file, "    ; Vypiš string hodnotu \n");
+        fprintf(file, "    mov rsi, %s\n", arg1_str);
+        fprintf(file, "    mov rdi, format_str\n");
+        fprintf(file, "    xor rax, rax\n"); // Clear rax for printf
+        fprintf(file, "    call printf wrt ..plt\n");
+    }
+    else if (instr->arg1.type != OPERAND_VARIABLE)
+    {
+        fprintf(file, "    ; Vypiš hodnotu \n");
+        fprintf(file, "    mov rsi, %s\n", arg1_str);
+        fprintf(file, "    mov rdi, format_int\n");
+        fprintf(file, "    xor rax, rax\n"); // Clear rax for printf
+        fprintf(file, "    call printf wrt ..plt\n");
+    }
+    // TODO: tohle pak trochu upravíme kvůli přehozování z registru (proto tu je to tu vícekrat)
+    else if (instr->arg1.type == OPERAND_VARIABLE)
+    {
+        if (instr->arg1.data_type == TYPE_STRING)
+        {
+            fprintf(file, "    ; Vypiš string hodnotu \n");
+            fprintf(file, "    mov rsi, %s\n", arg1_str);
+            fprintf(file, "    mov rdi, format_str\n");
+            fprintf(file, "    xor rax, rax\n"); // Clear rax for printf
+            fprintf(file, "    call printf wrt ..plt\n");
+        }
+        else if (instr->arg1.data_type == TYPE_NUMBER)
+        {
+            fprintf(file, "    ; Vypiš hodnotu \n");
+            fprintf(file, "    mov rsi, %s\n", arg1_str);
+            fprintf(file, "    mov rdi, format_int\n");
+            fprintf(file, "    xor rax, rax\n"); // Clear rax for printf
+            fprintf(file, "    call printf wrt ..plt\n");
+        }
+    }
 }
 
 void generate_function_start(FILE *file, IRInstruction *instr)
@@ -341,7 +406,13 @@ void generate_param(FILE *file, IRInstruction *instr)
         {
             // Registr do lokální
             fprintf(file, " ; Parametr %s v registru %s\n", param_name, reg_names[param_index]);
-            fprintf(file, " mov [%s], %s\n", param_name, reg_names[param_index]);
+            // if(instr->arg1.data_type == TYPE_NUMBER) {
+                fprintf(file, " mov [%s], %s\n", param_name, reg_names[param_index]);
+            // } else {
+            //     printf("KOKOTINA");
+            //     fprintf(file, " mov %s, %s\n", param_name, reg_names[param_index]);
+
+            // }
         }
         else
         {
@@ -384,7 +455,18 @@ void generate_arg(FILE *file, IRInstruction *instr)
 
     if (instr->arg1.type != OPERAND_NONE)
     {
-        generate_load_operand(file, instr->arg1);
+        if (instr->arg1.type == OPERAND_STRING_LITERAL)
+        {
+            char arg1_str[64];
+            get_nasm_operand(instr->arg1, arg1_str, 0);
+
+            fprintf(file, "    ; Načti string literal adresu \n");
+            fprintf(file, "    mov rax, %s\n", arg1_str);
+        }
+        else
+        {
+            generate_load_operand(file, instr->arg1);
+        }
     }
     else if (instr->result.type != OPERAND_NONE)
     {
@@ -472,6 +554,10 @@ void generate_nasm_from_ir(IRProgram *program, SymbolTable *table, const char *o
     VariableList variables;
     init_variable_list(&variables);
 
+    VariableList string_literals;
+    init_variable_list(&string_literals);
+    int string_literal_count = 0;
+
     // Funkce, která se zpracovává (Pak hodit do IRProgramu)
     char current_function[64] = "";
 
@@ -513,19 +599,80 @@ void generate_nasm_from_ir(IRProgram *program, SymbolTable *table, const char *o
             sprintf(temp_name, "t%d", instr->arg2.value.temp_number);
             add_variable_to_list(&variables, temp_name);
         }
+
+        if (instr->arg1.type == OPERAND_STRING_LITERAL)
+        {
+            char literal_name[64];
+            sprintf(literal_name, "str_%d", string_literal_count++);
+            add_variable_to_list(&string_literals, literal_name);
+        }
     }
 
     fprintf(file, "; Profesionální NASM z IR vygenerováno PainGenem  \n");
     fprintf(file, "section .data\n");
     fprintf(file, "    format_int db \"%%d\", 10, 0  ; Formát pro print \n\n");
+    fprintf(file, "    format_str db \"%%s\", 10, 0  ; Formát pro řetězce\n\n");
+
+    string_literal_count = 0;
+    for (int i = 0; i < program->instruction_count; i++)
+    {
+        IRInstruction *instr = &program->instructions[i];
+        print_ir_instruction(*instr);
+        if (instr->arg1.type == OPERAND_STRING_LITERAL)
+        {
+            char literal_name[64];
+            sprintf(literal_name, "str_%d", string_literal_count++);
+            fprintf(file, "    %s db \"%s\", 0\n", literal_name, instr->arg1.value.string_literal);
+
+            free(instr->arg1.value.string_literal);
+            instr->arg1.value.string_literal = strdup(literal_name);
+        }
+
+        if (instr->result.type == OPERAND_STRING_LITERAL)
+        {
+            char literal_name[64];
+            sprintf(literal_name, "str_%d", string_literal_count++);
+            fprintf(file, "    %s db \"%s\", 0\n", literal_name, instr->result.value.string_literal);
+
+            free(instr->result.value.string_literal);
+            instr->result.value.string_literal = strdup(literal_name);
+        }
+        if (instr->arg2.type == OPERAND_STRING_LITERAL)
+        {
+            char literal_name[64];
+            sprintf(literal_name, "str_%d", string_literal_count++);
+            fprintf(file, "    %s db \"%s\", 0\n", literal_name, instr->arg2.value.string_literal);
+
+            free(instr->arg2.value.string_literal);
+            instr->arg2.value.string_literal = strdup(literal_name);
+        }
+    }
+
+    for (int i = 0; i < variables.count; i++)
+    {
+        // Nechceme proměnné labely pro funkce (pak se to cyklí jak debil)
+        // Stringy tu nechceme
+        SymbolEntry *entry = lookup_variable_all_scopes(table, variables.variables[i]);
+        if (entry && entry->data_type == TYPE_STRING)
+        {
+            fprintf(file, "    %s: db \"%s\",0\n", variables.variables[i], entry->string_value);
+        }
+    }
 
     // Konstnatní
     fprintf(file, "section .bss\n");
     for (int i = 0; i < variables.count; i++)
     {
+        // Stringy tu nechceme
+        SymbolEntry *entry = lookup_variable(table, variables.variables[i]);
+        if (entry != NULL && entry->data_type == TYPE_STRING)
+        {
+            continue;
+        }
+
         // Nechceme proměnné labely pro funkce (pak se to cyklí jak debil)
-        FunctionEntry *entry = lookup_function(table, variables.variables[i]);
-        if (entry)
+        FunctionEntry *f_entry = lookup_function(table, variables.variables[i]);
+        if (f_entry)
         {
             continue;
         }

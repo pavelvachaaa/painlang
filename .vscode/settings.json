@@ -3,6 +3,10 @@
         "stdio.h": "c",
         "ir.h": "c",
         "ast.h": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "symbol_table.h": "c",
+        "types.h": "c",
+        "ast_printer.h": "c",
+        "instruction_printer.h": "c"
     }
 }

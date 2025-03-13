@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "prints.h"
-#include "./inc/ast.h"
-#include "./inc/ast_printer.h"
-#include "./inc/ir.h"
+#include "./inc/ast/ast.h"
+#include "./inc/printers/ast/ast_printer.h"
+#include "./inc/ir/ir.h"
 #include <unistd.h>
 
 int yylex();
@@ -94,7 +94,9 @@ int main(int argc, char **argv) {
         optimize_program(ast_root,table);
     }
 
-    // print_ast(ast_root);
+    find_and_set_variables(ast_root, table);
+
+    print_ast(ast_root);
     
     // IR reprezentace a struktura
     IRProgram *program = malloc(sizeof(IRProgram));
@@ -103,7 +105,7 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    ir_init(program);
+    ir_init(program, table);
     generate_ir_from_ast(ast_root, program);
     output_ir_to_file(program, ir_file);
 
@@ -125,6 +127,7 @@ int main(int argc, char **argv) {
     CondOpType cond_op;
     struct {
         char **names;
+        DataType *param_types;  
         int count;
     } param_list; // Pak to asi mergnout do sebe... Nebo taky ne ten param list musí být prostě jen var_declaration
     struct {
@@ -134,9 +137,11 @@ int main(int argc, char **argv) {
 }
 
 %token <num> NUMBER DECLARE
-%token <str> IDENTIFIER ASSIGN SEMICOLON PRINT IF ELSE FOR FUNCTION RETURN 
+%token <str> IDENTIFIER ASSIGN SEMICOLON PRINT IF ELSE FOR FUNCTION RETURN STRING_LITERAL
 %token EQUALS NOT_EQUALS GREAT_OR_EQUALS LESS_OR_EQUALS GREATER_THAN LESS_THAN DOUBLE_PLUS DOUBLE_MINUS
 %token PLUS_ASSIGN MINUS_ASSIGN MULT_ASSIGN DIV_ASSIGN
+
+%token <str> LL_TYPE_STRING, LL_TYPE_NUMBER
 
 %type <node> program statementList statement assignment varDeclaration vardec
 %type <node> printStatement expression term factor ifStatement block
@@ -146,6 +151,8 @@ int main(int argc, char **argv) {
 %type <cond_op> relop
 %type <param_list> parameterList parameters
 %type <arg_list> argumentList arguments
+%type <num> typeRule
+
 
 %left '+' '-'
 %left '*' '/'
@@ -256,7 +263,6 @@ assignment: IDENTIFIER ASSIGN expression
     {
         ASTNode *var_node = create_variable_node($1);
         ASTNode *div_node = create_binary_op_node(OP_DIVIDE, var_node, $3);
-        $$ = create_assignment_node($1, div_node);
         debug_print("Created /= node for '%s'\n", $1);
     }
 
@@ -291,15 +297,27 @@ varDeclaration: DECLARE vardec
     }
     ;
 
-vardec: IDENTIFIER
+vardec: IDENTIFIER ':' typeRule
     {
         $$ = create_var_declaration_node($1, NULL);
+        $$->type_annotation = $3;
         debug_print("Created VAR_DECLARATION node for '%s' with no init\n", $1);
     }
-    | IDENTIFIER ASSIGN expression
+    | IDENTIFIER ':' typeRule ASSIGN expression
     {
-        $$ = create_var_declaration_node($1, $3);
+        $$ = create_var_declaration_node($1, $5);
+        $$->type_annotation = $3;
         debug_print("Created VAR_DECLARATION node for '%s' with init\n", $1);
+    }
+    ;
+
+typeRule: LL_TYPE_STRING
+    {
+        $$ = TYPE_STRING;
+    }
+    | LL_TYPE_NUMBER
+    {
+        $$ = TYPE_NUMBER;
     }
     ;
 
@@ -363,10 +381,15 @@ factor: NUMBER
     {
         $$ = create_number_node($1);
     }
+    | STRING_LITERAL
+    {
+        $$ = create_string_node($1);
+    }
     | IDENTIFIER
     {
         $$ = create_variable_node($1);
     }
+    
     | '(' expression ')'
     {
         $$ = $2;
@@ -430,7 +453,7 @@ block: '{' { enter_scope(table); } statementList '}' { exit_scope(table);  }
 funDeclaration: FUNCTION IDENTIFIER '(' parameterList ')' block 
 {
     // ten count kvůli tomu, že pojedeme scope odznova a potřebuji vědět kolik jich bude..
-    $$ = create_function_declaration_node($2, $4.names, $4.count, $6);
+    $$ = create_function_declaration_node($2, $4.names, $4.count, $4.param_types, $6);
     debug_print("Created FUNCTION_DECLARATION node for '%s' with %d parameters\n", $2, $4.count);
     // Zaeviduju tě, ale pozor v optimalitaci zkontrolovat jestli se volá a kdyžtak odstranit
     add_function(table, $2, $4.count);
@@ -445,23 +468,31 @@ parameterList: parameters
     | 
     {
         $$.names = NULL;
+        $$.param_types = NULL;
         $$.count = 0;    
     }
     ;
 
-parameters: IDENTIFIER
+parameters: IDENTIFIER ':' typeRule
     {
         $$.names = malloc(sizeof(char*));
+        $$.param_types = malloc(sizeof(DataType));
         $$.names[0] = $1;
+        $$.param_types[0] = $3; 
         $$.count = 1;
     }
-    | IDENTIFIER ',' parameters
+    | IDENTIFIER ':' typeRule ',' parameters
     {
-      $$.names = malloc(sizeof(char*) * ($3.count + 1));
+        $$.names = malloc(sizeof(char*) * ($5.count + 1));
+        $$.param_types = malloc(sizeof(DataType) * ($5.count + 1));
         $$.names[0] = $1;
-        memcpy($$.names + 1, $3.names, sizeof(char*) * $3.count);
-        $$.count = $3.count + 1;
-        free($3.names);
+        $$.param_types[0] = $3; 
+
+        memcpy($$.names + 1, $5.names, sizeof(char*) * $5.count);
+        memcpy($$.param_types + 1, $5.param_types, sizeof(DataType) * $5.count);
+
+        $$.count = $5.count + 1;
+        free($5.names);
     }
     ;
 

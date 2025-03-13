@@ -9,7 +9,7 @@ PARSER_BIN="painlang_parser"
 
 ROOT_DIR=$(shell pwd)
 INCDIR=$(ROOT_DIR)/inc
-INCFILES=$(wildcard $(INCDIR)/*.c)
+INCFILES := $(shell find $(INCDIR) -type f -name "*.c")
 #LIBOBJS = $(wildcard $(LIBDIR)/*.o)
 #LIBNAMES = $(shell basename -s ".o" $(LIBOBJS))
 #LIBS = $(addprefix -l, $(LIBNAMES))
@@ -51,5 +51,5 @@ subclean:
 	@rm -rf y.tab.h y.tab.c
 
 clean: subclean
-	@rm -rf $(BINDIR)/*
+	@rm -rf $(BINDIR)/* *.o
 

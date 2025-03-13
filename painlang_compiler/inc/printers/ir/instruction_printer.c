@@ -9,7 +9,10 @@ void print_operand(IROperand operand)
         printf("OPERAND_LITERAL(%d) ", operand.value.literal);
         break;
     case OPERAND_VARIABLE:
-        printf("%s", operand.value.variable);
+        printf("%s %d ", operand.value.variable, operand.data_type);
+        break;
+    case OPERAND_STRING_LITERAL:
+        printf("'%s'", operand.value.string_literal);
         break;
     case OPERAND_TEMP:
         printf("t%d", operand.value.temp_number);
@@ -102,7 +105,7 @@ void print_ir_instruction(IRInstruction instr)
         break;
     case IR_ARG:
         printf("arg ");
-        print_operand(instr.arg1);
+        print_operand(instr.result);
         break;
     case IR_PROLOGUE:
         printf("prologue");

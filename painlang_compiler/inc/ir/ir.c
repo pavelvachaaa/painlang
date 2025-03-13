@@ -1,14 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "ast.h"
 #include "ir.h"
+#include "../printers/ir/instruction_printer.h"
 
 IROperand generate_function_call_ir(ASTNode *node, IRProgram *program);
 
-void ir_init(IRProgram *program)
+void ir_init(IRProgram *program, SymbolTable *table)
 {
     program->instructions = NULL;
+    program->symbol_table = table;
     program->instruction_count = 0;
     program->temp_counter = 0;
     program->label_counter = 0;
@@ -23,10 +24,20 @@ IROperand ir_literal(int value)
     return operand;
 }
 
-IROperand ir_variable(const char *name, int is_initialized)
+IROperand ir_string_literal(const char *value)
+{
+    IROperand operand;
+    operand.type = OPERAND_STRING_LITERAL;
+    operand.value.string_literal = strdup(value);
+    operand.is_initialized = 1;
+    return operand;
+}
+
+IROperand ir_variable(const char *name, int is_initialized, DataType data_type)
 {
     IROperand operand;
     operand.type = OPERAND_VARIABLE;
+    operand.data_type = data_type;
     operand.value.variable = strdup(name);
     operand.is_initialized = is_initialized;
     return operand;
@@ -124,9 +135,22 @@ IROperand generate_expression_ir(ASTNode *node, IRProgram *program)
         return ir_literal(node->data.number.value);
     }
 
+    case NODE_STRING:
+    {
+        return ir_string_literal(node->data.string.value);
+    }
+
     case NODE_VARIABLE:
     {
-        return ir_variable(node->data.variable.name, 0);
+        SymbolEntry *entry = lookup_variable_all_scopes(program->symbol_table, node->data.variable.name);
+        DataType type = TYPE_UNKNOWN;
+        if (entry)
+        {
+            printf("Not a chance %d", entry->data_type);
+            type = entry->data_type;
+        }
+        printf("JOJOJOJOU %d %s", type);
+        return ir_variable(node->data.variable.name, 0, type);
     }
 
     case NODE_BINARY_OP:
@@ -198,13 +222,13 @@ void generate_function_declaration_ir(ASTNode *node, IRProgram *program)
 
     char *func_name = strdup(node->data.function_declaration.name);
     int param_count = node->data.function_declaration.param_count;
-    ir_add_instruction(program, IR_PROLOGUE, ir_variable(func_name, 0), ir_literal(param_count), ir_none());
+    ir_add_instruction(program, IR_PROLOGUE, ir_variable(func_name, 0, TYPE_UNKNOWN), ir_literal(param_count), ir_none());
 
     // V RESULtu JE INDEX parametru!!! (důležite pro codegen)
     for (int i = 0; i < param_count; i++)
     {
         char *param_name = node->data.function_declaration.param_names[i];
-        ir_add_instruction(program, IR_PARAM, ir_literal(i), ir_variable(param_name, 0), ir_none());
+        ir_add_instruction(program, IR_PARAM, ir_literal(i), ir_variable(param_name, 0, node->data.function_declaration.param_types[i]), ir_none());
     }
 
     if (node->data.function_declaration.body)
@@ -212,7 +236,7 @@ void generate_function_declaration_ir(ASTNode *node, IRProgram *program)
         generate_statement_ir(node->data.function_declaration.body, program);
     }
 
-    ir_add_instruction(program, IR_EPILOGUE, ir_variable(func_name, 0), ir_none(), ir_none());
+    ir_add_instruction(program, IR_EPILOGUE, ir_variable(func_name, 0, TYPE_UNKNOWN), ir_none(), ir_none());
     free(func_name);
 }
 
@@ -233,7 +257,7 @@ IROperand generate_function_call_ir(ASTNode *node, IRProgram *program)
     IROperand result = ir_temp(program);
 
     ir_add_instruction(program, IR_CALL, result,
-                       ir_variable(node->data.function_call.func_name, 0),
+                       ir_variable(node->data.function_call.func_name, 0, TYPE_UNKNOWN),
                        ir_literal(node->data.function_call.argument_count));
 
     return result;
@@ -261,7 +285,7 @@ void generate_statement_ir(ASTNode *node, IRProgram *program)
         if (node->data.var_declaration.init_expr)
         {
             IROperand init_value = generate_expression_ir(node->data.var_declaration.init_expr, program);
-            IROperand var = ir_variable(node->data.var_declaration.var_name, 1);
+            IROperand var = ir_variable(node->data.var_declaration.var_name, 1, node->type_annotation);
             ir_add_instruction(program, IR_ASSIGN, var, init_value, ir_none());
         }
 
@@ -273,14 +297,21 @@ void generate_statement_ir(ASTNode *node, IRProgram *program)
         break;
 
     case NODE_RETURN:
-        generate_return_ir(node,program);
+        generate_return_ir(node, program);
         break;
     case NODE_ASSIGNMENT:
     {
 
         IROperand expr = generate_expression_ir(node->data.assignment.value, program);
 
-        IROperand var = ir_variable(node->data.assignment.var_name, 1);
+        SymbolEntry *entry = lookup_variable_all_scopes(program->symbol_table, node->data.assignment.var_name);
+        DataType type = TYPE_UNKNOWN;
+        if (entry)
+        {
+            type = entry->data_type;
+        }
+
+        IROperand var = ir_variable(node->data.assignment.var_name, 1, type);
 
         ir_add_instruction(program, IR_ASSIGN, var, expr, ir_none());
         break;
@@ -420,6 +451,9 @@ char *get_operand_string(IROperand operand, char *buffer)
 
     case OPERAND_LITERAL:
         sprintf(buffer, "%d", operand.value.literal);
+        break;
+    case OPERAND_STRING_LITERAL:
+        sprintf(buffer, "'%s'", strdup(operand.value.string_literal));
         break;
     case OPERAND_VARIABLE:
         sprintf(buffer, "%s", operand.value.variable);
@@ -578,7 +612,6 @@ void output_ir_to_file(IRProgram *program, const char *filename)
         case IR_ARG:
             fprintf(file, "arg %s\n", get_operand_string(instr->result, arg1_str));
             break;
-
         case IR_RETURN:
             fprintf(file, "return %s\n", get_operand_string(instr->arg1, arg1_str));
             break;

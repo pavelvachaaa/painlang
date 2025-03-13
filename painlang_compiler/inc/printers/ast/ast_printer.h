@@ -1,7 +1,7 @@
 #ifndef AST_H_PRINTER
 #define AST_H_PRINTER
 
-#include "ast.h"
+#include "../../ast/ast.h"
 
 void print_ast(ASTNode *root);
 

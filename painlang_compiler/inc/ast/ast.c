@@ -3,7 +3,7 @@
 #include <string.h>
 #include "ast.h"
 
-ASTNode *create_function_declaration_node(char *name, char **param_names, int param_count, ASTNode *body)
+ASTNode *create_function_declaration_node(char *name, char **param_names, int param_count, DataType *types, ASTNode *body)
 {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
     node->type = NODE_FUNCTION_DECLARATION;
@@ -12,15 +12,19 @@ ASTNode *create_function_declaration_node(char *name, char **param_names, int pa
 
     if (param_count > 0)
     {
+        node->data.function_declaration.param_types = (DataType *)malloc(sizeof(DataType) * param_count);
+
         node->data.function_declaration.param_names = (char **)malloc(sizeof(char *) * param_count);
         for (int i = 0; i < param_count; i++)
         {
             node->data.function_declaration.param_names[i] = strdup(param_names[i]);
+            node->data.function_declaration.param_types[i] = types[i];
         }
     }
     else
     {
         node->data.function_declaration.param_names = NULL;
+        node->data.function_declaration.param_types = NULL;
     }
 
     node->data.function_declaration.body = body;
@@ -93,6 +97,14 @@ ASTNode *create_assignment_node(char *name, ASTNode *value)
     return node;
 }
 
+ASTNode *create_string_node(char *value)
+{
+    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
+    node->type = NODE_STRING;
+    node->data.string.value = strdup(value);
+    return node;
+}
+
 ASTNode *create_print_node(ASTNode *expr)
 {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
@@ -147,20 +159,65 @@ ASTNode *create_condition_node(CondOpType op, ASTNode *left, ASTNode *right)
     return node;
 }
 
+DataType ast_to_st_type(NodeType type)
+{
+    switch (type)
+    {
+    case NODE_STRING:
+        return TYPE_STRING;
+        break;
+    case NODE_NUMBER:
+        return TYPE_NUMBER;
+        break;
+
+    default:
+        return TYPE_UNKNOWN;
+        break;
+    }
+}
+
 ASTNode *evaluate_expression(ASTNode *node, SymbolTable *table)
 {
-    printf("ALE VOLEEEE");
 
     if (!node)
         return NULL;
 
-    printf("ALE VOLEEEE");
     if (node->type == NODE_VARIABLE)
     {
+
         SymbolEntry *entry = lookup_variable(table, node->data.variable.name);
         if (entry)
         {
-            return create_number_node(entry->value);
+            if (entry->data_type == TYPE_NUMBER)
+            {
+                return create_number_node(entry->value);
+            }
+            else if (entry->data_type == TYPE_STRING)
+            {
+                return create_string_node(entry->string_value);
+            }
+        }
+    }
+
+    if (node->type == NODE_ASSIGNMENT)
+    {
+
+        SymbolEntry *entry = lookup_variable(table, node->data.assignment.var_name);
+        if (entry)
+        {
+            printf("Zde jsem a %d", entry->data_type);
+
+            if (node->data.assignment.value->type == NODE_NUMBER)
+            {
+                entry->value = node->data.assignment.value->data.number.value;
+                entry->data_type = TYPE_NUMBER;
+            }
+            else if (node->data.assignment.value->type == NODE_STRING)
+            {
+                entry->string_value = strdup(node->data.assignment.value->data.string.value);
+                entry->data_type = TYPE_STRING;
+            }
+            entry->is_initialized = 1;
         }
     }
 
@@ -208,14 +265,20 @@ ASTNode *replace_variables(ASTNode *node, SymbolTable *table)
 
     node = evaluate_expression(node, table);
 
-    // nahrazujeme v ifu proměnné za čísla
+    // nahrazujeme v ifu proměnné za literály
     if (node->type == NODE_VARIABLE)
     {
-        printf("KáMO");
         SymbolEntry *entry = lookup_variable(table, node->data.variable.name);
         if (entry && entry->is_initialized)
         {
-            return create_number_node(entry->value);
+            if (entry->data_type == TYPE_NUMBER)
+            {
+                return create_number_node(entry->value);
+            }
+            else if (entry->data_type == TYPE_STRING)
+            {
+                return create_string_node(entry->string_value);
+            }
         }
     }
     return node;
@@ -264,6 +327,214 @@ ASTNode *evaluate_condition(ASTNode *condition, SymbolTable *table)
     return condition;
 }
 
+void find_and_set_variables(ASTNode *node, SymbolTable *table)
+{
+    if (!node)
+        return;
+
+    switch (node->type)
+    {
+    case NODE_PROGRAM:
+    case NODE_STATEMENT_LIST:
+        for (int i = 0; i < node->data.statement_list.statement_count; i++)
+        {
+            find_and_set_variables(node->data.statement_list.statements[i], table);
+        }
+        break;
+
+    case NODE_VAR_DECLARATION:
+        if (!lookup_variable(table, node->data.var_declaration.var_name))
+        {
+            if (node->data.var_declaration.init_expr)
+            {
+                NodeType type = node->data.var_declaration.init_expr->type;
+                if (type == NODE_NUMBER)
+                {
+                    int value = node->data.var_declaration.init_expr->data.number.value;
+
+                    set_variable(table, node->data.var_declaration.var_name,
+                                 &value, 1, TYPE_NUMBER);
+                }
+                else if (type == NODE_STRING)
+                {
+                    char *value = node->data.var_declaration.init_expr->data.string.value;
+                    set_variable(table, node->data.var_declaration.var_name, value, 1, TYPE_STRING);
+                }
+                else if (type == NODE_FUNCTION_CALL)
+                {
+                    int value = 0;
+                    set_variable(table, node->data.var_declaration.var_name, &value, 0, TYPE_NUMBER);
+                    SymbolEntry *entry = lookup_variable(table, node->data.var_declaration.var_name);
+                    if (entry)
+                    {
+                        entry->is_used = 1;
+                    }
+                }
+                else
+                {
+                    int value = 0;
+
+                    set_variable(table, node->data.var_declaration.var_name, &value, 0, TYPE_NUMBER);
+                }
+            }
+            else
+            {
+                int value = 0;
+                set_variable(table, node->data.var_declaration.var_name, &value, 0, TYPE_NUMBER);
+            }
+        }
+
+        if (node->data.var_declaration.init_expr)
+        {
+            find_and_set_variables(node->data.var_declaration.init_expr, table);
+        }
+        break;
+
+    case NODE_ASSIGNMENT:
+        if (!lookup_variable(table, node->data.assignment.var_name))
+        {
+            if (node->data.assignment.value->type == NODE_NUMBER)
+            {
+                set_variable(table, node->data.assignment.var_name,
+                             &(node->data.assignment.value->data.number.value), 1, TYPE_NUMBER);
+            }
+            else if (node->data.assignment.value->type == NODE_STRING)
+            {
+                set_variable(table, node->data.assignment.var_name,
+                             node->data.assignment.value->data.string.value, 1, TYPE_STRING);
+            }
+            else
+            {
+                int value = 0;
+
+                set_variable(table, node->data.assignment.var_name, &value, 0, TYPE_NUMBER);
+            }
+        }
+        else
+        {
+            SymbolEntry *entry = lookup_variable(table, node->data.assignment.var_name);
+            if (entry && node->data.assignment.value->type == NODE_NUMBER)
+            {
+                entry->value = node->data.assignment.value->data.number.value;
+                entry->is_initialized = 1;
+                entry->data_type = TYPE_NUMBER;
+            }
+            else if (entry && node->data.assignment.value->type == NODE_STRING)
+            {
+                entry->string_value = strdup(node->data.assignment.value->data.string.value);
+                entry->is_initialized = 1;
+                entry->data_type = TYPE_STRING;
+            }
+        }
+
+        find_and_set_variables(node->data.assignment.value, table);
+        break;
+
+    case NODE_VARIABLE:
+    {
+        SymbolEntry *entry = lookup_variable(table, node->data.variable.name);
+        if (entry)
+        {
+
+            entry->is_used = 1;
+        }
+        else
+        {
+
+            int value = 0;
+            set_variable(table, node->data.variable.name, &value, 0, TYPE_NUMBER);
+
+            entry = lookup_variable(table, node->data.variable.name);
+            if (entry)
+            {
+                entry->is_used = 1;
+            } 
+        }
+    }
+    break;
+
+    case NODE_PRINT:
+        find_and_set_variables(node->data.print.expr, table);
+        break;
+
+    case NODE_IF:
+        find_and_set_variables(node->data.if_statement.condition, table);
+        if (node->data.if_statement.if_block)
+        {
+            find_and_set_variables(node->data.if_statement.if_block, table);
+        }
+        if (node->data.if_statement.else_block)
+        {
+            find_and_set_variables(node->data.if_statement.else_block, table);
+        }
+        break;
+
+    case NODE_BINARY_OP:
+        find_and_set_variables(node->data.binary_op.left, table);
+        find_and_set_variables(node->data.binary_op.right, table);
+        break;
+
+    case NODE_CONDITION:
+        find_and_set_variables(node->data.condition.left, table);
+        find_and_set_variables(node->data.condition.right, table);
+        break;
+
+    case NODE_FOR_LOOP:
+        if (node->data.for_loop.init_expression)
+        {
+            find_and_set_variables(node->data.for_loop.init_expression, table);
+        }
+        if (node->data.for_loop.condition)
+        {
+            find_and_set_variables(node->data.for_loop.condition, table);
+        }
+        if (node->data.for_loop.update)
+        {
+            find_and_set_variables(node->data.for_loop.update, table);
+        }
+        if (node->data.for_loop.body)
+        {
+            find_and_set_variables(node->data.for_loop.body, table);
+        }
+        break;
+
+    case NODE_FUNCTION_CALL:
+        for (int i = 0; i < node->data.function_call.argument_count; i++)
+        {
+            find_and_set_variables(node->data.function_call.arguments[i], table);
+        }
+        break;
+
+    case NODE_FUNCTION_DECLARATION:
+        for (int i = 0; i < node->data.function_declaration.param_count; i++)
+        {
+            int value = 0;
+            set_variable(table, node->data.function_declaration.param_names[i], &value, 0, node->data.function_declaration.param_types[i]);
+            SymbolEntry *entry = lookup_variable(table, node->data.function_declaration.param_names[i]);
+            if (entry)
+            {
+                entry->is_used = 1;
+            }
+        }
+
+        if (node->data.function_declaration.body)
+        {
+            find_and_set_variables(node->data.function_declaration.body, table);
+        }
+        break;
+
+    case NODE_RETURN:
+        if (node->data.return_statement.expr)
+        {
+            find_and_set_variables(node->data.return_statement.expr, table);
+        }
+        break;
+
+    default:
+        break;
+    }
+}
+
 void mark_modified_variables(ASTNode *node, SymbolTable *table);
 void remove_unused_variables(ASTNode *node, SymbolTable *table);
 
@@ -291,7 +562,11 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
             if (node->data.var_declaration.init_expr->type == NODE_NUMBER)
             {
                 int value = node->data.var_declaration.init_expr->data.number.value;
-                set_variable(table, node->data.var_declaration.var_name, value, 1);
+                set_variable(table, node->data.var_declaration.var_name, &value, 1, TYPE_NUMBER);
+            }
+            else if (node->data.var_declaration.init_expr->type == NODE_STRING)
+            {
+                set_variable(table, node->data.var_declaration.var_name, node->data.var_declaration.init_expr->data.string.value, 1, TYPE_STRING);
             }
             // else if (node->data.var_declaration.init_expr->type == NODE_FUNCTION_CALL)
             // {
@@ -299,7 +574,9 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
             // }
             else
             {
-                set_variable(table, node->data.var_declaration.var_name, 0, 0);
+                int value = 0;
+
+                set_variable(table, node->data.var_declaration.var_name, &value, 0, TYPE_NUMBER);
             }
         }
         break;
@@ -310,18 +587,26 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         SymbolEntry *entry = lookup_variable(table, node->data.assignment.var_name);
         if (entry && entry->is_modified_in_loop)
         {
-            set_variable(table, node->data.assignment.var_name, 0, 0);
+            int value = 0;
+
+            set_variable(table, node->data.assignment.var_name, &value, 0, TYPE_NUMBER);
             break;
         }
 
         if (node->data.assignment.value->type == NODE_NUMBER)
         {
             int value = node->data.assignment.value->data.number.value;
-            set_variable(table, node->data.assignment.var_name, value, 1);
+            set_variable(table, node->data.assignment.var_name, &value, 1, TYPE_NUMBER);
+        }
+        else if (node->data.assignment.value->type == NODE_STRING)
+        {
+            set_variable(table, node->data.assignment.var_name, node->data.assignment.value->data.string.value, 1, TYPE_STRING);
         }
         else
         {
-            set_variable(table, node->data.assignment.var_name, 0, 0);
+            int value = 0;
+
+            set_variable(table, node->data.assignment.var_name, &value, 0, TYPE_NUMBER);
         }
         break;
 
@@ -439,12 +724,24 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         SymbolEntry *entry = lookup_variable(table, node->data.variable.name);
         if (entry && entry->is_initialized && !entry->is_modified_in_loop)
         {
-            ASTNode *number_node = create_number_node(entry->value);
+            ASTNode *new_node = NULL;
 
-            free(node->data.variable.name);
-            free(node);
+            if (entry->data_type == TYPE_NUMBER)
+            {
 
-            return number_node;
+                new_node = create_number_node(entry->value);
+            }
+            else if (entry->data_type == TYPE_STRING)
+            {
+                new_node = create_string_node(entry->string_value);
+            }
+
+            if (new_node)
+            {
+                free(node->data.variable.name);
+                free(node);
+                return new_node;
+            }
         }
     }
     break;
@@ -522,9 +819,18 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         // Překopírijeme si tabulku
         for (int i = 0; i < table->count; i++)
         {
-            set_variable(&loop_table, table->entries[i].name,
-                         table->entries[i].value,
-                         table->entries[i].is_initialized);
+            if (table->entries[i].data_type == TYPE_STRING)
+            {
+                set_variable(&loop_table, table->entries[i].name,
+                             table->entries[i].string_value,
+                             table->entries[i].is_initialized, TYPE_STRING);
+            }
+            else
+            {
+                set_variable(&loop_table, table->entries[i].name,
+                             &(table->entries[i].value),
+                             table->entries[i].is_initialized, TYPE_NUMBER);
+            }
         }
 
         if (node->data.for_loop.init_expression)
@@ -569,6 +875,9 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         // TODO: Mazat loop, když bude vždycky neplatná podmínka
         break;
     }
+    case NODE_STRING:
+
+        break;
 
     case NODE_NUMBER:
         // Numbers are already optimized
@@ -600,6 +909,10 @@ void free_ast(ASTNode *node)
         {
             free_ast(node->data.var_declaration.init_expr);
         }
+        break;
+
+    case NODE_STRING:
+        free(node->data.string.value);
         break;
 
     case NODE_ASSIGNMENT:
@@ -659,8 +972,17 @@ void mark_modified_variables(ASTNode *node, SymbolTable *table)
         }
         else
         {
+            if (entry->data_type == TYPE_STRING)
+            {
+                set_variable(table, node->data.assignment.var_name, node->data.assignment.value->data.string.value, 0, TYPE_STRING);
+            }
+            else
+            {
+                int value = 0;
 
-            set_variable(table, node->data.assignment.var_name, 0, 0);
+                set_variable(table, node->data.assignment.var_name, &value, 0, TYPE_NUMBER);
+            }
+
             entry = lookup_variable(table, node->data.assignment.var_name);
             if (entry)
             {
@@ -682,7 +1004,17 @@ void mark_modified_variables(ASTNode *node, SymbolTable *table)
         }
         else
         {
-            set_variable(table, node->data.var_declaration.var_name, 0, 0);
+            if (entry->data_type == TYPE_STRING)
+            {
+                set_variable(table, node->data.assignment.var_name, node->data.assignment.value->data.string.value, 0, TYPE_STRING);
+            }
+            else
+            {
+                int value = 0;
+
+                set_variable(table, node->data.assignment.var_name, &value, 0, TYPE_NUMBER);
+            }
+
             entry = lookup_variable(table, node->data.var_declaration.var_name);
             if (entry)
             {

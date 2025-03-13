@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "types.h"
 typedef enum
 {
     SYMBOL_VAR,
@@ -9,22 +9,16 @@ typedef enum
     SYMBOL_ARG,
 } SymbolType;
 
-typedef enum
-{
-    TYPE_NUMBER,
-    TYPE_STRING,
-    TYPE_BOOLEAN
-} SymbolDataType;
-
 typedef struct
 {
     char *name;
-    int value;
+    char *string_value;
+    int value; // TODO: Pak z toho udělat void* (bude nutné přepsat kompletně uvolňování paměti a získávání hodnot:)))))
     int is_initialized;
     int is_modified_in_loop;
     int is_used;
     SymbolType type;
-    SymbolDataType data_type;
+    DataType data_type;
     int scope_level; // Tohle je tak messy až to není pěkný
     // Viděl jsem v nějakých implementacích, že tam měli něco jako block owner struct pointer..  ale to je mimo můj scope už
 
@@ -51,7 +45,8 @@ void init_symbol_table(SymbolTable *table);
 SymbolEntry *lookup_variable(SymbolTable *table, const char *name);
 SymbolEntry *lookup_variable_all_scopes(SymbolTable *table, const char *name);
 
-void set_variable(SymbolTable *table, const char *name, int value, int is_initialized);
+void set_variable(SymbolTable *table, const char *name, void *value, int is_initialized, DataType data_type);
+
 void enter_scope(SymbolTable *table);
 void exit_scope(SymbolTable *table);
 

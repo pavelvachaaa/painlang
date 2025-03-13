@@ -52,6 +52,9 @@ void print_ast_helper(ASTNode *node, int indent)
     case NODE_NUMBER:
         printf("Number: %d\n", node->data.number.value);
         break;
+    case NODE_STRING:
+        printf("String: %s\n", node->data.string.value);
+        break;
     case NODE_FOR_LOOP:
         printf("For Loop\n");
         print_ast_helper(node->data.for_loop.init_expression, indent + 1);
@@ -65,7 +68,13 @@ void print_ast_helper(ASTNode *node, int indent)
         print_ast_helper(node->data.condition.right, indent + 1);
         break;
     case NODE_FUNCTION_DECLARATION:
-        printf("Function declaration: %s param_count: %d \n", node->data.function_declaration.name, node->data.function_declaration.param_count);
+        printf("Function declaration: %s param_count: %d, Types(:", node->data.function_declaration.name, node->data.function_declaration.param_count);
+        printf("Params:");
+        for (int i = 0; i < node->data.function_declaration.param_count; i++)
+        {
+            printf("%d,", node->data.function_declaration.param_types[i]);
+        }
+        printf(")\n");
         print_ast_helper(node->data.function_declaration.body, indent + 1);
         break;
 

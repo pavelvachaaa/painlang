@@ -2,7 +2,9 @@
 #define IR_H
 
 #include <stdlib.h>
-#include "ast.h"
+#include "../ast/ast.h"
+#include "types.h"
+
 
 typedef enum
 {
@@ -22,7 +24,6 @@ typedef enum
     IR_LESS_EQ,      // x = y <= z
     IR_GREATER_EQ,   // x = y >= z
     IR_PRINT,        // print x
-
     IR_PROLOGUE,
     IR_EPILOGUE,
     IR_PARAM,
@@ -38,18 +39,22 @@ typedef enum
     OPERAND_LITERAL,
     OPERAND_VARIABLE,
     OPERAND_TEMP, // t1, ...
-    OPERAND_LABEL
+    OPERAND_LABEL,
+    OPERAND_STRING_LITERAL, //"more"
+
 } OperandType;
 
 typedef struct
 {
     OperandType type;
+    DataType data_type; // Když je operandtype variable -> ztratím informaci o datovém typu a musím se ptát symboltable
     union
     {
         int literal;
         char *variable;
         int temp_number;
         int label_number;
+        char *string_literal;
     } value;
     int is_initialized;
 
@@ -66,19 +71,21 @@ typedef struct
 typedef struct
 {
     IRInstruction *instructions;
+    SymbolTable *symbol_table; // TODO: možná to pak čerpat jen z AST typů..
     int instruction_count;
     int temp_counter;
     int label_counter;
     // TODO: Pak smazat asi
-    int current_param_index;  // pozice parametru
-    int current_arg_index;    // argumentu
-    char *current_function;   // V jaké funkci jsem
+    int current_param_index; // pozice parametru
+    int current_arg_index;   // argumentu
+    char *current_function;  // V jaké funkci jsem
 } IRProgram;
 
-void ir_init(IRProgram *program);
+void ir_init(IRProgram *program, SymbolTable* table);
 
+IROperand ir_string_literal(const char *value);
 IROperand ir_literal(int value);
-IROperand ir_variable(const char *name, int is_initialized);
+IROperand ir_variable(const char *name, int is_initialized, DataType data_type);
 IROperand ir_temp(IRProgram *program);
 IROperand ir_label(IRProgram *program);
 IROperand ir_none();

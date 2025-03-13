@@ -146,41 +146,87 @@ void set_is_used(SymbolTable *table, const char *name)
     if (!entry)
     {
         fprintf(stderr, "Error: proměnná neexistuje");
-        set_variable(table, name, 0, 0);
+        set_variable(table, name, 0, 0, entry->data_type);
         return;
     }
 
     set_is_used(table, name);
 }
 
-void set_variable(SymbolTable *table, const char *name, int value, int is_initialized)
+void set_variable(SymbolTable *table, const char *name, void *value, int is_initialized, DataType data_type)
 {
     SymbolEntry *entry = lookup_variable(table, name);
-    // Už jsi definovaná, tak tě aktualizujeme
+
     if (entry)
     {
-        // if (entry->is_const)
-        // {
-        //     fprintf(stderr, "Error: tahle proměnná je konstantní, nezapisuj do ní vole");
-        // }
-        entry->value = value;
         entry->is_initialized = is_initialized;
+
+        if (entry->data_type != data_type)
+        {
+            fprintf(stderr, "Error: Datové typy nesedí '%s'\n", name);
+            return;
+        }
+
+        if (data_type == TYPE_NUMBER)
+        {
+            entry->value = *(int *)value;
+        }
+        else if (data_type == TYPE_STRING)
+        {
+            free(entry->string_value);
+            entry->string_value = strdup((char *)value);
+        }
     }
     else
     {
         entry = lookup_variable_all_scopes(table, name);
-        if (entry) // Existuje mimo inner scope
+
+        if (entry)
         {
-            entry->value = value;
             entry->is_initialized = is_initialized;
+
+            if (entry->data_type != data_type)
+            {
+                fprintf(stderr, "[Error]: Datové typy nesedí '%s'\n", name);
+                return;
+            }
+
+            if (data_type == TYPE_NUMBER)
+            {
+                entry->value = *(int *)value;
+            }
+            else if (data_type == TYPE_STRING)
+            {
+                free(entry->string_value);
+                entry->string_value = strdup((char *)value);
+            }
         }
         else
         {
             table->entries = realloc(table->entries, sizeof(SymbolEntry) * (table->count + 1));
-            table->entries[table->count].name = strdup(name);
-            table->entries[table->count].value = value;
-            table->entries[table->count].is_initialized = is_initialized;
-            table->entries[table->count].scope_level = table->current_scope;
+            if (!table->entries)
+            {
+                fprintf(stderr, "Error: MemAlloc Fail \n");
+                return;
+            }
+
+            entry = &table->entries[table->count];
+            entry->name = strdup(name);
+            entry->is_initialized = is_initialized;
+            entry->scope_level = table->current_scope;
+            entry->data_type = data_type;
+
+            if (data_type == TYPE_NUMBER)
+            {
+                entry->value = *(int *)value;
+                entry->string_value = NULL;
+            }
+            else if (data_type == TYPE_STRING)
+            {
+                entry->string_value = strdup((char *)value);
+                entry->value = 0;
+            }
+
             table->count++;
         }
     }
