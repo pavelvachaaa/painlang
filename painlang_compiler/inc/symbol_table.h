@@ -31,6 +31,7 @@ typedef struct
 {
     char *name;
     int number_of_params;
+    DataType return_type;
 } FunctionEntry;
 
 typedef struct
@@ -51,7 +52,7 @@ void set_variable(SymbolTable *table, const char *name, void *value, int is_init
 void enter_scope(SymbolTable *table);
 void exit_scope(SymbolTable *table);
 
-void add_function(SymbolTable *table, const char *name, int number_of_params);
+void add_function(SymbolTable *table, const char *name, int number_of_params, DataType return_type);
 FunctionEntry *lookup_function(SymbolTable *table, const char *name);
 
 void set_is_used(SymbolTable *table, const char *name);

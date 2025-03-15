@@ -1,10 +1,48 @@
 goto L0
 L1:
-function pavel(1):
+function convertNumberToString(1):
+param input
+t0 = input == 1
+if t0 == 0 goto L2
+return 'Jednička'
+L2:
+t1 = input == 0
+if t1 == 0 goto L4
+return 'Nula'
+L4:
+t2 = input == 3
+if t2 == 0 goto L6
+return 'Trojčičkaaa'
+L6:
+return 'Nějaká jiná prasárna'
+end function convertNumberToString
+L8:
+function isZero(1):
+param input
+t3 = input == 0
+if t3 == 0 goto L9
+print 'Ano'
+return true
+L9:
+print 'Ne'
+return false
+end function isZero
+L11:
+function printer(3):
 param a
-t0 = a * a
-return t0
-end function pavel
+param b
+param c
+print a
+t4 = b + 28
+print t4
+return 'nebavyyyyy'
+end function printer
 L0:
-print 'Ahoj světe'
-print 'Prdel'
+arg 0
+t5 = call isZero, 1
+p = t5
+print p
+arg 2
+t6 = call convertNumberToString, 1
+vysledek = t6
+print vysledek

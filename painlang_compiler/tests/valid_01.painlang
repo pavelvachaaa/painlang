@@ -1,17 +1,69 @@
-/*
-@a -> number, číslo k vynásobení samo  se sebou
-*/
-function pavel(a: number) {
-    return a *a;
+let promenna_str : string = "Pavel je v prdeli";
+//print(promenna_str);
+
+let promenna_num : number = 23;
+//print(promenna_num);
+
+let promenna_bool : bool = true;
+//print(promenna_bool);
+
+//print(false);
+
+//let retVal : string = printer(promenna_str, promenna_num, promenna_bool);
+//print(retVal);
+
+let z : bool = false || false;
+//TODO: Optimalizátor ničí nějak booleany, když jsou v printu přímo literaly (pravděpodobně OPTIMISE_AST ztratí kontext o variable?? a binaryop?)
+//print(z);
+
+
+let p : bool = isZero(0);
+print(p);
+
+let vysledek : string = convertNumberToString(2);
+print(vysledek);
+
+
+function convertNumberToString(input: number) -> string {
+    if(input == 1) {
+        return "Jednička";
+    }
+
+    if(input == 0) {
+        return "Nula";
+    }
+
+    if(input == 3) {
+        return "Trojčičkaaa";
+    }
+
+    return "Nějaká jiná prasárna";
+
 }
 
-let x : bool = true;
-let x2 : bool = false;
+// Tomu říkám řádně optimalizovaná funkce 
+function isZero(input: number) -> bool {
+    if(input == 0) {
+        print("Ano");
+        return true;
+    }
 
-print("Ahoj světe");
-let random_text : string = "Prdel";
-print(random_text);
+    print("Ne");
+    return false;
+}
 
+
+function printer(a: string, b: number, c:bool) -> string {
+    print(a);
+    print(b+28);
+
+    return "nebavyyyyy";
+}
+
+
+
+// let ba : number = pavel(12);
+// print(ba);
 
 // Bez optimalizace má ekvivalent:
 //goto L0

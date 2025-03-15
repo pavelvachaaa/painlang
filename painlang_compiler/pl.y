@@ -107,9 +107,9 @@ int main(int argc, char **argv) {
 
     ir_init(program, table);
     generate_ir_from_ast(ast_root, program);
-    output_ir_to_file(program, ir_file);
+     output_ir_to_file(program, ir_file);
 
-    //NASM
+    // //NASM
     generate_nasm_from_ir(program, table, output_file);
     
     ir_free(program);
@@ -140,8 +140,8 @@ int main(int argc, char **argv) {
 %token <num> NUMBER DECLARE
 %token <str> IDENTIFIER ASSIGN SEMICOLON PRINT IF ELSE FOR FUNCTION RETURN STRING_LITERAL
 %token EQUALS NOT_EQUALS GREAT_OR_EQUALS LESS_OR_EQUALS GREATER_THAN LESS_THAN DOUBLE_PLUS DOUBLE_MINUS
-%token PLUS_ASSIGN MINUS_ASSIGN MULT_ASSIGN DIV_ASSIGN
-%token BINARY_OP_OR BINARY_OP_AND BINARY_OP_XOR
+%token PLUS_ASSIGN MINUS_ASSIGN MULT_ASSIGN DIV_ASSIGN RETURN_TYPE
+%token BINARY_OP_OR BINARY_OP_AND BINARY_OP_XOR LOGICAL_AND LOGICAL_OR
 %token UNARY_OP_NOT 
 
 %token <boolean_value> LITERAL_TRUE, LITERAL_FALSE
@@ -347,6 +347,14 @@ expression: expression '+' term
     {
         $$ = create_binary_op_node(OP_SUBTRACT, $1, $3);
     }
+    | expression LOGICAL_AND term 
+    {
+        $$ = create_binary_op_node(OP_LOGICAL_AND, $1, $3);
+    }
+    | expression LOGICAL_OR term 
+    {
+        $$ = create_binary_op_node(OP_LOGICAL_OR, $1, $3);
+    }
     | term
     {
         $$ = $1;
@@ -378,6 +386,15 @@ term: term '*' factor
     {
         $$ = create_binary_op_node(OP_DIVIDE, $1, $3);
     }
+    | term LOGICAL_AND factor 
+    {
+        $$ = create_binary_op_node(OP_LOGICAL_AND, $1, $3);
+    }
+    | term LOGICAL_OR factor 
+    {
+        $$ = create_binary_op_node(OP_LOGICAL_OR, $1, $3);
+    }
+
     | factor
     {
         $$ = $1;
@@ -400,6 +417,11 @@ factor: NUMBER
     | LITERAL_FALSE 
     {
         $$ = create_boolean_node($1);
+    }
+    | UNARY_OP_NOT factor
+    {
+        $$ = create_unary_op_node(OP_LOGICAL_NOT, $2);
+        debug_print("Created UNARY_OP_NOT node\n");
     }
     | IDENTIFIER
     {
@@ -466,13 +488,13 @@ block: '{' { enter_scope(table); } statementList '}' { exit_scope(table);  }
 
 
 
-funDeclaration: FUNCTION IDENTIFIER '(' parameterList ')' block 
+funDeclaration: FUNCTION IDENTIFIER '(' parameterList ')' RETURN_TYPE typeRule block 
 {
     // ten count kvůli tomu, že pojedeme scope odznova a potřebuji vědět kolik jich bude..
-    $$ = create_function_declaration_node($2, $4.names, $4.count, $4.param_types, $6);
+    $$ = create_function_declaration_node($2, $4.names, $4.count, $4.param_types, $7, $8);
     debug_print("Created FUNCTION_DECLARATION node for '%s' with %d parameters\n", $2, $4.count);
     // Zaeviduju tě, ale pozor v optimalitaci zkontrolovat jestli se volá a kdyžtak odstranit
-    add_function(table, $2, $4.count);
+    add_function(table, $2, $4.count,  $7);
 
 
 };

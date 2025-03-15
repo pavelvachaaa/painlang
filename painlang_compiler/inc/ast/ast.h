@@ -33,7 +33,9 @@ typedef enum
     OP_ADD,
     OP_SUBTRACT,
     OP_MULTIPLY,
-    OP_DIVIDE
+    OP_DIVIDE,
+    OP_LOGICAL_AND,
+    OP_LOGICAL_OR,
 } BinaryOpType;
 
 typedef enum
@@ -142,6 +144,7 @@ struct ASTNode
             char *name;
             char **param_names;
             DataType *param_types;
+            DataType return_type;
             int param_count;
             ASTNode *body;
         } function_declaration;
@@ -178,7 +181,7 @@ ASTNode *create_boolean_node(uint8_t value);
 ASTNode *create_condition_node(CondOpType op, ASTNode *left, ASTNode *right);
 ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTNode *update, ASTNode *body);
 
-ASTNode *create_function_declaration_node(char *name, char **param_names, int param_count, DataType *types, ASTNode *body);
+ASTNode *create_function_declaration_node(char *name, char **param_names, int param_count, DataType *types, DataType return_type, ASTNode *body);
 ASTNode *create_function_call_node(char *name, ASTNode **arguments, int arg_count);
 ASTNode *create_return_node(ASTNode *expr);
 

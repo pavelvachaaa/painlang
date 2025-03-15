@@ -16,7 +16,7 @@ void init_symbol_table(SymbolTable *table)
     table->current_scope = 0;
 }
 
-void add_function(SymbolTable *table, const char *name, int number_of_params)
+void add_function(SymbolTable *table, const char *name, int number_of_params, DataType return_type)
 {
     FunctionEntry *entry = lookup_function(table, name);
     if (entry)
@@ -29,6 +29,7 @@ void add_function(SymbolTable *table, const char *name, int number_of_params)
     table->functions = realloc(table->functions, sizeof(FunctionEntry) * (table->countF + 1));
     table->functions[table->countF].name = strdup(name);
     table->functions[table->countF].number_of_params = number_of_params;
+    table->functions[table->countF].return_type = return_type;
     table->countF++;
 }
 

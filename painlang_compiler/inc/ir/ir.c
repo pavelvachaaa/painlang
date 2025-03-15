@@ -52,12 +52,13 @@ IROperand ir_variable(const char *name, int is_initialized, DataType data_type)
     return operand;
 }
 
-IROperand ir_temp(IRProgram *program)
+IROperand ir_temp(IRProgram *program, DataType type)
 {
     IROperand operand;
     operand.type = OPERAND_TEMP;
     operand.value.temp_number = program->temp_counter++;
     operand.is_initialized = 0;
+    operand.data_type = type;
     return operand;
 }
 
@@ -92,6 +93,17 @@ void ir_add_instruction(IRProgram *program, IROp op, IROperand result, IROperand
     program->instructions[program->instruction_count - 1].arg2 = arg2;
 }
 
+IROp unary_op_to_ir_op(UnaryOpType op)
+{
+    switch (op)
+    {
+    case OP_LOGICAL_NOT:
+        return IR_LOGICAL_NOT;
+    default:
+        return IR_LOGICAL_NOT;
+    }
+}
+
 IROp binary_op_to_ir_op(BinaryOpType op)
 {
     switch (op)
@@ -104,6 +116,10 @@ IROp binary_op_to_ir_op(BinaryOpType op)
         return IR_MULTIPLY;
     case OP_DIVIDE:
         return IR_DIVIDE;
+    case OP_LOGICAL_AND:
+        return IR_LOGICAL_AND;
+    case OP_LOGICAL_OR:
+        return IR_LOGICAL_OR;
     default:
         return IR_ADD;
     }
@@ -160,24 +176,37 @@ IROperand generate_expression_ir(ASTNode *node, IRProgram *program)
         DataType type = TYPE_UNKNOWN;
         if (entry)
         {
-            printf("Not a chance %d", entry->data_type);
             type = entry->data_type;
         }
-        printf("JOJOJOJOU %d %s", type);
         return ir_variable(node->data.variable.name, 0, type);
     }
 
     case NODE_BINARY_OP:
     {
+        printf("[INFO] NODE_BINARY_OP called \n");
+
         IROperand left = generate_expression_ir(node->data.binary_op.left, program);
         IROperand right = generate_expression_ir(node->data.binary_op.right, program);
-        IROperand result = ir_temp(program);
+
+        IROperand result = ir_temp(program, left.data_type);
 
         IROp op = binary_op_to_ir_op(node->data.binary_op.op);
         ir_add_instruction(program, op, result, left, right);
 
         return result;
     }
+
+    case NODE_UNARY_OP:
+    {
+        IROperand value = generate_expression_ir(node->data.unary_op.value, program);
+        IROperand result = ir_temp(program, value.data_type);
+
+        IROp op = unary_op_to_ir_op(node->data.unary_op.op);
+        ir_add_instruction(program, op, value, result, ir_none());
+
+        return result;
+    }
+    break;
 
     case NODE_FUNCTION_CALL:
     {
@@ -209,7 +238,7 @@ IROperand generate_condition_ir(ASTNode *node, IRProgram *program)
     {
         IROperand left = generate_expression_ir(node->data.condition.left, program);
         IROperand right = generate_expression_ir(node->data.condition.right, program);
-        IROperand result = ir_temp(program);
+        IROperand result = ir_temp(program, left.data_type);
 
         IROp op = cond_op_to_ir_op(node->data.condition.op);
         ir_add_instruction(program, op, result, left, right);
@@ -236,7 +265,8 @@ void generate_function_declaration_ir(ASTNode *node, IRProgram *program)
 
     char *func_name = strdup(node->data.function_declaration.name);
     int param_count = node->data.function_declaration.param_count;
-    ir_add_instruction(program, IR_PROLOGUE, ir_variable(func_name, 0, TYPE_UNKNOWN), ir_literal(param_count), ir_none());
+    DataType return_type = node->data.function_declaration.return_type;
+    ir_add_instruction(program, IR_PROLOGUE, ir_variable(func_name, 0, return_type), ir_literal(param_count), ir_none());
 
     // V RESULtu JE INDEX parametru!!! (důležite pro codegen)
     for (int i = 0; i < param_count; i++)
@@ -250,7 +280,7 @@ void generate_function_declaration_ir(ASTNode *node, IRProgram *program)
         generate_statement_ir(node->data.function_declaration.body, program);
     }
 
-    ir_add_instruction(program, IR_EPILOGUE, ir_variable(func_name, 0, TYPE_UNKNOWN), ir_none(), ir_none());
+    ir_add_instruction(program, IR_EPILOGUE, ir_variable(func_name, 0, return_type), ir_none(), ir_none());
     free(func_name);
 }
 
@@ -268,7 +298,8 @@ IROperand generate_function_call_ir(ASTNode *node, IRProgram *program)
     }
 
     // Výsledek funkce bude v tomhle tempu
-    IROperand result = ir_temp(program);
+    FunctionEntry *function = lookup_function(program->symbol_table, node->data.function_call.func_name);
+    IROperand result = ir_temp(program, function->return_type);
 
     ir_add_instruction(program, IR_CALL, result,
                        ir_variable(node->data.function_call.func_name, 0, TYPE_UNKNOWN),

@@ -8,12 +8,14 @@
 typedef struct
 {
     char **variables;
+    DataType *types;
     int count;
 } VariableList;
 
 void init_variable_list(VariableList *list)
 {
     list->variables = NULL;
+    list->types = NULL;
     list->count = 0;
 }
 
@@ -30,7 +32,20 @@ int is_variable_in_list(VariableList *list, const char *var_name)
     return 0;
 }
 
-void add_variable_to_list(VariableList *list, const char *var_name)
+DataType get_variable_type(VariableList *list, const char *var_name)
+{
+    for (int i = 0; i < list->count; i++)
+    {
+        if (strcmp(list->variables[i], var_name) == 0)
+        {
+            return list->types[i];
+        }
+    }
+
+    return 0;
+}
+
+void add_variable_to_list(VariableList *list, const char *var_name, DataType type)
 {
     if (is_variable_in_list(list, var_name))
     {
@@ -39,9 +54,10 @@ void add_variable_to_list(VariableList *list, const char *var_name)
 
     list->count++;
     list->variables = realloc(list->variables, list->count * sizeof(char *));
+    list->types = realloc(list->types, (list->count + 1) * sizeof(DataType));
+    list->types[list->count - 1] = type;
     list->variables[list->count - 1] = strdup(var_name);
 }
-
 void free_variable_list(VariableList *list)
 {
     for (int i = 0; i < list->count; i++)
@@ -50,6 +66,7 @@ void free_variable_list(VariableList *list)
     }
     free(list->variables);
     list->variables = NULL;
+    list->types = NULL;
     list->count = 0;
 }
 /// @brief  Pro komentáře ve finalní assembly
@@ -89,23 +106,19 @@ static void get_nasm_operand(IROperand operand, char *buffer, int is_dest)
         sprintf(buffer, "%d", operand.value.literal);
         break;
     case OPERAND_VARIABLE:
-        // if (operand.data_type == TYPE_NUMBER)
-        // {
-        //     sprintf(buffer, "[%s]", operand.value.variable);
-        // }
-        // else
-        // {
-            sprintf(buffer, "%s", operand.value.variable);
-        // }
-        break;
-    case OPERAND_STRING_LITERAL:
-        sprintf(buffer, "%s", operand.value.string_literal);
+        sprintf(buffer, "[%s]", operand.value.variable);
         break;
     case OPERAND_TEMP:
         sprintf(buffer, "[t%d]", operand.value.temp_number);
         break;
     case OPERAND_LABEL:
         sprintf(buffer, "L%d", operand.value.label_number);
+        break;
+    case OPERAND_STRING_LITERAL:
+        sprintf(buffer, "%s", operand.value.string_literal);
+        break;
+    case OPERAND_BOOLEAN_LITERAL:
+        sprintf(buffer, "%s", operand.value.boolean_literal ? "bool_l_true" : "bool_l_false");
         break;
     case OPERAND_NONE:
         sprintf(buffer, "");
@@ -130,8 +143,13 @@ static void generate_load_operand(FILE *file, IROperand operand)
     }
     else if (operand.type == OPERAND_STRING_LITERAL)
     {
-        fprintf(file, "    ; Load string literal address\n");
+        fprintf(file, "    ; Načti string literal adresu \n");
         fprintf(file, "    mov rax, %s\n", operand_str);
+    }
+    else if (operand.type == OPERAND_BOOLEAN_LITERAL)
+    {
+        fprintf(file, "    ; Načtin bool (1 byte) z %s\n", operand_str);
+        fprintf(file, "    mov al, byte [%s] \n", operand_str);
     }
 }
 
@@ -144,6 +162,11 @@ static void generate_store_operand(FILE *file, IROperand operand)
     {
         fprintf(file, "    ; Ulož do %s\n", operand_str);
         fprintf(file, "    mov %s, rax\n", operand_str);
+    }
+    else if (operand.type == OPERAND_BOOLEAN_LITERAL)
+    {
+        fprintf(file, "    ; Ulož do (1 byte) %s\n", operand_str);
+        fprintf(file, "    mov byte %s, al\n", operand_str); // AL = 8 bitů raxu (dole)
     }
 }
 
@@ -338,16 +361,18 @@ static void generate_print(FILE *file, IRInstruction *instr)
         fprintf(file, "    ; Vypiš string hodnotu \n");
         fprintf(file, "    mov rsi, %s\n", arg1_str);
         fprintf(file, "    mov rdi, format_str\n");
-        fprintf(file, "    xor rax, rax\n"); // Clear rax for printf
-        fprintf(file, "    call printf wrt ..plt\n");
+    }
+    else if (instr->arg1.type == OPERAND_BOOLEAN_LITERAL)
+    {
+        fprintf(file, "    ; Vypiš string hodnotu \n");
+        fprintf(file, "    movzx rsi, byte [%s] \n", arg1_str);
+        fprintf(file, "    mov rdi, format_int\n");
     }
     else if (instr->arg1.type != OPERAND_VARIABLE)
     {
         fprintf(file, "    ; Vypiš hodnotu \n");
         fprintf(file, "    mov rsi, %s\n", arg1_str);
         fprintf(file, "    mov rdi, format_int\n");
-        fprintf(file, "    xor rax, rax\n"); // Clear rax for printf
-        fprintf(file, "    call printf wrt ..plt\n");
     }
     // TODO: tohle pak trochu upravíme kvůli přehozování z registru (proto tu je to tu vícekrat)
     else if (instr->arg1.type == OPERAND_VARIABLE)
@@ -357,18 +382,23 @@ static void generate_print(FILE *file, IRInstruction *instr)
             fprintf(file, "    ; Vypiš string hodnotu \n");
             fprintf(file, "    mov rsi, %s\n", arg1_str);
             fprintf(file, "    mov rdi, format_str\n");
-            fprintf(file, "    xor rax, rax\n"); // Clear rax for printf
-            fprintf(file, "    call printf wrt ..plt\n");
         }
         else if (instr->arg1.data_type == TYPE_NUMBER)
         {
             fprintf(file, "    ; Vypiš hodnotu \n");
             fprintf(file, "    mov rsi, %s\n", arg1_str);
             fprintf(file, "    mov rdi, format_int\n");
-            fprintf(file, "    xor rax, rax\n"); // Clear rax for printf
-            fprintf(file, "    call printf wrt ..plt\n");
+        }
+        else if (instr->arg1.type == TYPE_BOOLEAN)
+        {
+            fprintf(file, "    ; Vypiš string hodnotu \n");
+            fprintf(file, "    mov rsi, %s\n", arg1_str);
+            fprintf(file, "    mov rdi, format_int\n");
         }
     }
+
+    fprintf(file, "    xor rax, rax\n"); // Clear rax for printf
+    fprintf(file, "    call printf wrt ..plt\n");
 }
 
 void generate_function_start(FILE *file, IRInstruction *instr)
@@ -407,7 +437,7 @@ void generate_param(FILE *file, IRInstruction *instr)
             // Registr do lokální
             fprintf(file, " ; Parametr %s v registru %s\n", param_name, reg_names[param_index]);
             // if(instr->arg1.data_type == TYPE_NUMBER) {
-                fprintf(file, " mov [%s], %s\n", param_name, reg_names[param_index]);
+            fprintf(file, " mov [%s], %s\n", param_name, reg_names[param_index]);
             // } else {
             //     printf("KOKOTINA");
             //     fprintf(file, " mov %s, %s\n", param_name, reg_names[param_index]);
@@ -556,60 +586,55 @@ void generate_nasm_from_ir(IRProgram *program, SymbolTable *table, const char *o
 
     VariableList string_literals;
     init_variable_list(&string_literals);
+
     int string_literal_count = 0;
 
     // Funkce, která se zpracovává (Pak hodit do IRProgramu)
     char current_function[64] = "";
 
-    // Vytvoření seznamu proměnných
     for (int i = 0; i < program->instruction_count; i++)
     {
         IRInstruction *instr = &program->instructions[i];
 
-        // Konstanty
-        if (instr->result.type == OPERAND_VARIABLE)
+        // Check all operands: result, arg1, and arg2
+        IROperand *operands[] = {&instr->result, &instr->arg1, &instr->arg2};
+        for (int j = 0; j < 3; j++)
         {
-            add_variable_to_list(&variables, instr->result.value.variable);
-        }
-        if (instr->arg1.type == OPERAND_VARIABLE)
-        {
-            add_variable_to_list(&variables, instr->arg1.value.variable);
-        }
-        if (instr->arg2.type == OPERAND_VARIABLE)
-        {
-            add_variable_to_list(&variables, instr->arg2.value.variable);
-        }
+            IROperand *op = operands[j];
+            if (op->type == OPERAND_VARIABLE)
+            {
+                add_variable_to_list(&variables, op->value.variable, op->data_type); // Store as string
+            }
+            else if (op->type == OPERAND_STRING_LITERAL)
+            {
+                char literal_name[64];
+                sprintf(literal_name, "str_%d", string_literal_count++);
+                add_variable_to_list(&string_literals, literal_name, op->data_type);
+            }
+            else if (op->type == OPERAND_TEMP)
+            {
+                char temp_name[32];
+                sprintf(temp_name, "t%d", op->value.temp_number);
 
-        // Pomocné proměnné
-        if (instr->result.type == OPERAND_TEMP)
-        {
-            char temp_name[32];
-            sprintf(temp_name, "t%d", instr->result.value.temp_number);
-            add_variable_to_list(&variables, temp_name);
-        }
-        if (instr->arg1.type == OPERAND_TEMP)
-        {
-            char temp_name[32];
-            sprintf(temp_name, "t%d", instr->arg1.value.temp_number);
-            add_variable_to_list(&variables, temp_name);
-        }
-        if (instr->arg2.type == OPERAND_TEMP)
-        {
-            char temp_name[32];
-            sprintf(temp_name, "t%d", instr->arg2.value.temp_number);
-            add_variable_to_list(&variables, temp_name);
-        }
-
-        if (instr->arg1.type == OPERAND_STRING_LITERAL)
-        {
-            char literal_name[64];
-            sprintf(literal_name, "str_%d", string_literal_count++);
-            add_variable_to_list(&string_literals, literal_name);
+                if (op->data_type == TYPE_STRING)
+                {
+                    printf("Prosím: %s\n", temp_name);
+                    add_variable_to_list(&string_literals, temp_name, op->data_type); // Store string temporaries separately
+                }
+                else
+                {
+                    printf("Prosím2: %s\n", temp_name);
+                    add_variable_to_list(&variables, temp_name, op->data_type); // Store as general temporary
+                }
+            }
         }
     }
 
     fprintf(file, "; Profesionální NASM z IR vygenerováno PainGenem  \n");
     fprintf(file, "section .data\n");
+
+    fprintf(file, "    bool_l_true  db 1                                \n\n");
+    fprintf(file, "    bool_l_false db 0                                \n\n ");
     fprintf(file, "    format_int db \"%%d\", 10, 0  ; Formát pro print \n\n");
     fprintf(file, "    format_str db \"%%s\", 10, 0  ; Formát pro řetězce\n\n");
 
@@ -659,6 +684,22 @@ void generate_nasm_from_ir(IRProgram *program, SymbolTable *table, const char *o
         }
     }
 
+    for (int i = 0; i < program->temp_counter; i++)
+    {
+        char temp_name[32];
+        sprintf(temp_name, "t%d", i);
+
+        if (get_variable_type(&string_literals, temp_name) == TYPE_STRING)
+        {
+            fprintf(file, "    %s: db \"\",0\n", temp_name);
+        }
+
+        if (get_variable_type(&variables, temp_name) == TYPE_STRING)
+        {
+            fprintf(file, "    %s: db \"\",0\n", temp_name);
+        }
+    }
+
     // Konstnatní
     fprintf(file, "section .bss\n");
     for (int i = 0; i < variables.count; i++)
@@ -685,7 +726,7 @@ void generate_nasm_from_ir(IRProgram *program, SymbolTable *table, const char *o
     {
         char temp_name[32];
         sprintf(temp_name, "t%d", i);
-        if (!is_variable_in_list(&variables, temp_name))
+        if ((!is_variable_in_list(&variables, temp_name) && get_variable_type(&variables, temp_name) != TYPE_STRING) && (!is_variable_in_list(&string_literals, temp_name) && get_variable_type(&string_literals, temp_name) != TYPE_STRING))
         {
             fprintf(file, "    %s resq 1\n", temp_name);
         }

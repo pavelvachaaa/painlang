@@ -5,14 +5,16 @@
 #include "../ast/ast.h"
 #include "types.h"
 
-
 typedef enum
 {
-    IR_ASSIGN,       // x = y
-    IR_ADD,          // x = y + z
-    IR_SUBTRACT,     // x = y - z
-    IR_MULTIPLY,     // x = y * z
-    IR_DIVIDE,       // x = y / z
+    IR_ASSIGN,   // x = y
+    IR_ADD,      // x = y + z
+    IR_SUBTRACT, // x = y - z
+    IR_MULTIPLY, // x = y * z
+    IR_DIVIDE,   // x = y / z
+    IR_LOGICAL_AND,
+    IR_LOGICAL_OR,
+    IR_LOGICAL_NOT,
     IR_LABEL,        // L1:
     IR_JUMPFALSE,    // if x == 0 goto L
     IR_JUMPTRUE,     // if x != 0 goto L
@@ -27,6 +29,7 @@ typedef enum
     IR_PROLOGUE,
     IR_EPILOGUE,
     IR_PARAM,
+
     IR_CALL,
     IR_RETURN,
     IR_ARG
@@ -83,13 +86,13 @@ typedef struct
     char *current_function;  // V jaké funkci jsem
 } IRProgram;
 
-void ir_init(IRProgram *program, SymbolTable* table);
+void ir_init(IRProgram *program, SymbolTable *table);
 
 IROperand ir_boolean_literal(uint8_t value);
 IROperand ir_string_literal(const char *value);
 IROperand ir_literal(int value);
 IROperand ir_variable(const char *name, int is_initialized, DataType data_type);
-IROperand ir_temp(IRProgram *program);
+IROperand ir_temp(IRProgram *program, DataType type);
 IROperand ir_label(IRProgram *program);
 IROperand ir_none();
 

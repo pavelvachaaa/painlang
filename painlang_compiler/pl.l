@@ -77,12 +77,19 @@ else                                                {debug_print("ELSE "); retur
 "<"                                                 {debug_print("LESS_THAN" ); return LESS_THAN;};
 ","                                                 {debug_print("," ); return ',';};
 =                                                   {debug_print("ASSIGN "); return ASSIGN;};
+"->"                                                {debug_print("RETURN_TYPE "); return RETURN_TYPE;};
+
 
 
 "!"                                                   {debug_print("UNARY_NOT "); return UNARY_OP_NOT;};
+
 "&"                                                  {debug_print("BINARY_AND "); return BINARY_OP_AND;};
 "|"                                                   {debug_print("BINARY_OR "); return BINARY_OP_OR;};
 "^"                                                   {debug_print("BINARY_XOR "); return BINARY_OP_XOR;};
+
+"&&"                                                   {debug_print("LOGICAL_AND "); return LOGICAL_AND;};
+"||"                                                   {debug_print("LOGICAL_OR "); return LOGICAL_OR;};
+
 
 
 
