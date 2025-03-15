@@ -439,6 +439,10 @@ ASTNode *evaluate_condition(ASTNode *condition, SymbolTable *table)
     return condition;
 }
 
+
+void mark_modified_variables(ASTNode *node, SymbolTable *table);
+void remove_unused_variables(ASTNode *node, SymbolTable *table);
+
 void find_and_set_variables(ASTNode *node, SymbolTable *table)
 {
     if (!node)
@@ -675,23 +679,67 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
         break;
 
     case NODE_FOR_LOOP:
+    {
+        SymbolTable loop_table;
+        init_symbol_table(&loop_table);
+
+        // Překopírijeme si tabulku
+        for (int i = 0; i < table->count; i++)
+        {
+            if (table->entries[i].data_type == TYPE_STRING)
+            {
+                set_variable(&loop_table, table->entries[i].name,
+                             table->entries[i].string_value,
+                             table->entries[i].is_initialized, TYPE_STRING);
+            }
+            else if (table->entries[i].data_type == TYPE_BOOLEAN)
+            {
+                set_variable(&loop_table, table->entries[i].name,
+                             &(table->entries[i].boolean_value),
+                             table->entries[i].is_initialized, TYPE_BOOLEAN);
+            }
+            else
+            {
+                set_variable(&loop_table, table->entries[i].name,
+                             &(table->entries[i].value),
+                             table->entries[i].is_initialized, TYPE_NUMBER);
+            }
+        }
+
         if (node->data.for_loop.init_expression)
         {
-            find_and_set_variables(node->data.for_loop.init_expression, table);
+            node->data.for_loop.init_expression = optimize_ast(node->data.for_loop.init_expression, &loop_table);
         }
-        if (node->data.for_loop.condition)
-        {
-            find_and_set_variables(node->data.for_loop.condition, table);
-        }
+
         if (node->data.for_loop.update)
         {
-            find_and_set_variables(node->data.for_loop.update, table);
+            mark_modified_variables(node->data.for_loop.update, &loop_table);
         }
+
         if (node->data.for_loop.body)
         {
-            find_and_set_variables(node->data.for_loop.body, table);
+            mark_modified_variables(node->data.for_loop.body, &loop_table);
         }
-        break;
+
+        // Mám to jako optimalizaci... ale bez toho is_modified_loop to budě dělat píčoviny
+        // Takže to pak dát někde při setování...
+        for (int i = 0; i < loop_table.count; i++)
+        {
+            if (loop_table.entries[i].is_modified_in_loop)
+            {
+                // TODO: Promyslet to s těma zasranejme scopama a vnitřní tabulkou for loopu
+                SymbolEntry *main_entry = lookup_variable(table, loop_table.entries[i].name);
+                if (main_entry)
+                {
+                    main_entry->is_modified_in_loop = 1;
+                    main_entry->is_used = 1;
+                    main_entry->is_initialized = 0; // Přezdívka pro konsantu to moje is_initiliazed
+                }
+            }
+        }
+    }
+
+    break;
 
     case NODE_FUNCTION_CALL:
         for (int i = 0; i < node->data.function_call.argument_count; i++)
@@ -729,9 +777,6 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
         break;
     }
 }
-
-void mark_modified_variables(ASTNode *node, SymbolTable *table);
-void remove_unused_variables(ASTNode *node, SymbolTable *table);
 
 // CPG optimalizování
 ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
@@ -997,7 +1042,7 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
             else if (entry->data_type == TYPE_BOOLEAN)
             {
                 new_node = create_boolean_node(entry->boolean_value);
-            } 
+            }
 
             if (new_node)
             {

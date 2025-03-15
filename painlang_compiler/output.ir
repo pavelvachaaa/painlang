@@ -1,48 +1,94 @@
 goto L0
 L1:
+function pow(2):
+param base
+param exp
+result = 1
+i = 0
+L2:
+t0 = i < exp
+if t0 == 0 goto L3
+t1 = result * base
+result = t1
+t2 = i + 1
+i = t2
+goto L2
+L3:
+return result
+end function pow
+L4:
+function factorial(1):
+param n
+fact = 1
+i = 1
+L5:
+t3 = i <= n
+if t3 == 0 goto L6
+t4 = fact * i
+fact = t4
+t5 = i + 1
+i = t5
+goto L5
+L6:
+return fact
+end function factorial
+L7:
 function convertNumberToString(1):
 param input
-t0 = input == 1
-if t0 == 0 goto L2
+t6 = input == 1
+if t6 == 0 goto L8
 return 'Jednička'
-L2:
-t1 = input == 0
-if t1 == 0 goto L4
+L8:
+t7 = input == 0
+if t7 == 0 goto L10
 return 'Nula'
-L4:
-t2 = input == 3
-if t2 == 0 goto L6
+L10:
+t8 = input == 3
+if t8 == 0 goto L12
 return 'Trojčičkaaa'
-L6:
+L12:
 return 'Nějaká jiná prasárna'
 end function convertNumberToString
-L8:
+L14:
 function isZero(1):
 param input
-t3 = input == 0
-if t3 == 0 goto L9
+t9 = input == 0
+if t9 == 0 goto L15
 print 'Ano'
 return true
-L9:
+L15:
 print 'Ne'
 return false
 end function isZero
-L11:
+L17:
 function printer(3):
 param a
 param b
 param c
 print a
-t4 = b + 28
-print t4
+t10 = b + 28
+print t10
 return 'nebavyyyyy'
 end function printer
 L0:
+arg 5
+t11 = call factorial, 1
+neco = t11
+print neco
+arg 2
+arg 10
+t12 = call pow, 2
+druhe_neco = t12
+print druhe_neco
+promenna_str = 'Pavel je v prdeli'
+promenna_num = 23
+promenna_bool = true
+z = false
 arg 0
-t5 = call isZero, 1
-p = t5
+t13 = call isZero, 1
+p = t13
 print p
 arg 2
-t6 = call convertNumberToString, 1
-vysledek = t6
+t14 = call convertNumberToString, 1
+vysledek = t14
 print vysledek
