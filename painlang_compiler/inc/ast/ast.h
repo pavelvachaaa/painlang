@@ -14,8 +14,9 @@ typedef enum
     NODE_PRINT,
     NODE_IF,
     NODE_BINARY_OP,
+    NODE_UNARY_OP,
     NODE_VARIABLE,
-    
+
     NODE_NUMBER,
     NODE_STRING,
     NODE_BOOLEAN,
@@ -34,6 +35,13 @@ typedef enum
     OP_MULTIPLY,
     OP_DIVIDE
 } BinaryOpType;
+
+typedef enum
+{
+    OP_LOGICAL_NOT,
+    OP_INCREMENT, // TODO: Pak upravit z předchozí double plus na op_increment kvůli optimalizaci instrukcí (dec, inc) místo x + 1 = > ...
+    OP_DECREMENT
+} UnaryOpType;
 
 typedef enum
 {
@@ -91,6 +99,11 @@ struct ASTNode
 
         struct
         {
+            UnaryOpType op;
+            ASTNode *value;
+        } unary_op;
+        struct
+        {
             char *name;
         } variable;
 
@@ -103,6 +116,11 @@ struct ASTNode
         {
             char *value;
         } string;
+
+        struct
+        {
+            uint8_t value;
+        } boolean;
 
         struct
         {
@@ -140,7 +158,7 @@ struct ASTNode
             ASTNode *expr;
         } return_statement;
     } data;
-    DataType type_annotation; 
+    DataType type_annotation;
 };
 
 ASTNode *create_program_node(ASTNode **statements, int count);
@@ -150,11 +168,12 @@ ASTNode *create_assignment_node(char *name, ASTNode *value);
 ASTNode *create_print_node(ASTNode *expr);
 ASTNode *create_if_node(ASTNode *condition, ASTNode *if_block, ASTNode *else_block);
 ASTNode *create_binary_op_node(BinaryOpType op, ASTNode *left, ASTNode *right);
+ASTNode *create_unary_op_node(UnaryOpType op, ASTNode *value);
 ASTNode *create_variable_node(char *name);
 
 ASTNode *create_number_node(int value);
 ASTNode *create_string_node(char *value);
-
+ASTNode *create_boolean_node(uint8_t value);
 
 ASTNode *create_condition_node(CondOpType op, ASTNode *left, ASTNode *right);
 ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTNode *update, ASTNode *body);
@@ -162,7 +181,6 @@ ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTN
 ASTNode *create_function_declaration_node(char *name, char **param_names, int param_count, DataType *types, ASTNode *body);
 ASTNode *create_function_call_node(char *name, ASTNode **arguments, int arg_count);
 ASTNode *create_return_node(ASTNode *expr);
-
 
 void find_and_set_variables(ASTNode *node, SymbolTable *table);
 ASTNode *optimize_ast(ASTNode *node, SymbolTable *table);

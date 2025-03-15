@@ -14,6 +14,9 @@ void print_operand(IROperand operand)
     case OPERAND_STRING_LITERAL:
         printf("'%s'", operand.value.string_literal);
         break;
+    case OPERAND_BOOLEAN_LITERAL:
+        operand.value.boolean_literal ? printf("true") : printf("false");
+        break;
     case OPERAND_TEMP:
         printf("t%d", operand.value.temp_number);
         break;

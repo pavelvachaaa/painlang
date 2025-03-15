@@ -122,6 +122,7 @@ int main(int argc, char **argv) {
 
 %union {
     int num;
+    uint8_t boolean_value;
     char *str;
     ASTNode *node;
     CondOpType cond_op;
@@ -140,8 +141,11 @@ int main(int argc, char **argv) {
 %token <str> IDENTIFIER ASSIGN SEMICOLON PRINT IF ELSE FOR FUNCTION RETURN STRING_LITERAL
 %token EQUALS NOT_EQUALS GREAT_OR_EQUALS LESS_OR_EQUALS GREATER_THAN LESS_THAN DOUBLE_PLUS DOUBLE_MINUS
 %token PLUS_ASSIGN MINUS_ASSIGN MULT_ASSIGN DIV_ASSIGN
+%token BINARY_OP_OR BINARY_OP_AND BINARY_OP_XOR
+%token UNARY_OP_NOT 
 
-%token <str> LL_TYPE_STRING, LL_TYPE_NUMBER
+%token <boolean_value> LITERAL_TRUE, LITERAL_FALSE
+%token <str> LL_TYPE_STRING, LL_TYPE_NUMBER, LL_TYPE_BOOLEAN
 
 %type <node> program statementList statement assignment varDeclaration vardec
 %type <node> printStatement expression term factor ifStatement block
@@ -319,6 +323,10 @@ typeRule: LL_TYPE_STRING
     {
         $$ = TYPE_NUMBER;
     }
+    | LL_TYPE_BOOLEAN
+    {
+        $$ = TYPE_BOOLEAN;
+    }
     ;
 
 forLoop: FOR '(' forInitExpression SEMICOLON condExpression SEMICOLON assignment ')' block
@@ -384,6 +392,14 @@ factor: NUMBER
     | STRING_LITERAL
     {
         $$ = create_string_node($1);
+    }
+    | LITERAL_TRUE 
+    {
+        $$ = create_boolean_node($1);
+    }
+    | LITERAL_FALSE 
+    {
+        $$ = create_boolean_node($1);
     }
     | IDENTIFIER
     {

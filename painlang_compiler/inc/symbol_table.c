@@ -156,6 +156,7 @@ void set_is_used(SymbolTable *table, const char *name)
 void set_variable(SymbolTable *table, const char *name, void *value, int is_initialized, DataType data_type)
 {
     SymbolEntry *entry = lookup_variable(table, name);
+    debug_print("I m setting variable %s data_type:%d \n ", name, data_type);
 
     if (entry)
     {
@@ -175,6 +176,12 @@ void set_variable(SymbolTable *table, const char *name, void *value, int is_init
         {
             free(entry->string_value);
             entry->string_value = strdup((char *)value);
+        }
+        else if (data_type == TYPE_BOOLEAN)
+        {
+            debug_print("I have set boolean");
+
+            entry->boolean_value = *(uint8_t *)value;
         }
     }
     else
@@ -199,6 +206,11 @@ void set_variable(SymbolTable *table, const char *name, void *value, int is_init
             {
                 free(entry->string_value);
                 entry->string_value = strdup((char *)value);
+            }
+            else if (data_type == TYPE_BOOLEAN)
+            {
+                debug_print("I have set boolean");
+                entry->boolean_value = *(uint8_t *)value;
             }
         }
         else
@@ -225,6 +237,11 @@ void set_variable(SymbolTable *table, const char *name, void *value, int is_init
             {
                 entry->string_value = strdup((char *)value);
                 entry->value = 0;
+            }
+            else if (data_type == TYPE_BOOLEAN)
+            {
+                debug_print("I have set boolean");
+                entry->boolean_value = *(uint8_t *)value;
             }
 
             table->count++;

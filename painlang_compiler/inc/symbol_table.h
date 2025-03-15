@@ -17,6 +17,7 @@ typedef struct
     int is_initialized;
     int is_modified_in_loop;
     int is_used;
+    uint8_t boolean_value;
     SymbolType type;
     DataType data_type;
     int scope_level; // Tohle je tak messy až to není pěkný

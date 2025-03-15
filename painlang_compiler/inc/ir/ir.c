@@ -24,6 +24,15 @@ IROperand ir_literal(int value)
     return operand;
 }
 
+IROperand ir_boolean_literal(uint8_t value)
+{
+    IROperand operand;
+    operand.type = OPERAND_BOOLEAN_LITERAL;
+    operand.value.boolean_literal = value;
+    operand.is_initialized = 1;
+    return operand;
+}
+
 IROperand ir_string_literal(const char *value)
 {
     IROperand operand;
@@ -135,6 +144,11 @@ IROperand generate_expression_ir(ASTNode *node, IRProgram *program)
         return ir_literal(node->data.number.value);
     }
 
+    case NODE_BOOLEAN:
+    {
+        return ir_boolean_literal(node->data.boolean.value);
+    }
+    break;
     case NODE_STRING:
     {
         return ir_string_literal(node->data.string.value);
@@ -454,6 +468,16 @@ char *get_operand_string(IROperand operand, char *buffer)
         break;
     case OPERAND_STRING_LITERAL:
         sprintf(buffer, "'%s'", strdup(operand.value.string_literal));
+        break;
+    case OPERAND_BOOLEAN_LITERAL:
+        if (operand.value.boolean_literal)
+        {
+            sprintf(buffer, "true");
+        }
+        else
+        {
+            sprintf(buffer, "false");
+        }
         break;
     case OPERAND_VARIABLE:
         sprintf(buffer, "%s", operand.value.variable);

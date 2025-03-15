@@ -1,6 +1,17 @@
+/*
+@a -> number, číslo k vynásobení samo  se sebou
+*/
+function pavel(a: number) {
+    return a *a;
+}
+
+let x : bool = true;
+let x2 : bool = false;
+
 print("Ahoj světe");
 let random_text : string = "Prdel";
 print(random_text);
+
 
 // Bez optimalizace má ekvivalent:
 //goto L0

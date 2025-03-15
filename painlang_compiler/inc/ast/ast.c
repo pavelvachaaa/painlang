@@ -105,6 +105,14 @@ ASTNode *create_string_node(char *value)
     return node;
 }
 
+ASTNode *create_boolean_node(uint8_t value)
+{
+    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
+    node->type = NODE_BOOLEAN;
+    node->data.boolean.value = value;
+    return node;
+}
+
 ASTNode *create_print_node(ASTNode *expr)
 {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
@@ -130,6 +138,14 @@ ASTNode *create_binary_op_node(BinaryOpType op, ASTNode *left, ASTNode *right)
     node->data.binary_op.op = op;
     node->data.binary_op.left = left;
     node->data.binary_op.right = right;
+    return node;
+}
+
+ASTNode *create_unary_op_node(UnaryOpType op, ASTNode *value)
+{
+    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
+    node->type = NODE_UNARY_OP;
+    node->data.unary_op.value = value;
     return node;
 }
 
@@ -168,6 +184,9 @@ DataType ast_to_st_type(NodeType type)
         break;
     case NODE_NUMBER:
         return TYPE_NUMBER;
+        break;
+    case NODE_BOOLEAN:
+        return TYPE_BOOLEAN;
         break;
 
     default:
@@ -218,6 +237,49 @@ ASTNode *evaluate_expression(ASTNode *node, SymbolTable *table)
                 entry->data_type = TYPE_STRING;
             }
             entry->is_initialized = 1;
+        }
+    }
+
+    if (node->type == NODE_UNARY_OP)
+    {
+        node->data.unary_op.value = evaluate_expression(node->data.unary_op.value, table);
+
+        if (node->data.unary_op.value->type == NODE_BOOLEAN)
+        {
+            uint8_t result;
+            switch (node->data.unary_op.op)
+            {
+
+            case OP_LOGICAL_NOT:
+                result = !node->data.unary_op.value->data.boolean.value;
+                free_ast(node->data.unary_op.value);
+                return create_boolean_node(result);
+                break;
+
+            default:
+                break;
+            }
+        }
+
+        // TODO: Domyslet jestli to dává smysl (hlavně pokud nedojde k evaluaci..)
+        if (node->data.unary_op.value->type == NODE_NUMBER)
+        {
+            int result = 0;
+            switch (node->data.unary_op.op)
+            {
+
+            case OP_INCREMENT:
+                free_ast(node->data.unary_op.value);
+                return create_number_node(result);
+                break;
+            case OP_DECREMENT:
+                free_ast(node->data.unary_op.value);
+                return create_number_node(result);
+                break;
+
+            default:
+                break;
+            }
         }
     }
 
@@ -360,6 +422,11 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
                     char *value = node->data.var_declaration.init_expr->data.string.value;
                     set_variable(table, node->data.var_declaration.var_name, value, 1, TYPE_STRING);
                 }
+                else if (type == NODE_BOOLEAN)
+                {
+                    uint8_t value = node->data.var_declaration.init_expr->data.boolean.value;
+                    set_variable(table, node->data.var_declaration.var_name, &value, 1, TYPE_BOOLEAN);
+                }
                 else if (type == NODE_FUNCTION_CALL)
                 {
                     int value = 0;
@@ -403,6 +470,11 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
                 set_variable(table, node->data.assignment.var_name,
                              node->data.assignment.value->data.string.value, 1, TYPE_STRING);
             }
+            else if (node->data.assignment.value->type == NODE_BOOLEAN)
+            {
+                uint8_t value = node->data.assignment.value->data.boolean.value;
+                set_variable(table, node->data.assignment.var_name, &value, 1, TYPE_BOOLEAN);
+            }
             else
             {
                 int value = 0;
@@ -424,6 +496,12 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
                 entry->string_value = strdup(node->data.assignment.value->data.string.value);
                 entry->is_initialized = 1;
                 entry->data_type = TYPE_STRING;
+            }
+            else if (entry && node->data.assignment.value->type == NODE_BOOLEAN)
+            {
+                entry->boolean_value = node->data.assignment.value->data.boolean.value;
+                entry->is_initialized = 1;
+                entry->data_type = TYPE_BOOLEAN;
             }
         }
 
@@ -448,7 +526,7 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
             if (entry)
             {
                 entry->is_used = 1;
-            } 
+            }
         }
     }
     break;
@@ -568,6 +646,10 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
             {
                 set_variable(table, node->data.var_declaration.var_name, node->data.var_declaration.init_expr->data.string.value, 1, TYPE_STRING);
             }
+            else if (node->data.var_declaration.init_expr->type == NODE_BOOLEAN)
+            {
+                set_variable(table, node->data.var_declaration.var_name, &(node->data.var_declaration.init_expr->data.boolean.value), 1, TYPE_BOOLEAN);
+            }
             // else if (node->data.var_declaration.init_expr->type == NODE_FUNCTION_CALL)
             // {
             //     set_is_used(table, node->data.var_declaration.var_name);
@@ -601,6 +683,10 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         else if (node->data.assignment.value->type == NODE_STRING)
         {
             set_variable(table, node->data.assignment.var_name, node->data.assignment.value->data.string.value, 1, TYPE_STRING);
+        }
+        else if (node->data.assignment.value->type == NODE_STRING)
+        {
+            set_variable(table, node->data.assignment.var_name, &(node->data.assignment.value->data.boolean.value), 1, TYPE_BOOLEAN);
         }
         else
         {
@@ -735,6 +821,10 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
             {
                 new_node = create_string_node(entry->string_value);
             }
+            else if (entry->data_type == TYPE_BOOLEAN)
+            {
+                new_node = create_boolean_node(entry->boolean_value);
+            }
 
             if (new_node)
             {
@@ -824,6 +914,12 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
                 set_variable(&loop_table, table->entries[i].name,
                              table->entries[i].string_value,
                              table->entries[i].is_initialized, TYPE_STRING);
+            }
+            else if (table->entries[i].data_type == TYPE_BOOLEAN)
+            {
+                set_variable(&loop_table, table->entries[i].name,
+                             &(table->entries[i].boolean_value),
+                             table->entries[i].is_initialized, TYPE_BOOLEAN);
             }
             else
             {
@@ -976,10 +1072,13 @@ void mark_modified_variables(ASTNode *node, SymbolTable *table)
             {
                 set_variable(table, node->data.assignment.var_name, node->data.assignment.value->data.string.value, 0, TYPE_STRING);
             }
+            else if (entry->data_type == TYPE_BOOLEAN)
+            {
+                set_variable(table, node->data.assignment.var_name, &(node->data.assignment.value->data.boolean.value), 0, TYPE_BOOLEAN);
+            }
             else
             {
                 int value = 0;
-
                 set_variable(table, node->data.assignment.var_name, &value, 0, TYPE_NUMBER);
             }
 
@@ -1006,13 +1105,16 @@ void mark_modified_variables(ASTNode *node, SymbolTable *table)
         {
             if (entry->data_type == TYPE_STRING)
             {
-                set_variable(table, node->data.assignment.var_name, node->data.assignment.value->data.string.value, 0, TYPE_STRING);
+                set_variable(table, node->data.var_declaration.var_name, node->data.var_declaration.init_expr->data.string.value, 0, TYPE_STRING);
+            }
+            else if (entry->data_type == TYPE_BOOLEAN)
+            {
+                set_variable(table, node->data.var_declaration.var_name, &(node->data.var_declaration.init_expr->data.boolean.value), 0, TYPE_BOOLEAN);
             }
             else
             {
                 int value = 0;
-
-                set_variable(table, node->data.assignment.var_name, &value, 0, TYPE_NUMBER);
+                set_variable(table, node->data.var_declaration.var_name, &value, 0, TYPE_NUMBER);
             }
 
             entry = lookup_variable(table, node->data.var_declaration.var_name);

@@ -44,13 +44,16 @@ char* process_string(char* text) {
 
 %%
 
-"//".*               { debug_print("SL-COMMENT"); }
+"//".*                                      { debug_print("SL-COMMENT"); }
 "/*"[^*]*"*"([^/][^*]*"*"[^/])*"/" { debug_print("ML-COMMENT"); }
 
 :                                                   {debug_print(":"); return ':';};
 ;                                                   {debug_print("SEMICOLON "); return SEMICOLON;};
 string                                                 {debug_print("string "); return LL_TYPE_STRING;};
 number                                                 {debug_print("number "); return LL_TYPE_NUMBER;};
+bool                                                  {debug_print("bool"); return LL_TYPE_BOOLEAN;}
+true                                                  { yylval.boolean_value = 1;  debug_print("true"); return LITERAL_TRUE;}
+false                                                 {yylval.boolean_value = 0;  debug_print("false"); return LITERAL_FALSE;}
 let                                                 {debug_print("DECLARE "); return DECLARE;};
 print                                               {debug_print("PRINT "); return PRINT;};
 function                                               {debug_print("FUNCTION "); return FUNCTION;};
@@ -74,6 +77,14 @@ else                                                {debug_print("ELSE "); retur
 "<"                                                 {debug_print("LESS_THAN" ); return LESS_THAN;};
 ","                                                 {debug_print("," ); return ',';};
 =                                                   {debug_print("ASSIGN "); return ASSIGN;};
+
+
+"!"                                                   {debug_print("UNARY_NOT "); return UNARY_OP_NOT;};
+"&"                                                  {debug_print("BINARY_AND "); return BINARY_OP_AND;};
+"|"                                                   {debug_print("BINARY_OR "); return BINARY_OP_OR;};
+"^"                                                   {debug_print("BINARY_XOR "); return BINARY_OP_XOR;};
+
+
 
 
 "+="                                                { return PLUS_ASSIGN; }

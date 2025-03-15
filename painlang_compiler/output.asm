@@ -7,6 +7,8 @@ section .data
     str_0 db "Ahoj světe", 0
     str_1 db "Prdel", 0
 section .bss
+    a resq 1
+    t0 resq 1
 
 section .text
     global main
@@ -19,6 +21,41 @@ main:
     ; IR: goto L0
     ; Skoč 
     jmp L0
+
+    ; IR: L1:
+L1:
+
+    ; IR: function pavel(1)
+pavel:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 64
+
+    ; IR: param a
+ ; Parametr a v registru rdi
+ mov [a], rdi
+
+    ; IR: t0 = a * a
+    ; Načti proměnnou a
+    mov rax, a
+    ; Vynásob konstantu a
+    imul rax, a
+    ; Ulož do [t0]
+    mov [t0], rax
+
+    ; IR: Neznám tě 20
+    ; Načti proměnnou [t0]
+    mov rax, [t0]
+    ; Return from function
+    mov rsp, rbp
+    pop rbp
+    ret
+
+    ; IR: end function pavel
+    ; Function epilogue
+    mov rsp, rbp
+    pop rbp
+    ret
 
     ; IR: L0:
 L0:

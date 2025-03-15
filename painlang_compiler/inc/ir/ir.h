@@ -41,6 +41,7 @@ typedef enum
     OPERAND_TEMP, // t1, ...
     OPERAND_LABEL,
     OPERAND_STRING_LITERAL, //"more"
+    OPERAND_BOOLEAN_LITERAL
 
 } OperandType;
 
@@ -55,6 +56,7 @@ typedef struct
         int temp_number;
         int label_number;
         char *string_literal;
+        uint8_t boolean_literal;
     } value;
     int is_initialized;
 
@@ -83,6 +85,7 @@ typedef struct
 
 void ir_init(IRProgram *program, SymbolTable* table);
 
+IROperand ir_boolean_literal(uint8_t value);
 IROperand ir_string_literal(const char *value);
 IROperand ir_literal(int value);
 IROperand ir_variable(const char *name, int is_initialized, DataType data_type);

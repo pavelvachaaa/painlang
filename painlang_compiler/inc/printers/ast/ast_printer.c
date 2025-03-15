@@ -46,11 +46,25 @@ void print_ast_helper(ASTNode *node, int indent)
         print_ast_helper(node->data.binary_op.left, indent + 1);
         print_ast_helper(node->data.binary_op.right, indent + 1);
         break;
+    case NODE_UNARY_OP:
+        printf("Unary operation\n");
+        print_ast_helper(node->data.unary_op.value, indent + 1);
+        break;
     case NODE_VARIABLE:
         printf("Variable: %s\n", node->data.variable.name);
         break;
     case NODE_NUMBER:
         printf("Number: %d\n", node->data.number.value);
+        break;
+    case NODE_BOOLEAN:
+        if (node->data.boolean.value)
+        {
+            printf("Boolean: true  (%d) \n", node->data.boolean.value);
+        }
+        else
+        {
+            printf("Boolean: false (%d) \n", node->data.boolean.value);
+        }
         break;
     case NODE_STRING:
         printf("String: %s\n", node->data.string.value);
