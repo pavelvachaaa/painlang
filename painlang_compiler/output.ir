@@ -80,10 +80,6 @@ arg 10
 t12 = call pow, 2
 druhe_neco = t12
 print druhe_neco
-promenna_str = 'Pavel je v prdeli'
-promenna_num = 23
-promenna_bool = true
-z = false
 arg 0
 t13 = call isZero, 1
 p = t13

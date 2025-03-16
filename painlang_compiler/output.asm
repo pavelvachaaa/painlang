@@ -15,9 +15,7 @@ section .data
     str_4 db "Ano", 0
     str_5 db "Ne", 0
     str_6 db "nebavyyyyy", 0
-    str_7 db "Pavel je v prdeli", 0
     a: db "",0
-    promenna_str: db "Pavel je v prdeli",0
     vysledek: db "",0
     t14: db "",0
 section .bss
@@ -45,9 +43,6 @@ section .bss
     neco resq 1
     t12 resq 1
     druhe_neco resq 1
-    promenna_num resq 1
-    promenna_bool resq 1
-    z resq 1
     t13 resq 1
     p resq 1
 
@@ -552,29 +547,6 @@ L0:
     mov rdi, format_int
     xor rax, rax
     call printf wrt ..plt
-
-    ; IR: promenna_str = 'str_7'
-    ; Přiřadit string address
-    mov rax, str_7
-    mov [promenna_str], rax
-
-    ; IR: promenna_num = 23
-    ; Načti konstantu 23
-    mov rax, 23
-    ; Ulož do [promenna_num]
-    mov [promenna_num], rax
-
-    ; IR: promenna_bool = 23
-    ; Načtin bool (1 byte) z bool_l_true
-    mov al, byte [bool_l_true] 
-    ; Ulož do [promenna_bool]
-    mov [promenna_bool], rax
-
-    ; IR: z = 23
-    ; Načtin bool (1 byte) z bool_l_false
-    mov al, byte [bool_l_false] 
-    ; Ulož do [z]
-    mov [z], rax
 
     ; IR: Neznám tě 24
     ; Načti konstantu 0

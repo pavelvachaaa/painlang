@@ -49,7 +49,7 @@ ASTNode *create_node_from_symbol(SymbolEntry *entry)
     }
 }
 
-void set_variable_from_node(SymbolTable *table, const char *name, ASTNode *value_node)
+void set_variable_from_node(SymbolTable *table, const char *name, ASTNode *value_node, int is_modified_in_loop)
 {
     if (!table || !name || !value_node)
         return;
@@ -88,6 +88,7 @@ void set_variable_from_node(SymbolTable *table, const char *name, ASTNode *value
             if (entry)
             {
                 entry->is_used = 1;
+                entry->is_modified_in_loop = is_modified_in_loop;
             }
         }
         break;
