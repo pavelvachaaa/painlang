@@ -3,199 +3,8 @@
 #include <string.h>
 #include "ast.h"
 #include "ast_helper.h"
-
-ASTNode *create_function_declaration_node(char *name, char **param_names, int param_count, DataType *types, DataType return_type, ASTNode *body)
-{
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = NODE_FUNCTION_DECLARATION;
-    node->data.function_declaration.name = strdup(name);
-    node->data.function_declaration.param_count = param_count;
-
-    if (param_count > 0)
-    {
-        node->data.function_declaration.param_types = (DataType *)malloc(sizeof(DataType) * param_count);
-
-        node->data.function_declaration.param_names = (char **)malloc(sizeof(char *) * param_count);
-        for (int i = 0; i < param_count; i++)
-        {
-            node->data.function_declaration.param_names[i] = strdup(param_names[i]);
-            node->data.function_declaration.param_types[i] = types[i];
-        }
-    }
-    else
-    {
-        node->data.function_declaration.param_names = NULL;
-        node->data.function_declaration.param_types = NULL;
-    }
-
-    node->data.function_declaration.return_type = return_type;
-    node->data.function_declaration.body = body;
-
-    return node;
-}
-
-ASTNode *create_function_call_node(char *name, ASTNode **arguments, int arg_count)
-{
-    ASTNode *node = malloc(sizeof(ASTNode));
-    node->type = NODE_FUNCTION_CALL;
-    node->data.function_call.func_name = strdup(name);
-    node->data.function_call.arguments = arguments;
-    node->data.function_call.argument_count = arg_count;
-    return node;
-}
-
-ASTNode *create_return_node(ASTNode *expr)
-{
-    ASTNode *node = malloc(sizeof(ASTNode));
-    node->type = NODE_RETURN;
-    node->data.return_statement.expr = expr;
-    return node;
-}
-
-ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTNode *update, ASTNode *body)
-{
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = NODE_FOR_LOOP;
-    node->data.for_loop.init_expression = init_expression;
-    node->data.for_loop.condition = condition;
-    node->data.for_loop.update = update;
-    node->data.for_loop.body = body;
-    return node;
-}
-
-ASTNode *create_program_node(ASTNode **statements, int count)
-{
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = NODE_PROGRAM;
-    node->data.statement_list.statements = statements;
-    node->data.statement_list.statement_count = count;
-    return node;
-}
-
-ASTNode *create_statement_list_node(ASTNode **statements, int count)
-{
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = NODE_STATEMENT_LIST;
-    node->data.statement_list.statements = statements;
-    node->data.statement_list.statement_count = count;
-    return node;
-}
-
-ASTNode *create_var_declaration_node(char *name, ASTNode *init_expr)
-{
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = NODE_VAR_DECLARATION;
-    node->data.var_declaration.var_name = strdup(name);
-    node->data.var_declaration.init_expr = init_expr;
-    return node;
-}
-
-ASTNode *create_assignment_node(char *name, ASTNode *value)
-{
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = NODE_ASSIGNMENT;
-    node->data.assignment.var_name = strdup(name);
-    node->data.assignment.value = value;
-    return node;
-}
-
-ASTNode *create_string_node(char *value)
-{
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = NODE_STRING;
-    node->data.string.value = strdup(value);
-    return node;
-}
-
-ASTNode *create_boolean_node(uint8_t value)
-{
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = NODE_BOOLEAN;
-    node->data.boolean.value = value;
-    return node;
-}
-
-ASTNode *create_print_node(ASTNode *expr)
-{
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = NODE_PRINT;
-    node->data.print.expr = expr;
-    return node;
-}
-
-ASTNode *create_if_node(ASTNode *condition, ASTNode *if_block, ASTNode *else_block)
-{
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = NODE_IF;
-    node->data.if_statement.condition = condition;
-    node->data.if_statement.if_block = if_block;
-    node->data.if_statement.else_block = else_block;
-    return node;
-}
-
-ASTNode *create_binary_op_node(BinaryOpType op, ASTNode *left, ASTNode *right)
-{
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = NODE_BINARY_OP;
-    node->data.binary_op.op = op;
-    node->data.binary_op.left = left;
-    node->data.binary_op.right = right;
-    return node;
-}
-
-ASTNode *create_unary_op_node(UnaryOpType op, ASTNode *value)
-{
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = NODE_UNARY_OP;
-    node->data.unary_op.value = value;
-    return node;
-}
-
-ASTNode *create_variable_node(char *name)
-{
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = NODE_VARIABLE;
-    node->data.variable.name = strdup(name);
-    return node;
-}
-
-ASTNode *create_number_node(int value)
-{
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = NODE_NUMBER;
-    node->data.number.value = value;
-    return node;
-}
-
-ASTNode *create_condition_node(CondOpType op, ASTNode *left, ASTNode *right)
-{
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    node->type = NODE_CONDITION;
-    node->data.condition.op = op;
-    node->data.condition.left = left;
-    node->data.condition.right = right;
-    return node;
-}
-
-DataType ast_to_st_type(NodeType type)
-{
-    switch (type)
-    {
-    case NODE_STRING:
-        return TYPE_STRING;
-        break;
-    case NODE_NUMBER:
-        return TYPE_NUMBER;
-        break;
-    case NODE_BOOLEAN:
-        return TYPE_BOOLEAN;
-        break;
-
-    default:
-        return TYPE_UNKNOWN;
-        break;
-    }
-}
+#include "ast_evaluator.h"
+#include "ast_creator.h"
 
 ASTNode *evaluate_expression(ASTNode *node, SymbolTable *table)
 {
@@ -205,9 +14,6 @@ ASTNode *evaluate_expression(ASTNode *node, SymbolTable *table)
 
     if (node->type == NODE_VARIABLE)
     {
-
-        printf("THIS MOTHER FUCKER! %s\n", node->data.variable.name);
-
         SymbolEntry *entry = lookup_variable(table, node->data.variable.name);
         return create_node_from_symbol(entry);
     }
@@ -220,132 +26,23 @@ ASTNode *evaluate_expression(ASTNode *node, SymbolTable *table)
         {
 
             ASTNode *evaluated_value = evaluate_expression(node->data.assignment.value, table);
-
-            printf("Zde jsem a %d", entry->data_type);
-
-            if (evaluated_value->type == NODE_NUMBER)
-            {
-                entry->value = evaluated_value->data.number.value;
-                entry->data_type = TYPE_NUMBER;
-            }
-            else if (evaluated_value->type == NODE_STRING)
-            {
-                entry->string_value = strdup(evaluated_value->data.string.value);
-                entry->data_type = TYPE_STRING;
-            }
-            else if (evaluated_value->type == NODE_BOOLEAN)
-            {
-                entry->boolean_value = evaluated_value->data.boolean.value;
-                entry->data_type = TYPE_BOOLEAN;
-            }
-            entry->is_initialized = 1;
+            update_symbol_entry_from_node(entry, evaluated_value);
 
             if (evaluated_value != node->data.assignment.value)
             {
                 free_ast(evaluated_value);
             }
-            entry->is_initialized = 1;
         }
     }
 
     if (node->type == NODE_UNARY_OP)
     {
-
-        node->data.unary_op.value = evaluate_expression(node->data.unary_op.value, table);
-
-        if (node->data.unary_op.value->type == NODE_BOOLEAN)
-        {
-            uint8_t result;
-            switch (node->data.unary_op.op)
-            {
-
-            case OP_LOGICAL_NOT:
-                printf("THIS MOTHER FUCKER!");
-                result = !node->data.unary_op.value->data.boolean.value;
-                free_ast(node->data.unary_op.value);
-                return create_boolean_node(result);
-                break;
-
-            default:
-                break;
-            }
-        }
-
-        // TODO: Domyslet jestli to dává smysl (hlavně pokud nedojde k evaluaci..)
-        if (node->data.unary_op.value->type == NODE_NUMBER)
-        {
-            int result = 0;
-            switch (node->data.unary_op.op)
-            {
-
-            case OP_INCREMENT:
-                free_ast(node->data.unary_op.value);
-                return create_number_node(result);
-                break;
-            case OP_DECREMENT:
-                free_ast(node->data.unary_op.value);
-                return create_number_node(result);
-                break;
-
-            default:
-                break;
-            }
-        }
+        return evaluate_unary_op_node(node, table);
     }
 
     if (node->type == NODE_BINARY_OP)
     {
-        // evalujeme dokud nám nezbyde vlastně jen čísla, na kterých můžeme operovat
-        node->data.binary_op.left = evaluate_expression(node->data.binary_op.left, table);
-        node->data.binary_op.right = evaluate_expression(node->data.binary_op.right, table);
-
-        if (node->data.binary_op.left->type == NODE_NUMBER && node->data.binary_op.right->type == NODE_NUMBER)
-        {
-            int left = node->data.binary_op.left->data.number.value;
-            int right = node->data.binary_op.right->data.number.value;
-            int result = 0;
-
-            switch (node->data.binary_op.op)
-            {
-            case OP_ADD:
-                result = left + right;
-                break;
-            case OP_SUBTRACT:
-                result = left - right;
-                break;
-            case OP_MULTIPLY:
-                result = left * right;
-                break;
-            case OP_DIVIDE:
-                result = left / right;
-                break;
-            }
-
-            free_ast(node->data.binary_op.left);
-            free_ast(node->data.binary_op.right);
-            return create_number_node(result);
-        }
-
-        if (node->data.binary_op.left->type == NODE_BOOLEAN && node->data.binary_op.right->type == NODE_BOOLEAN)
-        {
-            uint8_t left = node->data.binary_op.left->data.boolean.value;
-            uint8_t right = node->data.binary_op.right->data.boolean.value;
-            uint8_t result = 0;
-
-            switch (node->data.binary_op.op)
-            {
-            case OP_LOGICAL_OR:
-                result = left || right;
-                break;
-            case OP_LOGICAL_AND:
-                result = left && right;
-                break;
-            }
-
-            free_ast(node->data.binary_op.left);
-            free_ast(node->data.binary_op.right);
-            return create_boolean_node(result);
-        }
+        return evaluate_binary_op_node(node, table);
     }
 
     return node;
@@ -381,29 +78,7 @@ ASTNode *evaluate_condition(ASTNode *condition, SymbolTable *table)
     {
         int left = condition->data.condition.left->data.number.value;
         int right = condition->data.condition.right->data.number.value;
-        int result = 0;
-
-        switch (condition->data.condition.op)
-        {
-        case COND_GREATER_THAN:
-            result = left > right;
-            break;
-        case COND_LESS_THAN:
-            result = left < right;
-            break;
-        case COND_EQUALS:
-            result = left == right;
-            break;
-        case COND_NOT_EQUALS:
-            result = left != right;
-            break;
-        case COND_GREATER_OR_EQUALS:
-            result = left >= right;
-            break;
-        case COND_LESS_OR_EQUALS:
-            result = left <= right;
-            break;
-        }
+        int result = evaluate_condition_op(condition->data.condition.op, left, right);
 
         return create_number_node(result);
     }
@@ -441,25 +116,7 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
             {
                 SymbolEntry *entry = lookup_variable(table, node->data.var_declaration.var_name);
                 node->data.var_declaration.init_expr = replace_variables(node->data.var_declaration.init_expr, table);
-
-                if (entry && node->data.var_declaration.init_expr->type == NODE_NUMBER)
-                {
-                    entry->value = node->data.var_declaration.init_expr->data.number.value;
-                    entry->is_initialized = 1;
-                    entry->data_type = TYPE_NUMBER;
-                }
-                else if (entry && node->data.var_declaration.init_expr->type == NODE_STRING)
-                {
-                    entry->string_value = strdup(node->data.var_declaration.init_expr->data.string.value);
-                    entry->is_initialized = 1;
-                    entry->data_type = TYPE_STRING;
-                }
-                else if (entry && node->data.var_declaration.init_expr->type == NODE_BOOLEAN)
-                {
-                    entry->boolean_value = node->data.var_declaration.init_expr->data.boolean.value;
-                    entry->is_initialized = 1;
-                    entry->data_type = TYPE_BOOLEAN;
-                }
+                update_symbol_entry_from_node(entry, node->data.var_declaration.init_expr);
             }
         }
 
@@ -480,25 +137,7 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
         {
             SymbolEntry *entry = lookup_variable(table, node->data.assignment.var_name);
             node->data.assignment.value = replace_variables(node->data.assignment.value, table);
-
-            if (entry && node->data.assignment.value->type == NODE_NUMBER)
-            {
-                entry->value = node->data.assignment.value->data.number.value;
-                entry->is_initialized = 1;
-                entry->data_type = TYPE_NUMBER;
-            }
-            else if (entry && node->data.assignment.value->type == NODE_STRING)
-            {
-                entry->string_value = strdup(node->data.assignment.value->data.string.value);
-                entry->is_initialized = 1;
-                entry->data_type = TYPE_STRING;
-            }
-            else if (entry && node->data.assignment.value->type == NODE_BOOLEAN)
-            {
-                entry->boolean_value = node->data.assignment.value->data.boolean.value;
-                entry->is_initialized = 1;
-                entry->data_type = TYPE_BOOLEAN;
-            }
+            update_symbol_entry_from_node(entry, node->data.assignment.value);
         }
 
         // TODO: Prozkoumat proč jsem to sem dal??
@@ -561,29 +200,7 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
     {
         SymbolTable loop_table;
         init_symbol_table(&loop_table);
-
-        // Překopírijeme si tabulku
-        for (int i = 0; i < table->count; i++)
-        {
-            if (table->entries[i].data_type == TYPE_STRING)
-            {
-                set_variable(&loop_table, table->entries[i].name,
-                             table->entries[i].string_value,
-                             table->entries[i].is_initialized, TYPE_STRING);
-            }
-            else if (table->entries[i].data_type == TYPE_BOOLEAN)
-            {
-                set_variable(&loop_table, table->entries[i].name,
-                             &(table->entries[i].boolean_value),
-                             table->entries[i].is_initialized, TYPE_BOOLEAN);
-            }
-            else
-            {
-                set_variable(&loop_table, table->entries[i].name,
-                             &(table->entries[i].value),
-                             table->entries[i].is_initialized, TYPE_NUMBER);
-            }
-        }
+        copy_symbol_table(&loop_table, table);
 
         if (node->data.for_loop.init_expression)
         {
@@ -600,22 +217,7 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
             mark_modified_variables(node->data.for_loop.body, &loop_table);
         }
 
-        // Mám to jako optimalizaci... ale bez toho is_modified_loop to budě dělat píčoviny
-        // Takže to pak dát někde při setování...
-        for (int i = 0; i < loop_table.count; i++)
-        {
-            if (loop_table.entries[i].is_modified_in_loop)
-            {
-                // TODO: Promyslet to s těma zasranejme scopama a vnitřní tabulkou for loopu
-                SymbolEntry *main_entry = lookup_variable(table, loop_table.entries[i].name);
-                if (main_entry)
-                {
-                    main_entry->is_modified_in_loop = 1;
-                    main_entry->is_used = 1;
-                    main_entry->is_initialized = 0; // Přezdívka pro konsantu to moje is_initiliazed
-                }
-            }
-        }
+        update_loop_modified_variables(table, &loop_table);
     }
 
     break;
@@ -761,80 +363,7 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         break;
 
     case NODE_BINARY_OP:
-        node->data.binary_op.left = optimize_ast(node->data.binary_op.left, table);
-        node->data.binary_op.right = optimize_ast(node->data.binary_op.right, table);
-
-        if (node->data.binary_op.left->type == NODE_NUMBER &&
-            node->data.binary_op.right->type == NODE_NUMBER)
-        {
-            int left = node->data.binary_op.left->data.number.value;
-            int right = node->data.binary_op.right->data.number.value;
-            int result = 0;
-
-            switch (node->data.binary_op.op)
-            {
-            case OP_ADD:
-                result = left + right;
-                break;
-            case OP_SUBTRACT:
-                result = left - right;
-                break;
-            case OP_MULTIPLY:
-                result = left * right;
-                break;
-            case OP_DIVIDE:
-                if (right != 0)
-                    result = left / right;
-                else
-                    return node;
-                break;
-            }
-
-            ASTNode *number_node = create_number_node(result);
-
-            ASTNode *left_node = node->data.binary_op.left;
-            ASTNode *right_node = node->data.binary_op.right;
-
-            node->data.binary_op.left = NULL;
-            node->data.binary_op.right = NULL;
-
-            free_ast(node);
-            free_ast(left_node);
-            free_ast(right_node);
-
-            return number_node;
-        }
-        else if (node->data.binary_op.left->type == NODE_BOOLEAN &&
-                 node->data.binary_op.right->type == NODE_BOOLEAN)
-        {
-            uint8_t left = node->data.binary_op.left->data.boolean.value;
-            uint8_t right = node->data.binary_op.right->data.boolean.value;
-            uint8_t result = 0;
-
-            switch (node->data.binary_op.op)
-            {
-            case OP_LOGICAL_OR:
-                result = left || right;
-                break;
-            case OP_LOGICAL_AND:
-                result = left && right;
-                break;
-            }
-
-            ASTNode *boolean_node = create_boolean_node(result);
-
-            ASTNode *left_node = node->data.binary_op.left;
-            ASTNode *right_node = node->data.binary_op.right;
-
-            node->data.binary_op.left = NULL;
-            node->data.binary_op.right = NULL;
-
-            free_ast(node);
-            free_ast(left_node);
-            free_ast(right_node);
-
-            return boolean_node;
-        }
+        return evaluate_binary_op_node(node, table);
         break;
 
     case NODE_VARIABLE:
@@ -861,54 +390,13 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
     break;
 
     case NODE_UNARY_OP:
-        node->data.unary_op.value = optimize_ast(node->data.unary_op.value, table);
-
-        if (node->data.unary_op.op == OP_LOGICAL_NOT &&
-            node->data.unary_op.value->type == NODE_BOOLEAN)
-        {
-            uint8_t value = node->data.unary_op.value->data.boolean.value;
-            uint8_t result = !value;
-
-            ASTNode *boolean_node = create_boolean_node(result);
-
-            ASTNode *value_node = node->data.unary_op.value;
-            node->data.unary_op.value = NULL;
-
-            free_ast(node);
-            free_ast(value_node);
-
-            return boolean_node;
-        }
-
-        else if ((node->data.unary_op.op == OP_INCREMENT ||
-                  node->data.unary_op.op == OP_DECREMENT) &&
-                 node->data.unary_op.value->type == NODE_NUMBER)
-        {
-            int value = node->data.unary_op.value->data.number.value;
-            int result;
-
-            if (node->data.unary_op.op == OP_INCREMENT)
-                result = value + 1;
-            else
-                result = value - 1;
-
-            ASTNode *number_node = create_number_node(result);
-
-            ASTNode *value_node = node->data.unary_op.value;
-            node->data.unary_op.value = NULL;
-
-            free_ast(node);
-            free_ast(value_node);
-
-            return number_node;
-        }
+        return evaluate_unary_op_node(node, table);
         break;
 
     case NODE_FUNCTION_CALL:
         // výrazy v argumentech
         for (int i = 0; i < node->data.function_call.argument_count; i++)
         {
-            printf("Ahoj světe");
             node->data.function_call.arguments[i] = optimize_ast(node->data.function_call.arguments[i], table);
         }
         break;
@@ -923,29 +411,7 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         {
             int left = node->data.condition.left->data.number.value;
             int right = node->data.condition.right->data.number.value;
-            int result = 0;
-
-            switch (node->data.condition.op)
-            {
-            case COND_GREATER_THAN:
-                result = left > right;
-                break;
-            case COND_LESS_THAN:
-                result = left < right;
-                break;
-            case COND_EQUALS:
-                result = left == right;
-                break;
-            case COND_NOT_EQUALS:
-                result = left != right;
-                break;
-            case COND_GREATER_OR_EQUALS:
-                result = left >= right;
-                break;
-            case COND_LESS_OR_EQUALS:
-                result = left <= right;
-                break;
-            }
+            int result = evaluate_condition_op(node->data.condition.op, left, right);
 
             ASTNode *number_node = create_number_node(result);
 
@@ -966,17 +432,7 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         {
             uint8_t left = node->data.condition.left->data.boolean.value;
             uint8_t right = node->data.condition.right->data.boolean.value;
-            uint8_t result = 0;
-
-            switch (node->data.condition.op)
-            {
-            case COND_EQUALS:
-                result = left == right;
-                break;
-            case COND_NOT_EQUALS:
-                result = left != right;
-                break;
-            }
+            uint8_t result = evaluate_boolean_condition_op(node->data.condition.op, left, right);
 
             ASTNode *boolean_node = create_boolean_node(result);
 
@@ -998,29 +454,7 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
     {
         SymbolTable loop_table;
         init_symbol_table(&loop_table);
-
-        // Překopírijeme si tabulku
-        for (int i = 0; i < table->count; i++)
-        {
-            if (table->entries[i].data_type == TYPE_STRING)
-            {
-                set_variable(&loop_table, table->entries[i].name,
-                             table->entries[i].string_value,
-                             table->entries[i].is_initialized, TYPE_STRING);
-            }
-            else if (table->entries[i].data_type == TYPE_BOOLEAN)
-            {
-                set_variable(&loop_table, table->entries[i].name,
-                             &(table->entries[i].boolean_value),
-                             table->entries[i].is_initialized, TYPE_BOOLEAN);
-            }
-            else
-            {
-                set_variable(&loop_table, table->entries[i].name,
-                             &(table->entries[i].value),
-                             table->entries[i].is_initialized, TYPE_NUMBER);
-            }
-        }
+        copy_symbol_table(&loop_table, table);
 
         if (node->data.for_loop.init_expression)
         {
@@ -1037,39 +471,15 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
             mark_modified_variables(node->data.for_loop.body, &loop_table);
         }
 
-        // Mám to jako optimalizaci... ale bez toho is_modified_loop to budě dělat píčoviny
-        // Takže to pak dát někde při setování...
-        for (int i = 0; i < loop_table.count; i++)
-        {
-            if (loop_table.entries[i].is_modified_in_loop)
-            {
-                // TODO: Promyslet to s těma zasranejme scopama a vnitřní tabulkou for loopu
-                SymbolEntry *main_entry = lookup_variable(table, loop_table.entries[i].name);
-                if (main_entry)
-                {
-                    main_entry->is_modified_in_loop = 1;
-                    main_entry->is_used = 1;
-                    main_entry->is_initialized = 0; // Přezdívka pro konsantu to moje is_initiliazed
-                }
-            }
-        }
+        update_loop_modified_variables(table, &loop_table);
 
         remove_unused_variables(node->data.for_loop.body, &loop_table);
-
-        // if (node->data.for_loop.update)
-        //  {
-        //      node->data.for_loop.update = optimize_ast(node->data.for_loop.update, &loop_table);
-        // }
-
-        // TODO: Mazat loop, když bude vždycky neplatná podmínka
         break;
     }
     case NODE_STRING:
-
         break;
 
     case NODE_NUMBER:
-        // Numbers are already optimized
         break;
     }
 

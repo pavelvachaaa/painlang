@@ -184,6 +184,7 @@ ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTN
 ASTNode *create_function_declaration_node(char *name, char **param_names, int param_count, DataType *types, DataType return_type, ASTNode *body);
 ASTNode *create_function_call_node(char *name, ASTNode **arguments, int arg_count);
 ASTNode *create_return_node(ASTNode *expr);
+ASTNode *evaluate_expression(ASTNode *node, SymbolTable *table);
 
 void find_and_set_variables(ASTNode *node, SymbolTable *table);
 ASTNode *optimize_ast(ASTNode *node, SymbolTable *table);

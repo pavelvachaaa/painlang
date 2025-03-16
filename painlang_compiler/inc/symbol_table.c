@@ -119,6 +119,49 @@ void exit_scope(SymbolTable *table)
     }
 }
 
+// Mám to jako optimalizaci... ale bez toho is_modified_loop to budě dělat píčoviny
+// Takže to pak dát někde při setování...
+void update_loop_modified_variables(SymbolTable *main_table, SymbolTable *loop_table)
+{
+    for (int i = 0; i < loop_table->count; i++) {
+        if (loop_table->entries[i].is_modified_in_loop) {
+                            // TODO: Promyslet to s těma zasranejme scopama a vnitřní tabulkou for loopu
+
+            SymbolEntry *main_entry = lookup_variable(main_table, loop_table->entries[i].name);
+            if (main_entry) {
+                main_entry->is_modified_in_loop = 1;
+                main_entry->is_used = 1;
+                main_entry->is_initialized = 0; // TODO: O tomhle popřemýšlet..
+            }
+        }
+    }
+}
+
+void copy_symbol_table(SymbolTable *dest, SymbolTable *src)
+{
+    if (!dest || !src) return;
+    
+    init_symbol_table(dest);
+    
+    for (int i = 0; i < src->count; i++) {
+        if (src->entries[i].data_type == TYPE_STRING) {
+            set_variable(dest, src->entries[i].name,
+                        src->entries[i].string_value,
+                        src->entries[i].is_initialized, TYPE_STRING);
+        } else if (src->entries[i].data_type == TYPE_BOOLEAN) {
+            set_variable(dest, src->entries[i].name,
+                        &(src->entries[i].boolean_value),
+                        src->entries[i].is_initialized, TYPE_BOOLEAN);
+        } else {
+            set_variable(dest, src->entries[i].name,
+                        &(src->entries[i].value),
+                        src->entries[i].is_initialized, TYPE_NUMBER);
+        }
+    }
+}
+
+
+
 SymbolEntry *lookup_variable(SymbolTable *table, const char *name)
 {
     for (int i = table->count - 1; i >= 0; i--) // Prioritizujeme vnitřní scope

@@ -59,4 +59,8 @@ void set_is_used(SymbolTable *table, const char *name);
 
 void print_symbol_table(SymbolTable *table);
 
+void copy_symbol_table(SymbolTable *dest, SymbolTable *src);
+void update_loop_modified_variables(SymbolTable *main_table, SymbolTable *loop_table);
+
+
 void free_symbol_table(SymbolTable *table);

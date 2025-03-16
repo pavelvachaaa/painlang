@@ -7,6 +7,7 @@
         "symbol_table.h": "c",
         "types.h": "c",
         "ast_printer.h": "c",
-        "instruction_printer.h": "c"
+        "instruction_printer.h": "c",
+        "ast_evaluator.h": "c"
     }
 }

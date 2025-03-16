@@ -49,6 +49,36 @@ ASTNode *create_node_from_symbol(SymbolEntry *entry)
     }
 }
 
+void update_symbol_entry_from_node(SymbolEntry *entry, ASTNode *node)
+{
+    if (!entry || !node)
+        return;
+
+    switch (node->type)
+    {
+    case NODE_NUMBER:
+        entry->value = node->data.number.value;
+        entry->data_type = TYPE_NUMBER;
+        break;
+    case NODE_STRING:
+        if (entry->string_value)
+        {
+            free(entry->string_value);
+        }
+        entry->string_value = strdup(node->data.string.value);
+        entry->data_type = TYPE_STRING;
+        break;
+    case NODE_BOOLEAN:
+        entry->boolean_value = node->data.boolean.value;
+        entry->data_type = TYPE_BOOLEAN;
+        break;
+    default:
+        return;
+    }
+
+    entry->is_initialized = 1;
+}
+
 void set_variable_from_node(SymbolTable *table, const char *name, ASTNode *value_node, int is_modified_in_loop)
 {
     if (!table || !name || !value_node)
