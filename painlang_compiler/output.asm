@@ -10,7 +10,8 @@ section .data
 
     str_0 db "Modulo test:", 0
     str_1 db "isEven test:", 0
-    str_2 db "isNotEven test:", 0
+    str_2 db "isOdd test:", 0
+    str_3 db "isPrime", 0
 section .bss
     base resq 1
     exp resq 1
@@ -20,30 +21,38 @@ section .bss
     t1 resq 1
     t2 resq 1
     n resq 1
-    fact resq 1
     t3 resq 1
     t4 resq 1
     t5 resq 1
-    a resq 1
-    b resq 1
     t6 resq 1
     t7 resq 1
     t8 resq 1
+    fact resq 1
     t9 resq 1
     t10 resq 1
     t11 resq 1
+    a resq 1
+    b resq 1
     t12 resq 1
     t13 resq 1
-    x resq 1
     t14 resq 1
-    res resq 1
     t15 resq 1
-    resVen resq 1
     t16 resq 1
     t17 resq 1
     t18 resq 1
     t19 resq 1
+    x resq 1
     t20 resq 1
+    res resq 1
+    t21 resq 1
+    resVen resq 1
+    t22 resq 1
+    t23 resq 1
+    t24 resq 1
+    t25 resq 1
+    primeTest resq 1
+    t26 resq 1
+    primeTest2 resq 1
 
 section .text
     global main
@@ -158,6 +167,163 @@ L3:
     ; IR: L4:
 L4:
 
+    ; IR: function isPrime(1)
+isPrime:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 64
+
+    ; IR: param n
+ ; Parametr n v registru rdi
+ mov [n], rdi
+
+    ; IR: t3 = n <= 1
+    ; Načti proměnnou [n]
+    mov rax, [n]
+    ; Porovnej
+    mov rbx, 1
+    cmp rax, rbx
+    setle al
+    movzx rax, al
+    ; Ulož do [t3]
+    mov [t3], rax
+
+    ; IR: if t3 == 0 goto L5
+    ; Skoč když false
+    mov rax, [t3]
+    cmp rax, 0
+    je L5
+
+    ; IR: Neznám tě 23
+    ; Načtin bool (1 byte) z bool_l_false
+    mov al, byte [bool_l_false] 
+    ; Return from function
+    mov rsp, rbp
+    pop rbp
+    ret
+
+    ; IR: L5:
+L5:
+
+    ; IR: i = 2
+    ; Načti konstantu 2
+    mov rax, 2
+    ; Ulož do [i]
+    mov [i], rax
+
+    ; IR: L7:
+L7:
+
+    ; IR: t4 = i * i
+    ; Načti proměnnou [i]
+    mov rax, [i]
+    ; Vynásob konstantu [i]
+    imul rax, [i]
+    ; Ulož do [t4]
+    mov [t4], rax
+
+    ; IR: t5 = t4 <= n
+    ; Načti proměnnou [t4]
+    mov rax, [t4]
+    ; Porovnej
+    mov rbx, [n]
+    cmp rax, rbx
+    setle al
+    movzx rax, al
+    ; Ulož do [t5]
+    mov [t5], rax
+
+    ; IR: if t5 == 0 goto L8
+    ; Skoč když false
+    mov rax, [t5]
+    cmp rax, 0
+    je L8
+
+    ; IR: Neznám tě 24
+    ; Načti proměnnou [n]
+    mov rax, [n]
+     ; Argument 0 v registru rdi
+     mov rdi, rax
+
+    ; IR: Neznám tě 24
+    ; Načti proměnnou [i]
+    mov rax, [i]
+     ; Argument 1 v registru rsi
+     mov rsi, rax
+
+    ; IR: Neznám tě 22
+    ; Align stack 16 bytes 
+    ; Call function modulo
+    call modulo
+    ; Ulož hodnotu z rax
+    mov [t6], rax
+
+    ; IR: t7 = t6 == 0
+    ; Načti proměnnou [t6]
+    mov rax, [t6]
+    ; Porovnej
+    mov rbx, 0
+    cmp rax, rbx
+    sete al
+    movzx rax, al
+    ; Ulož do [t7]
+    mov [t7], rax
+
+    ; IR: if t7 == 0 goto L11
+    ; Skoč když false
+    mov rax, [t7]
+    cmp rax, 0
+    je L11
+
+    ; IR: Neznám tě 23
+    ; Načtin bool (1 byte) z bool_l_false
+    mov al, byte [bool_l_false] 
+    ; Return from function
+    mov rsp, rbp
+    pop rbp
+    ret
+
+    ; IR: L11:
+L11:
+
+    ; IR: t8 = i + 1
+    ; Načti proměnnou [i]
+    mov rax, [i]
+    ; Sečti konstantu 1
+    add rax, 1
+    ; Ulož do [t8]
+    mov [t8], rax
+
+    ; IR: i = t8
+    ; Načti proměnnou [t8]
+    mov rax, [t8]
+    ; Ulož do [i]
+    mov [i], rax
+
+    ; IR: goto L7
+    ; Skoč 
+    jmp L7
+
+    ; IR: L8:
+L8:
+
+    ; IR: Neznám tě 23
+    ; Načtin bool (1 byte) z bool_l_true
+    mov al, byte [bool_l_true] 
+    ; Return from function
+    mov rsp, rbp
+    pop rbp
+    ret
+
+    ; IR: end function isPrime
+    ; Function epilogue
+    mov rsp, rbp
+    pop rbp
+    ret
+
+    ; IR: L13:
+L13:
+
     ; IR: function factorial(1)
 factorial:
     push rbp
@@ -180,10 +346,10 @@ factorial:
     ; Ulož do [i]
     mov [i], rax
 
-    ; IR: L5:
-L5:
+    ; IR: L14:
+L14:
 
-    ; IR: t3 = i <= n
+    ; IR: t9 = i <= n
     ; Načti proměnnou [i]
     mov rax, [i]
     ; Porovnej
@@ -191,49 +357,49 @@ L5:
     cmp rax, rbx
     setle al
     movzx rax, al
-    ; Ulož do [t3]
-    mov [t3], rax
+    ; Ulož do [t9]
+    mov [t9], rax
 
-    ; IR: if t3 == 0 goto L6
+    ; IR: if t9 == 0 goto L15
     ; Skoč když false
-    mov rax, [t3]
+    mov rax, [t9]
     cmp rax, 0
-    je L6
+    je L15
 
-    ; IR: t4 = fact * i
+    ; IR: t10 = fact * i
     ; Načti proměnnou [fact]
     mov rax, [fact]
     ; Vynásob konstantu [i]
     imul rax, [i]
-    ; Ulož do [t4]
-    mov [t4], rax
+    ; Ulož do [t10]
+    mov [t10], rax
 
-    ; IR: fact = t4
-    ; Načti proměnnou [t4]
-    mov rax, [t4]
+    ; IR: fact = t10
+    ; Načti proměnnou [t10]
+    mov rax, [t10]
     ; Ulož do [fact]
     mov [fact], rax
 
-    ; IR: t5 = i + 1
+    ; IR: t11 = i + 1
     ; Načti proměnnou [i]
     mov rax, [i]
     ; Sečti konstantu 1
     add rax, 1
-    ; Ulož do [t5]
-    mov [t5], rax
+    ; Ulož do [t11]
+    mov [t11], rax
 
-    ; IR: i = t5
-    ; Načti proměnnou [t5]
-    mov rax, [t5]
+    ; IR: i = t11
+    ; Načti proměnnou [t11]
+    mov rax, [t11]
     ; Ulož do [i]
     mov [i], rax
 
-    ; IR: goto L5
+    ; IR: goto L14
     ; Skoč 
-    jmp L5
+    jmp L14
 
-    ; IR: L6:
-L6:
+    ; IR: L15:
+L15:
 
     ; IR: Neznám tě 23
     ; Načti proměnnou [fact]
@@ -249,8 +415,8 @@ L6:
     pop rbp
     ret
 
-    ; IR: L7:
-L7:
+    ; IR: L16:
+L16:
 
     ; IR: function modulo(2)
 modulo:
@@ -266,7 +432,7 @@ modulo:
  ; Parametr b v registru rsi
  mov [b], rsi
 
-    ; IR: t6 = a / b
+    ; IR: t12 = a / b
     ; Načti proměnnou [a]
     mov rax, [a]
     ; Vynuluj 
@@ -274,28 +440,28 @@ modulo:
     ; Vyděl proměnnou [b]
     mov rbx, [b]
     idiv rbx
-    ; Ulož do [t6]
-    mov [t6], rax
+    ; Ulož do [t12]
+    mov [t12], rax
 
-    ; IR: t7 = t6 * b
-    ; Načti proměnnou [t6]
-    mov rax, [t6]
+    ; IR: t13 = t12 * b
+    ; Načti proměnnou [t12]
+    mov rax, [t12]
     ; Vynásob konstantu [b]
     imul rax, [b]
-    ; Ulož do [t7]
-    mov [t7], rax
+    ; Ulož do [t13]
+    mov [t13], rax
 
-    ; IR: t8 = a - t7
+    ; IR: t14 = a - t13
     ; Načti proměnnou [a]
     mov rax, [a]
-    ; Odečti proměnnou [t7]
-    sub rax, [t7]
-    ; Ulož do [t8]
-    mov [t8], rax
+    ; Odečti proměnnou [t13]
+    sub rax, [t13]
+    ; Ulož do [t14]
+    mov [t14], rax
 
     ; IR: Neznám tě 23
-    ; Načti proměnnou [t8]
-    mov rax, [t8]
+    ; Načti proměnnou [t14]
+    mov rax, [t14]
     ; Return from function
     mov rsp, rbp
     pop rbp
@@ -307,8 +473,8 @@ modulo:
     pop rbp
     ret
 
-    ; IR: L8:
-L8:
+    ; IR: L17:
+L17:
 
     ; IR: function isEven(1)
 isEven:
@@ -337,24 +503,24 @@ isEven:
     ; Call function modulo
     call modulo
     ; Ulož hodnotu z rax
-    mov [t9], rax
+    mov [t15], rax
 
-    ; IR: t10 = t9 == 0
-    ; Načti proměnnou [t9]
-    mov rax, [t9]
+    ; IR: t16 = t15 == 0
+    ; Načti proměnnou [t15]
+    mov rax, [t15]
     ; Porovnej
     mov rbx, 0
     cmp rax, rbx
     sete al
     movzx rax, al
-    ; Ulož do [t10]
-    mov [t10], rax
+    ; Ulož do [t16]
+    mov [t16], rax
 
-    ; IR: if t10 == 0 goto L9
+    ; IR: if t16 == 0 goto L18
     ; Skoč když false
-    mov rax, [t10]
+    mov rax, [t16]
     cmp rax, 0
-    je L9
+    je L18
 
     ; IR: Neznám tě 23
     ; Načtin bool (1 byte) z bool_l_true
@@ -364,12 +530,12 @@ isEven:
     pop rbp
     ret
 
-    ; IR: goto L10
+    ; IR: goto L19
     ; Skoč 
-    jmp L10
+    jmp L19
 
-    ; IR: L9:
-L9:
+    ; IR: L18:
+L18:
 
     ; IR: Neznám tě 23
     ; Načtin bool (1 byte) z bool_l_false
@@ -379,8 +545,8 @@ L9:
     pop rbp
     ret
 
-    ; IR: L10:
-L10:
+    ; IR: L19:
+L19:
 
     ; IR: end function isEven
     ; Function epilogue
@@ -388,8 +554,8 @@ L10:
     pop rbp
     ret
 
-    ; IR: L11:
-L11:
+    ; IR: L20:
+L20:
 
     ; IR: function isOdd(1)
 isOdd:
@@ -418,24 +584,24 @@ isOdd:
     ; Call function modulo
     call modulo
     ; Ulož hodnotu z rax
-    mov [t11], rax
+    mov [t17], rax
 
-    ; IR: t12 = t11 != 0
-    ; Načti proměnnou [t11]
-    mov rax, [t11]
+    ; IR: t18 = t17 != 0
+    ; Načti proměnnou [t17]
+    mov rax, [t17]
     ; Porovnej
     mov rbx, 0
     cmp rax, rbx
     setne al
     movzx rax, al
-    ; Ulož do [t12]
-    mov [t12], rax
+    ; Ulož do [t18]
+    mov [t18], rax
 
-    ; IR: if t12 == 0 goto L12
+    ; IR: if t18 == 0 goto L21
     ; Skoč když false
-    mov rax, [t12]
+    mov rax, [t18]
     cmp rax, 0
-    je L12
+    je L21
 
     ; IR: Neznám tě 23
     ; Načtin bool (1 byte) z bool_l_true
@@ -445,12 +611,12 @@ isOdd:
     pop rbp
     ret
 
-    ; IR: goto L13
+    ; IR: goto L22
     ; Skoč 
-    jmp L13
+    jmp L22
 
-    ; IR: L12:
-L12:
+    ; IR: L21:
+L21:
 
     ; IR: Neznám tě 23
     ; Načtin bool (1 byte) z bool_l_false
@@ -460,8 +626,8 @@ L12:
     pop rbp
     ret
 
-    ; IR: L13:
-L13:
+    ; IR: L22:
+L22:
 
     ; IR: end function isOdd
     ; Function epilogue
@@ -489,11 +655,11 @@ L0:
     ; Call function pow
     call pow
     ; Ulož hodnotu z rax
-    mov [t13], rax
+    mov [t19], rax
 
-    ; IR: x = t13
-    ; Načti proměnnou [t13]
-    mov rax, [t13]
+    ; IR: x = t19
+    ; Načti proměnnou [t19]
+    mov rax, [t19]
     ; Ulož do [x]
     mov [x], rax
 
@@ -521,11 +687,11 @@ L0:
     ; Call function modulo
     call modulo
     ; Ulož hodnotu z rax
-    mov [t14], rax
+    mov [t20], rax
 
-    ; IR: res = t14
-    ; Načti proměnnou [t14]
-    mov rax, [t14]
+    ; IR: res = t20
+    ; Načti proměnnou [t20]
+    mov rax, [t20]
     ; Ulož do [res]
     mov [res], rax
 
@@ -561,11 +727,11 @@ L0:
     ; Call function isEven
     call isEven
     ; Ulož hodnotu z rax
-    mov [t15], rax
+    mov [t21], rax
 
-    ; IR: resVen = t15
-    ; Načti proměnnou [t15]
-    mov rax, [t15]
+    ; IR: resVen = t21
+    ; Načti proměnnou [t21]
+    mov rax, [t21]
     ; Ulož do [resVen]
     mov [resVen], rax
 
@@ -587,11 +753,11 @@ L0:
     ; Call function isEven
     call isEven
     ; Ulož hodnotu z rax
-    mov [t16], rax
+    mov [t22], rax
 
-    ; IR: resVen = t16
-    ; Načti proměnnou [t16]
-    mov rax, [t16]
+    ; IR: resVen = t22
+    ; Načti proměnnou [t22]
+    mov rax, [t22]
     ; Ulož do [resVen]
     mov [resVen], rax
 
@@ -613,11 +779,11 @@ L0:
     ; Call function isEven
     call isEven
     ; Ulož hodnotu z rax
-    mov [t17], rax
+    mov [t23], rax
 
-    ; IR: resVen = t17
-    ; Načti proměnnou [t17]
-    mov rax, [t17]
+    ; IR: resVen = t23
+    ; Načti proměnnou [t23]
+    mov rax, [t23]
     ; Ulož do [resVen]
     mov [resVen], rax
 
@@ -646,11 +812,11 @@ L0:
     ; Call function isOdd
     call isOdd
     ; Ulož hodnotu z rax
-    mov [t18], rax
+    mov [t24], rax
 
-    ; IR: resVen = t18
-    ; Načti proměnnou [t18]
-    mov rax, [t18]
+    ; IR: resVen = t24
+    ; Načti proměnnou [t24]
+    mov rax, [t24]
     ; Ulož do [resVen]
     mov [resVen], rax
 
@@ -661,54 +827,61 @@ L0:
     xor rax, rax
     call printf wrt ..plt
 
+    ; IR: print 'str_3'
+    ; Vypiš string hodnotu 
+    mov rsi, str_3
+    mov rdi, format_str
+    xor rax, rax
+    call printf wrt ..plt
+
     ; IR: Neznám tě 24
-    ; Načti konstantu 44
-    mov rax, 44
+    ; Načti konstantu 13
+    mov rax, 13
      ; Argument 0 v registru rdi
      mov rdi, rax
 
     ; IR: Neznám tě 22
     ; Align stack 16 bytes 
-    ; Call function isOdd
-    call isOdd
+    ; Call function isPrime
+    call isPrime
     ; Ulož hodnotu z rax
-    mov [t19], rax
+    mov [t25], rax
 
-    ; IR: resVen = t19
-    ; Načti proměnnou [t19]
-    mov rax, [t19]
-    ; Ulož do [resVen]
-    mov [resVen], rax
+    ; IR: primeTest = t25
+    ; Načti proměnnou [t25]
+    mov rax, [t25]
+    ; Ulož do [primeTest]
+    mov [primeTest], rax
 
-    ; IR: print resVen
+    ; IR: print primeTest
     ; Vypiš string hodnotu 
-    mov rsi, [resVen]
+    mov rsi, [primeTest]
     mov rdi, format_int
     xor rax, rax
     call printf wrt ..plt
 
     ; IR: Neznám tě 24
-    ; Načti konstantu 43
-    mov rax, 43
+    ; Načti konstantu 10
+    mov rax, 10
      ; Argument 0 v registru rdi
      mov rdi, rax
 
     ; IR: Neznám tě 22
     ; Align stack 16 bytes 
-    ; Call function isOdd
-    call isOdd
+    ; Call function isPrime
+    call isPrime
     ; Ulož hodnotu z rax
-    mov [t20], rax
+    mov [t26], rax
 
-    ; IR: resVen = t20
-    ; Načti proměnnou [t20]
-    mov rax, [t20]
-    ; Ulož do [resVen]
-    mov [resVen], rax
+    ; IR: primeTest2 = t26
+    ; Načti proměnnou [t26]
+    mov rax, [t26]
+    ; Ulož do [primeTest2]
+    mov [primeTest2], rax
 
-    ; IR: print resVen
+    ; IR: print primeTest2
     ; Vypiš string hodnotu 
-    mov rsi, [resVen]
+    mov rsi, [primeTest2]
     mov rdi, format_int
     xor rax, rax
     call printf wrt ..plt

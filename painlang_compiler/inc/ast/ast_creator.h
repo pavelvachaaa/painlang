@@ -3,6 +3,14 @@
 
 #include "ast.h"
 
+ASTNode *create_while_loop_node(ASTNode *condition, ASTNode *body) {
+    ASTNode *node = malloc(sizeof(ASTNode));
+    node->type = NODE_WHILE_LOOP;
+    node->data.while_loop.condition = condition;
+    node->data.while_loop.body = body;
+    return node;
+}
+
 ASTNode *create_function_declaration_node(char *name, char **param_names, int param_count, DataType *types, DataType return_type, ASTNode *body)
 {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));

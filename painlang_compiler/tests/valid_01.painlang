@@ -21,13 +21,13 @@ print(resVen);
 resVen = isEven(43);
 print(resVen);
 
-print("isNotEven test:");
+print("isOdd test:");
 let resVen: bool = isOdd(1);
 print(resVen);
 
-resVen = isOdd(44);
-print(resVen);
+print("isPrime");
+let primeTest:number = isPrime(13);
+print(primeTest);
 
-resVen = isOdd(43);
-print(resVen);
-
+let primeTest2:number = isPrime(10);
+print(primeTest2);

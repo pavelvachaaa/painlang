@@ -11,6 +11,7 @@ typedef enum
     NODE_VAR_DECLARATION,
     NODE_ASSIGNMENT,
     NODE_FOR_LOOP,
+    NODE_WHILE_LOOP,
     NODE_PRINT,
     NODE_IF,
     NODE_BINARY_OP,
@@ -135,6 +136,12 @@ struct ASTNode
 
         struct
         {
+            ASTNode *condition;
+            ASTNode *body;
+        } while_loop;
+
+        struct
+        {
             CondOpType op;
             ASTNode *left;
             ASTNode *right;
@@ -185,6 +192,7 @@ ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTN
 ASTNode *create_function_declaration_node(char *name, char **param_names, int param_count, DataType *types, DataType return_type, ASTNode *body);
 ASTNode *create_function_call_node(char *name, ASTNode **arguments, int arg_count);
 ASTNode *create_return_node(ASTNode *expr);
+ASTNode *create_while_loop_node(ASTNode *condition, ASTNode *body);
 
 ASTNode *evaluate_expression(ASTNode *node, SymbolTable *table);
 

@@ -134,6 +134,8 @@ include   BEGIN(incl);
 "/*"[^*]*"*"([^/][^*]*"*"[^/])*"/" { debug_print("ML-COMMENT"); }
 
 
+
+while                                               {debug_print("WHILE"); return WHILE;};
 :                                                   {debug_print(":"); return ':';};
 ;                                                   {debug_print("SEMICOLON "); return SEMICOLON;};
 string                                                 {debug_print("string "); return LL_TYPE_STRING;};

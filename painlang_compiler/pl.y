@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
 }
 
 %token <num> NUMBER DECLARE
-%token <str> IDENTIFIER ASSIGN SEMICOLON PRINT IF ELSE FOR FUNCTION RETURN STRING_LITERAL
+%token <str> IDENTIFIER ASSIGN SEMICOLON PRINT IF ELSE FOR FUNCTION RETURN STRING_LITERAL WHILE
 %token EQUALS NOT_EQUALS GREAT_OR_EQUALS LESS_OR_EQUALS GREATER_THAN LESS_THAN DOUBLE_PLUS DOUBLE_MINUS
 %token PLUS_ASSIGN MINUS_ASSIGN MULT_ASSIGN DIV_ASSIGN RETURN_TYPE
 %token BINARY_OP_OR BINARY_OP_AND BINARY_OP_XOR LOGICAL_AND LOGICAL_OR
@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
 %type <node> funDeclaration functionCall returnStatement 
 /* %type <node> importStatement */
 %type <node> condExpression
-%type <node> forLoop forInitExpression
+%type <node> forLoop forInitExpression whileLoop
 %type <cond_op> relop
 %type <param_list> parameterList parameters
 %type <arg_list> argumentList arguments
@@ -227,6 +227,7 @@ statement: assignment SEMICOLON
     | forLoop
     /* | importStatement */
     | funDeclaration
+    | whileLoop
     | functionCall SEMICOLON
     | returnStatement SEMICOLON
     | empty
@@ -234,6 +235,14 @@ statement: assignment SEMICOLON
         $$ = NULL;
     }
     ;
+
+
+whileLoop: WHILE '(' condExpression ')' block
+    {
+        $$ = create_while_loop_node($3, $5);
+        debug_print("Created WHILE_LOOP node\n");
+    }
+;
 
 printStatement: PRINT '(' expression ')'
     {

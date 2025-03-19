@@ -17,93 +17,119 @@ L3:
 return result
 end function pow
 L4:
+function isPrime(1):
+param n
+t3 = n <= 1
+if t3 == 0 goto L5
+return false
+L5:
+i = 2
+L7:
+t4 = i * i
+t5 = t4 <= n
+if t5 == 0 goto L8
+arg n
+arg i
+t6 = call modulo, 2
+t7 = t6 == 0
+if t7 == 0 goto L11
+return false
+L11:
+t8 = i + 1
+i = t8
+goto L7
+L8:
+return true
+end function isPrime
+L13:
 function factorial(1):
 param n
 fact = 1
 i = 1
-L5:
-t3 = i <= n
-if t3 == 0 goto L6
-t4 = fact * i
-fact = t4
-t5 = i + 1
-i = t5
-goto L5
-L6:
+L14:
+t9 = i <= n
+if t9 == 0 goto L15
+t10 = fact * i
+fact = t10
+t11 = i + 1
+i = t11
+goto L14
+L15:
 return fact
 end function factorial
-L7:
+L16:
 function modulo(2):
 param a
 param b
-t6 = a / b
-t7 = t6 * b
-t8 = a - t7
-return t8
+t12 = a / b
+t13 = t12 * b
+t14 = a - t13
+return t14
 end function modulo
-L8:
+L17:
 function isEven(1):
 param n
 arg n
 arg 2
-t9 = call modulo, 2
-t10 = t9 == 0
-if t10 == 0 goto L9
+t15 = call modulo, 2
+t16 = t15 == 0
+if t16 == 0 goto L18
 return true
-goto L10
-L9:
+goto L19
+L18:
 return false
-L10:
+L19:
 end function isEven
-L11:
+L20:
 function isOdd(1):
 param n
 arg n
 arg 2
-t11 = call modulo, 2
-t12 = t11 != 0
-if t12 == 0 goto L12
+t17 = call modulo, 2
+t18 = t17 != 0
+if t18 == 0 goto L21
 return true
-goto L13
-L12:
+goto L22
+L21:
 return false
-L13:
+L22:
 end function isOdd
 L0:
 arg 2
 arg 10
-t13 = call pow, 2
-x = t13
+t19 = call pow, 2
+x = t19
 print x
 arg 3
 arg 8
-t14 = call modulo, 2
-res = t14
+t20 = call modulo, 2
+res = t20
 print 'Modulo test:'
 print res
 print 'isEven test:'
 arg 1
-t15 = call isEven, 1
-resVen = t15
+t21 = call isEven, 1
+resVen = t21
 print resVen
 arg 44
-t16 = call isEven, 1
-resVen = t16
+t22 = call isEven, 1
+resVen = t22
 print resVen
 arg 43
-t17 = call isEven, 1
-resVen = t17
+t23 = call isEven, 1
+resVen = t23
 print resVen
-print 'isNotEven test:'
+print 'isOdd test:'
 arg 1
-t18 = call isOdd, 1
-resVen = t18
+t24 = call isOdd, 1
+resVen = t24
 print resVen
-arg 44
-t19 = call isOdd, 1
-resVen = t19
-print resVen
-arg 43
-t20 = call isOdd, 1
-resVen = t20
-print resVen
+print 'isPrime'
+arg 13
+t25 = call isPrime, 1
+primeTest = t25
+print primeTest
+arg 10
+t26 = call isPrime, 1
+primeTest2 = t26
+print primeTest2

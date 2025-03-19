@@ -8,6 +8,19 @@ function pow(base: number, exp: number) -> number {
     return result;
 }
 
+function isPrime(n: number) -> bool {
+  if (n <= 1) {return false;}
+  
+  let i : number = 2;
+  while (i * i <= n) {
+    if (modulo(n,i) == 0) {
+      return false;  // jsi dělitelný i => VYPADNI
+    }
+    i++;
+  }
+  return true;  
+}
+
 function factorial(n: number) -> number {
    let fact :number = 1;
 

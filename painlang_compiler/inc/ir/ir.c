@@ -317,6 +317,27 @@ void generate_return_ir(ASTNode *node, IRProgram *program)
     ir_add_instruction(program, IR_RETURN, ir_none(), expr, ir_none());
 }
 
+void generate_while_loop_ir(ASTNode *node, IRProgram *program) {
+    int start_label = ir_new_label(program);
+    int end_label = ir_new_label(program);
+    
+    IROperand start_label_op = ir_label(program);
+    start_label_op.value.label_number = start_label;
+    ir_add_instruction(program, IR_LABEL, start_label_op, ir_none(), ir_none());
+    
+    IROperand condition = generate_condition_ir(node->data.while_loop.condition, program);
+    
+    IROperand end_label_op = ir_label(program);
+    end_label_op.value.label_number = end_label;
+    ir_add_instruction(program, IR_JUMPFALSE, end_label_op, condition, ir_none());
+    
+    generate_statement_ir(node->data.while_loop.body, program);
+    
+    ir_add_instruction(program, IR_JUMP, start_label_op, ir_none(), ir_none());
+    
+    ir_add_instruction(program, IR_LABEL, end_label_op, ir_none(), ir_none());
+}
+
 void generate_statement_ir(ASTNode *node, IRProgram *program)
 {
     if (!node)
@@ -408,6 +429,11 @@ void generate_statement_ir(ASTNode *node, IRProgram *program)
 
         break;
     }
+
+    case NODE_WHILE_LOOP:
+        generate_while_loop_ir(node, program);
+    break;
+
 
     case NODE_FOR_LOOP:
     {
