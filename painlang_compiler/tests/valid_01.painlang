@@ -1,112 +1,33 @@
-// Funkce umocňuje základ požadovanným exponentem
-function pow(base: number, exp: number) -> number {
-    let result : number = 1;
-    for(let i : number = 0; i < exp; i = i +1) {
-        result *= base;
-    }
+include "stdlib/math"
 
-    return result;
-}
+let x: number = pow(2, 10);
+print(x);
 
-function factorial(n: number) -> number {
-   let fact :number = 1;
+let a: number = 3;
+let base: number = 8;
 
-    for (let i : number = 1; i <= n; i = i + 1) {
-        fact = fact * i;
-    }
-
-    return fact;
-}
+let res: number = modulo(3,base);
+print("Modulo test:");
+print(res);
 
 
-let neco : number = factorial(5);
-print(neco);
+print("isEven test:");
+let resVen: bool = isEven(1);
+print(resVen);
 
-let druhe_neco : number = pow(2, 10);
-print(druhe_neco);
+resVen = isEven(44);
+print(resVen);
 
+resVen = isEven(43);
+print(resVen);
 
+print("isNotEven test:");
+let resVen: bool = isOdd(1);
+print(resVen);
 
-let promenna_str : string = "Pavel je v prdeli";
-//print(promenna_str);
+resVen = isOdd(44);
+print(resVen);
 
-let promenna_num : number = 23;
-//print(promenna_num);
+resVen = isOdd(43);
+print(resVen);
 
-let promenna_bool : bool = true;
-//print(promenna_bool);
-
-//print(false);
-
-//let retVal : string = printer(promenna_str, promenna_num, promenna_bool);
-//print(retVal);
-
-let z : bool = false || false;
-//TODO: Optimalizátor ničí nějak booleany, když jsou v printu přímo literaly (pravděpodobně OPTIMISE_AST ztratí kontext o variable?? a binaryop?)
-//print(z);
-
-
-let p : bool = isZero(0);
-print(p);
-
-let vysledek : string = convertNumberToString(2);
-print(vysledek);
-
-
-function convertNumberToString(input: number) -> string {
-    if(input == 1) {
-        return "Jednička";
-    }
-
-    if(input == 0) {
-        return "Nula";
-    }
-
-    if(input == 3) {
-        return "Trojčičkaaa";
-    }
-
-    return "Nějaká jiná prasárna";
-
-}
-
-// Tomu říkám řádně optimalizovaná funkce 
-function isZero(input: number) -> bool {
-    if(input == 0) {
-        print("Ano");
-        return true;
-    }
-
-    print("Ne");
-    return false;
-}
-
-
-function printer(a: string, b: number, c:bool) -> string {
-    print(a);
-    print(b+28);
-
-    return "nebavyyyyy";
-}
-
-
-
-// let ba : number = pavel(12);
-// print(ba);
-
-// Bez optimalizace má ekvivalent:
-//goto L0
-//L0:
-//print 'Ahoj světe'
-//random_text = 'Prdel'
-//print random_text
-
-// => TODO: Je nutné checkovat pro stejný literalý a variable, abych zbytečne neduplikoval data
-
-// S optimalizací:
-
-//goto L0
-//L0:
-//print 'Ahoj světe'
-//print 'Prdel'
-// Ještě by stálo za řeč vyhodit goto a první label, když nebudou žadné funkce...

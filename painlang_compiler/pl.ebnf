@@ -17,10 +17,10 @@ statement = assignment ';'
 printStatement = "print" "(" expression ")"
 
 variableDeclaration = 'let' vardec 
-vardec = identifier
-           | identifier '=' expression
+vardec = identifier ':' typeRule
+           | identifier ':' typeRule '=' expression
 
-functionDeclaration = 'function' identifier '(' parameterList ')'  block
+functionDeclaration = 'function' identifier '(' parameterList ')' '->' typeRule block
 parameterLis = parameters | empty
 parameters = identifier | identifier ',' parameters
 functionCall = identifier  '(' argumentList ')'
@@ -34,6 +34,7 @@ forLoop = "for" '(' forInitExpression ';' condExpression ';' assignment ')' bloc
 forInitExpression = assignment | varDeclaration
 assignment = identifier '=' expression
 identifier = letter {letter} 
+typeRule: "string" | "number" | "bool"
 letter = "A" | "B" | "C" | "D" | "E" | "F" | "G"
        | "H" | "I" | "J" | "K" | "L" | "M" | "N"
        | "O" | "P" | "Q" | "R" | "S" | "T" | "U"

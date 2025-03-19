@@ -7,7 +7,9 @@
 #include "./inc/printers/ast/ast_printer.h"
 #include "./inc/ir/ir.h"
 #include <unistd.h>
+#include "lexer.h"
 
+// #include "./inc/import_handler.h"
 int yylex();
 int yyparse();
 void yyerror(const char *str) {
@@ -18,15 +20,18 @@ int yywrap() {
     return 1;
 }
 
-extern FILE *yyin;
 
 ASTNode *ast_root = NULL;
-
+ASTNode *imported_ast = NULL;
 
 void print_usage(const char *prog_name) {
     fprintf(stderr, "Použití: %s -i input_file [-o output-file] [-O] [-m ir_file]  \n", prog_name);
 }
+
+
+
 SymbolTable *table = NULL;
+  FILE *file = NULL;
 int main(int argc, char **argv) {
         table = malloc(sizeof(SymbolTable));
         if(!table) {
@@ -79,7 +84,7 @@ int main(int argc, char **argv) {
         ir_file = "output.ir";
     }
 
-    FILE *file = fopen(input_file, "r");
+    file = fopen(input_file, "r");
     if (!file) {
         perror("ale vole");
         return EXIT_FAILURE;
@@ -88,7 +93,6 @@ int main(int argc, char **argv) {
     yyin = file;
     yyparse();
     fclose(file);
-
     // ten level pak passovat do funkce a podle toho rozhodovat jak optimalizovat
     if (optimizeLevel == 1) {
         optimize_program(ast_root,table);
@@ -96,8 +100,10 @@ int main(int argc, char **argv) {
 
     find_and_set_variables(ast_root, table);
 
+    printf("============ AST_TREE_START ============ \n");
     print_ast(ast_root);
-    
+    printf("============ AST_TREE_END ============ \n");
+
     // IR reprezentace a struktura
     IRProgram *program = malloc(sizeof(IRProgram));
     if (!program) {
@@ -143,13 +149,16 @@ int main(int argc, char **argv) {
 %token PLUS_ASSIGN MINUS_ASSIGN MULT_ASSIGN DIV_ASSIGN RETURN_TYPE
 %token BINARY_OP_OR BINARY_OP_AND BINARY_OP_XOR LOGICAL_AND LOGICAL_OR
 %token UNARY_OP_NOT 
+%token IMPORT AS 
 
 %token <boolean_value> LITERAL_TRUE, LITERAL_FALSE
 %token <str> LL_TYPE_STRING, LL_TYPE_NUMBER, LL_TYPE_BOOLEAN
+%token INCLUDE
 
 %type <node> program statementList statement assignment varDeclaration vardec
 %type <node> printStatement expression term factor ifStatement block
-%type <node> funDeclaration functionCall returnStatement
+%type <node> funDeclaration functionCall returnStatement 
+/* %type <node> importStatement */
 %type <node> condExpression
 %type <node> forLoop forInitExpression
 %type <cond_op> relop
@@ -162,9 +171,12 @@ int main(int argc, char **argv) {
 %left '*' '/'
 
 %%
-program: statementList
+program: 
+    | statementList
     {
         ast_root = $1;
+            printf("AST root set in program rule\n");
+
     }
     ;
 
@@ -213,6 +225,7 @@ statement: assignment SEMICOLON
         $$ = $1;
     }
     | forLoop
+    /* | importStatement */
     | funDeclaration
     | functionCall SEMICOLON
     | returnStatement SEMICOLON
@@ -487,7 +500,6 @@ block: '{' { enter_scope(table); } statementList '}' { exit_scope(table);  }
     ;
 
 
-
 funDeclaration: FUNCTION IDENTIFIER '(' parameterList ')' RETURN_TYPE typeRule block 
 {
     // ten count kvůli tomu, že pojedeme scope odznova a potřebuji vědět kolik jich bude..
@@ -576,6 +588,6 @@ returnStatement: RETURN expression
 
 
 
-empty:
+empty: 
     ;
 %%

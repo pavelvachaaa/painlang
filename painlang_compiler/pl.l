@@ -1,8 +1,42 @@
+%option header-file="lexer.h"
+%x incl
+
 %{
 #include <stdio.h>
 #include "./inc/ast/ast.h"    
 #include "y.tab.h"
 #include "./inc/prints.h"
+extern FILE *yyin;
+int yylex();
+
+#define MAX_INCLUDE_DEPTH 10
+#define MAX_INCLUDED_FILES 100
+
+YY_BUFFER_STATE include_stack[MAX_INCLUDE_DEPTH];
+int include_stack_ptr = 0;
+
+char *included_files[MAX_INCLUDED_FILES];
+int included_files_count = 0;
+
+int is_already_included(const char *filename) {
+    for (int i = 0; i < included_files_count; i++) {
+        if (strcmp(included_files[i], filename) == 0) {
+            return 1; 
+        }
+    }
+    return 0;
+}
+
+
+void add_to_included_files(const char *filename) {
+    if (included_files_count < MAX_INCLUDED_FILES) {
+        included_files[included_files_count] = strdup(filename);
+        included_files_count++;
+    } else {
+        fprintf(stderr, "To už nepůjde... \n");
+        exit(EXIT_FAILURE);
+    }
+}
 
 
 char* process_string(char* text) {
@@ -40,16 +74,71 @@ char* process_string(char* text) {
     
     return result;
 }
+
+
+
+char* process_import(char* file_name) {
+    
+}
+
 %}
 
+
 %%
+include   BEGIN(incl);
+
+<incl>[ \t]*  // Mezery
+
+<incl>\"[^\"]+\"   {
+    char filename[256];
+
+    strncpy(filename, yytext + 1, strlen(yytext) - 2);  
+    filename[strlen(yytext) - 2] = '\0';
+
+    if (is_already_included(filename)) {
+        debug_print("Přeskoč tento soubor: %s\n", filename);
+        BEGIN(INITIAL); // https://westes.github.io/flex/manual/Multiple-Input-Buffers.html#Multiple-Input-Buffers HODNĚ GOOGLENÍ :))
+    } else {
+        add_to_included_files(filename);
+
+        FILE *new_file = fopen(filename, "r");
+        if (!new_file) {
+            fprintf(stderr, "Neexistuje: %s\n", filename);
+        } else {
+            if (include_stack_ptr >= MAX_INCLUDE_DEPTH) {
+                fprintf(stderr, "Ponořil ses too deep!\n");
+                exit(EXIT_FAILURE);
+            }
+
+            include_stack[include_stack_ptr++] = YY_CURRENT_BUFFER;
+
+            // dali jsme si na stack aktuální buffer a teď je nutné aktualizovat na nový 
+            yyin = new_file;
+            yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
+        }
+    }
+
+    BEGIN(INITIAL);
+}
+
+<<EOF>> {
+    if (include_stack_ptr > 0) {
+        yypop_buffer_state();
+        include_stack_ptr--;
+    } else {
+        yyterminate();
+    }
+}
 
 "//".*                                      { debug_print("SL-COMMENT"); }
 "/*"[^*]*"*"([^/][^*]*"*"[^/])*"/" { debug_print("ML-COMMENT"); }
 
+
 :                                                   {debug_print(":"); return ':';};
 ;                                                   {debug_print("SEMICOLON "); return SEMICOLON;};
 string                                                 {debug_print("string "); return LL_TYPE_STRING;};
+import                                                 {debug_print("IMPORT "); return IMPORT;};
+as                                                   {debug_print("AS "); return AS;};
 number                                                 {debug_print("number "); return LL_TYPE_NUMBER;};
 bool                                                  {debug_print("bool"); return LL_TYPE_BOOLEAN;}
 true                                                  { yylval.boolean_value = 1;  debug_print("true"); return LITERAL_TRUE;}
@@ -108,6 +197,5 @@ else                                                {debug_print("ELSE "); retur
 "/"                                                 {debug_print("DIVOP "); return '/';}
 "("                                                 {debug_print("LB "); return '(';}
 ")"                                                 {debug_print("RB "); return ')';}
-
 .           { }
 %%

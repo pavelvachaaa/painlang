@@ -33,58 +33,77 @@ L6:
 return fact
 end function factorial
 L7:
-function convertNumberToString(1):
-param input
-t6 = input == 1
-if t6 == 0 goto L8
-return 'Jednička'
-L8:
-t7 = input == 0
-if t7 == 0 goto L10
-return 'Nula'
-L10:
-t8 = input == 3
-if t8 == 0 goto L12
-return 'Trojčičkaaa'
-L12:
-return 'Nějaká jiná prasárna'
-end function convertNumberToString
-L14:
-function isZero(1):
-param input
-t9 = input == 0
-if t9 == 0 goto L15
-print 'Ano'
-return true
-L15:
-print 'Ne'
-return false
-end function isZero
-L17:
-function printer(3):
+function modulo(2):
 param a
 param b
-param c
-print a
-t10 = b + 28
-print t10
-return 'nebavyyyyy'
-end function printer
+t6 = a / b
+t7 = t6 * b
+t8 = a - t7
+return t8
+end function modulo
+L8:
+function isEven(1):
+param n
+arg n
+arg 2
+t9 = call modulo, 2
+t10 = t9 == 0
+if t10 == 0 goto L9
+return true
+goto L10
+L9:
+return false
+L10:
+end function isEven
+L11:
+function isOdd(1):
+param n
+arg n
+arg 2
+t11 = call modulo, 2
+t12 = t11 != 0
+if t12 == 0 goto L12
+return true
+goto L13
+L12:
+return false
+L13:
+end function isOdd
 L0:
-arg 5
-t11 = call factorial, 1
-neco = t11
-print neco
 arg 2
 arg 10
-t12 = call pow, 2
-druhe_neco = t12
-print druhe_neco
-arg 0
-t13 = call isZero, 1
-p = t13
-print p
-arg 2
-t14 = call convertNumberToString, 1
-vysledek = t14
-print vysledek
+t13 = call pow, 2
+x = t13
+print x
+arg 3
+arg 8
+t14 = call modulo, 2
+res = t14
+print 'Modulo test:'
+print res
+print 'isEven test:'
+arg 1
+t15 = call isEven, 1
+resVen = t15
+print resVen
+arg 44
+t16 = call isEven, 1
+resVen = t16
+print resVen
+arg 43
+t17 = call isEven, 1
+resVen = t17
+print resVen
+print 'isNotEven test:'
+arg 1
+t18 = call isOdd, 1
+resVen = t18
+print resVen
+arg 44
+t19 = call isOdd, 1
+resVen = t19
+print resVen
+arg 43
+t20 = call isOdd, 1
+resVen = t20
+print resVen

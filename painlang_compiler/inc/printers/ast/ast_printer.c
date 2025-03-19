@@ -56,6 +56,10 @@ void print_ast_helper(ASTNode *node, int indent)
     case NODE_NUMBER:
         printf("Number: %d\n", node->data.number.value);
         break;
+    // case NODE_IMPORT_STATEMENT:
+    //     printf("Import statement: %s (%s)", node->data.import_statement.filename, node->data.import_statement.alias);
+    //     print_ast_helper(node->data.import_statement.imported_ast,  indent + 1);
+    //     break;
     case NODE_BOOLEAN:
         if (node->data.boolean.value)
         {
@@ -105,7 +109,7 @@ void print_ast_helper(ASTNode *node, int indent)
 
         break;
     default:
-        printf("print_ast_helper: Unkown node \n");
+        printf("print_ast_helper: Unkown node %d \n", node->type);
         break;
     }
 }

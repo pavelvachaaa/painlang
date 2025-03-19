@@ -337,6 +337,15 @@ void generate_statement_ir(ASTNode *node, IRProgram *program)
         break;
     }
 
+    // case NODE_IMPORT_STATEMENT:
+    // printf("KONEČNÁ \n");
+    //     if (node->data.import_statement.imported_ast)
+    //     {
+    //         generate_statement_ir(node->data.import_statement.imported_ast, program);
+    //     }
+
+    //     break;
+
     case NODE_FUNCTION_CALL:
         generate_function_call_ir(node, program);
         break;
@@ -443,6 +452,7 @@ void generate_statement_ir(ASTNode *node, IRProgram *program)
 
     case NODE_STATEMENT_LIST:
     {
+        printf("[NODE_STATEMENT_LIST]");
         for (int i = 0; i < node->data.statement_list.statement_count; i++)
         {
             generate_statement_ir(node->data.statement_list.statements[i], program);

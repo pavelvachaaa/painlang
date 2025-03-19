@@ -102,6 +102,10 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
             find_and_set_variables(node->data.statement_list.statements[i], table);
         }
         break;
+    
+    // case NODE_IMPORT_STATEMENT: 
+    //     find_and_set_variables(node->data.import_statement.imported_ast, table);
+    // break;
 
     case NODE_VAR_DECLARATION:
         if (!lookup_variable(table, node->data.var_declaration.var_name))
