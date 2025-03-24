@@ -1,33 +1,21 @@
-include "stdlib/math"
+let a : string = "pavel";
+let b : string = "kauba";
+let c : string = "pavel";
 
-let x: number = pow(2, 10);
-print(x);
-
-let a: number = 3;
-let base: number = 8;
-
-let res: number = modulo(3,base);
-print("Modulo test:");
-print(res);
+if(a == c) {
+    if(b == "kuba" ) {
+        print("a je pavel a b je kuba");
+    } else {
+        print("a je pavel a b není kuba");
+    }
+    print("A je pavel");
 
 
-print("isEven test:");
-let resVen: bool = isEven(1);
-print(resVen);
-
-resVen = isEven(44);
-print(resVen);
-
-resVen = isEven(43);
-print(resVen);
-
-print("isOdd test:");
-let resVen: bool = isOdd(1);
-print(resVen);
-
-print("isPrime");
-let primeTest:number = isPrime(13);
-print(primeTest);
-
-let primeTest2:number = isPrime(10);
-print(primeTest2);
+} else {
+     if(b == "kuba" ) {
+        print("a je kuba a b je kuba");
+    } else {
+        print("a je kuba a b není kuba");
+    }
+    print("A není kuba");
+}

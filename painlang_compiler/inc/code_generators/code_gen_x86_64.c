@@ -278,23 +278,87 @@ static void generate_divide(FILE *file, IRInstruction *instr)
         fprintf(file, "    idiv rbx\n");
     }
 
-    // Store result
     generate_store_operand(file, instr->result);
+}
+
+static void generate_unique_label(char *buffer, size_t buffer_size, const char *prefix)
+{
+    static unsigned long long counter = 0;
+    snprintf(buffer, buffer_size, ".%s_%llu", prefix, counter++);
 }
 
 static void generate_comparison(FILE *file, IRInstruction *instr, const char *comparison_op)
 {
-    generate_load_operand(file, instr->arg1);
+    char loop_label[64], different_label[64], equal_label[64], done_label[64];
 
-    char arg2_str[64];
-    get_nasm_operand(instr->arg2, arg2_str, 0);
+    generate_unique_label(loop_label, sizeof(loop_label), "str_cmp_loop");
+    generate_unique_label(different_label, sizeof(different_label), "str_cmp_different");
+    generate_unique_label(equal_label, sizeof(equal_label), "str_cmp_equal");
+    generate_unique_label(done_label, sizeof(done_label), "str_cmp_done");
 
-    fprintf(file, "    ; Porovnej\n");
-    fprintf(file, "    mov rbx, %s\n", arg2_str);
-    fprintf(file, "    cmp rax, rbx\n");
-    fprintf(file, "    %s al\n", comparison_op);
-    fprintf(file, "    movzx rax, al\n");
+    if (instr->arg1.data_type == TYPE_STRING && instr->arg2.data_type == TYPE_STRING)
+    {
+        fprintf(file, " ; String porovnání\n");
+        generate_load_operand(file, instr->arg1);
+        fprintf(file, " mov rdi, rax\n");
+        generate_load_operand(file, instr->arg2);
+        fprintf(file, " mov rsi, rax\n");
 
+        fprintf(file, " ; Loop začátek porovnání\n");
+        fprintf(file, " %s:\n", loop_label);
+        fprintf(file, " mov al, [rdi]\n");
+        fprintf(file, " mov bl, [rsi]\n");
+        fprintf(file, " cmp al, bl\n");
+        fprintf(file, " jne %s\n", different_label);
+        fprintf(file, " test al, al\n");
+        fprintf(file, " jz %s\n", equal_label);
+        fprintf(file, " inc rdi\n");
+        fprintf(file, " inc rsi\n");
+        fprintf(file, " jmp %s\n", loop_label);
+
+        fprintf(file, " %s:\n", different_label);
+        fprintf(file, " mov al, 1\n");
+        fprintf(file, " jmp %s\n", done_label);
+
+        fprintf(file, " %s:\n", equal_label);
+        fprintf(file, " xor al, al\n");
+
+        fprintf(file, " %s:\n", done_label);
+
+        if (strcmp(comparison_op, "sete") == 0)
+        {
+            fprintf(file, " sete al\n");
+        }
+        else if (strcmp(comparison_op, "setne") == 0)
+        {
+            fprintf(file, " setne al\n");
+        }
+
+        fprintf(file, " movzx rax, al\n");
+
+        // Restoruju původní odkazy, když to byly proměnné
+        if(instr->arg1.type == OPERAND_VARIABLE) {
+            generate_load_operand(file, instr->arg1);
+        }
+
+        if(instr->arg2.type == OPERAND_VARIABLE) {
+            generate_load_operand(file, instr->arg2);
+        }
+    }
+    else
+    {
+
+        generate_load_operand(file, instr->arg1);
+
+        char arg2_str[64];
+        get_nasm_operand(instr->arg2, arg2_str, 0);
+
+        fprintf(file, "    ; Porovnej\n");
+        fprintf(file, "    mov rbx, %s\n", arg2_str);
+        fprintf(file, "    cmp rax, rbx\n");
+        fprintf(file, "    %s al\n", comparison_op);
+        fprintf(file, "    movzx rax, al\n");
+    }
     generate_store_operand(file, instr->result);
 }
 

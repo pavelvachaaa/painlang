@@ -51,6 +51,18 @@ ASTNode *evaluate_binary_op_node(ASTNode *node, SymbolTable *table)
         return create_number_node(result);
     }
 
+    if (node->data.binary_op.left->type == NODE_STRING && node->data.binary_op.right->type == NODE_STRING)
+    {
+        char *left = node->data.binary_op.left->data.string.value;
+        char *right = node->data.binary_op.right->data.string.value;
+        uint8_t result = evaluate_string_condition_op(node->data.binary_op.op, left, right);
+
+        free_ast(node->data.binary_op.left);
+        free_ast(node->data.binary_op.right);
+        
+        return create_boolean_node(result);
+    }
+
     if (node->data.binary_op.left->type == NODE_BOOLEAN && node->data.binary_op.right->type == NODE_BOOLEAN)
     {
         uint8_t left = node->data.binary_op.left->data.boolean.value;
@@ -96,6 +108,19 @@ uint8_t evaluate_boolean_binary_op(BinaryOpType op, uint8_t left, uint8_t right)
         return left || right;
     case OP_LOGICAL_AND:
         return left && right;
+    default:
+        return 0;
+    }
+}
+
+uint8_t evaluate_string_condition_op(CondOpType op, const char *left, const char *right)
+{
+    switch (op)
+    {
+    case COND_EQUALS:
+        return strcmp(left, right);
+    case COND_NOT_EQUALS:
+        return !strcmp(left, right);
     default:
         return 0;
     }

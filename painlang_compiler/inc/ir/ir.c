@@ -28,6 +28,7 @@ IROperand ir_boolean_literal(uint8_t value)
 {
     IROperand operand;
     operand.type = OPERAND_BOOLEAN_LITERAL;
+    operand.data_type = TYPE_BOOLEAN;
     operand.value.boolean_literal = value;
     operand.is_initialized = 1;
     return operand;
@@ -38,6 +39,7 @@ IROperand ir_string_literal(const char *value)
     IROperand operand;
     operand.type = OPERAND_STRING_LITERAL;
     operand.value.string_literal = strdup(value);
+    operand.data_type = TYPE_STRING;
     operand.is_initialized = 1;
     return operand;
 }
@@ -46,6 +48,7 @@ IROperand ir_variable(const char *name, int is_initialized, DataType data_type)
 {
     IROperand operand;
     operand.type = OPERAND_VARIABLE;
+    operand.data_type = TYPE_NUMBER;
     operand.data_type = data_type;
     operand.value.variable = strdup(name);
     operand.is_initialized = is_initialized;
@@ -150,6 +153,7 @@ IROp cond_op_to_ir_op(CondOpType op)
 
 IROperand generate_expression_ir(ASTNode *node, IRProgram *program)
 {
+
     if (!node)
         return ir_none();
 
@@ -159,6 +163,7 @@ IROperand generate_expression_ir(ASTNode *node, IRProgram *program)
     {
         return ir_literal(node->data.number.value);
     }
+    break;
 
     case NODE_BOOLEAN:
     {
@@ -167,11 +172,14 @@ IROperand generate_expression_ir(ASTNode *node, IRProgram *program)
     break;
     case NODE_STRING:
     {
+
         return ir_string_literal(node->data.string.value);
     }
+    break;
 
     case NODE_VARIABLE:
     {
+
         SymbolEntry *entry = lookup_variable_all_scopes(program->symbol_table, node->data.variable.name);
         DataType type = TYPE_UNKNOWN;
         if (entry)
@@ -180,11 +188,10 @@ IROperand generate_expression_ir(ASTNode *node, IRProgram *program)
         }
         return ir_variable(node->data.variable.name, 0, type);
     }
+    break;
 
     case NODE_BINARY_OP:
     {
-        printf("[INFO] NODE_BINARY_OP called \n");
-
         IROperand left = generate_expression_ir(node->data.binary_op.left, program);
         IROperand right = generate_expression_ir(node->data.binary_op.right, program);
 
@@ -195,6 +202,7 @@ IROperand generate_expression_ir(ASTNode *node, IRProgram *program)
 
         return result;
     }
+    break;
 
     case NODE_UNARY_OP:
     {
@@ -235,9 +243,11 @@ IROperand generate_condition_ir(ASTNode *node, IRProgram *program)
         return ir_none();
 
     if (node->type == NODE_CONDITION)
-    {
+    {   
+
         IROperand left = generate_expression_ir(node->data.condition.left, program);
         IROperand right = generate_expression_ir(node->data.condition.right, program);
+
         IROperand result = ir_temp(program, left.data_type);
 
         IROp op = cond_op_to_ir_op(node->data.condition.op);
@@ -245,8 +255,10 @@ IROperand generate_condition_ir(ASTNode *node, IRProgram *program)
 
         return result;
     }
+
     else if (node->type == NODE_NUMBER)
     {
+
         return ir_literal(node->data.number.value);
     }
     else
@@ -317,24 +329,25 @@ void generate_return_ir(ASTNode *node, IRProgram *program)
     ir_add_instruction(program, IR_RETURN, ir_none(), expr, ir_none());
 }
 
-void generate_while_loop_ir(ASTNode *node, IRProgram *program) {
+void generate_while_loop_ir(ASTNode *node, IRProgram *program)
+{
     int start_label = ir_new_label(program);
     int end_label = ir_new_label(program);
-    
+
     IROperand start_label_op = ir_label(program);
     start_label_op.value.label_number = start_label;
     ir_add_instruction(program, IR_LABEL, start_label_op, ir_none(), ir_none());
-    
+
     IROperand condition = generate_condition_ir(node->data.while_loop.condition, program);
-    
+
     IROperand end_label_op = ir_label(program);
     end_label_op.value.label_number = end_label;
     ir_add_instruction(program, IR_JUMPFALSE, end_label_op, condition, ir_none());
-    
+
     generate_statement_ir(node->data.while_loop.body, program);
-    
+
     ir_add_instruction(program, IR_JUMP, start_label_op, ir_none(), ir_none());
-    
+
     ir_add_instruction(program, IR_LABEL, end_label_op, ir_none(), ir_none());
 }
 
@@ -358,14 +371,14 @@ void generate_statement_ir(ASTNode *node, IRProgram *program)
         break;
     }
 
-    // case NODE_IMPORT_STATEMENT:
-    // printf("KONEČNÁ \n");
-    //     if (node->data.import_statement.imported_ast)
-    //     {
-    //         generate_statement_ir(node->data.import_statement.imported_ast, program);
-    //     }
+        // case NODE_IMPORT_STATEMENT:
+        // printf("KONEČNÁ \n");
+        //     if (node->data.import_statement.imported_ast)
+        //     {
+        //         generate_statement_ir(node->data.import_statement.imported_ast, program);
+        //     }
 
-    //     break;
+        //     break;
 
     case NODE_FUNCTION_CALL:
         generate_function_call_ir(node, program);
@@ -424,16 +437,15 @@ void generate_statement_ir(ASTNode *node, IRProgram *program)
         if (node->data.if_statement.else_block)
         {
             generate_statement_ir(node->data.if_statement.else_block, program);
-            ir_add_instruction(program, IR_LABEL, ir_literal(end_label), ir_none(), ir_none());
         }
+        ir_add_instruction(program, IR_LABEL, ir_literal(end_label), ir_none(), ir_none());
 
         break;
     }
 
     case NODE_WHILE_LOOP:
         generate_while_loop_ir(node, program);
-    break;
-
+        break;
 
     case NODE_FOR_LOOP:
     {

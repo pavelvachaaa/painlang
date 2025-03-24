@@ -90,6 +90,7 @@ void remove_unused_variables(ASTNode *node, SymbolTable *table);
 
 void find_and_set_variables(ASTNode *node, SymbolTable *table)
 {
+
     if (!node)
         return;
 
@@ -150,6 +151,7 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
 
     case NODE_VARIABLE:
     {
+
         SymbolEntry *entry = lookup_variable(table, node->data.variable.name);
         if (entry)
         {
@@ -193,6 +195,7 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
     case NODE_UNARY_OP:
         find_and_set_variables(node->data.unary_op.value, table);
         break;
+
 
     case NODE_CONDITION:
         find_and_set_variables(node->data.condition.left, table);
@@ -408,11 +411,11 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
     case NODE_CONDITION:
         node->data.condition.left = optimize_ast(node->data.condition.left, table);
         node->data.condition.right = optimize_ast(node->data.condition.right, table);
-
         // Tady můžeme eliminovat rovnou jednu branch..
         if (node->data.condition.left->type == NODE_NUMBER &&
             node->data.condition.right->type == NODE_NUMBER)
         {
+
             int left = node->data.condition.left->data.number.value;
             int right = node->data.condition.right->data.number.value;
             int result = evaluate_condition_op(node->data.condition.op, left, right);
@@ -434,6 +437,7 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         else if (node->data.condition.left->type == NODE_BOOLEAN &&
                  node->data.condition.right->type == NODE_BOOLEAN)
         {
+
             uint8_t left = node->data.condition.left->data.boolean.value;
             uint8_t right = node->data.condition.right->data.boolean.value;
             uint8_t result = evaluate_boolean_condition_op(node->data.condition.op, left, right);
