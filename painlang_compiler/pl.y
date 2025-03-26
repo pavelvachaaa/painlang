@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
 
 %union {
     int num;
-    uint8_t boolean_value;
+    u_int8_t boolean_value;
     char *str;
     ASTNode *node;
     CondOpType cond_op;

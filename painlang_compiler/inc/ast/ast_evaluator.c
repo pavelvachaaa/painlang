@@ -9,7 +9,7 @@ ASTNode *evaluate_unary_op_node(ASTNode *node, SymbolTable *table)
     {
         if (node->data.unary_op.op == OP_LOGICAL_NOT)
         {
-            uint8_t result = !node->data.unary_op.value->data.boolean.value;
+            u_int8_t result = !node->data.unary_op.value->data.boolean.value;
             free_ast(node->data.unary_op.value);
             return create_boolean_node(result);
         }
@@ -55,7 +55,7 @@ ASTNode *evaluate_binary_op_node(ASTNode *node, SymbolTable *table)
     {
         char *left = node->data.binary_op.left->data.string.value;
         char *right = node->data.binary_op.right->data.string.value;
-        uint8_t result = evaluate_string_condition_op(node->data.binary_op.op, left, right);
+        u_int8_t result = evaluate_string_condition_op(node->data.binary_op.op, left, right);
 
         free_ast(node->data.binary_op.left);
         free_ast(node->data.binary_op.right);
@@ -65,9 +65,9 @@ ASTNode *evaluate_binary_op_node(ASTNode *node, SymbolTable *table)
 
     if (node->data.binary_op.left->type == NODE_BOOLEAN && node->data.binary_op.right->type == NODE_BOOLEAN)
     {
-        uint8_t left = node->data.binary_op.left->data.boolean.value;
-        uint8_t right = node->data.binary_op.right->data.boolean.value;
-        uint8_t result = evaluate_boolean_binary_op(node->data.binary_op.op, left, right);
+        u_int8_t left = node->data.binary_op.left->data.boolean.value;
+        u_int8_t right = node->data.binary_op.right->data.boolean.value;
+        u_int8_t result = evaluate_boolean_binary_op(node->data.binary_op.op, left, right);
 
         free_ast(node->data.binary_op.left);
         free_ast(node->data.binary_op.right);
@@ -100,7 +100,7 @@ int evaluate_numeric_binary_op(BinaryOpType op, int left, int right)
 /**
  * TODO: Další operace
  */
-uint8_t evaluate_boolean_binary_op(BinaryOpType op, uint8_t left, uint8_t right)
+u_int8_t evaluate_boolean_binary_op(BinaryOpType op, u_int8_t left, u_int8_t right)
 {
     switch (op)
     {
@@ -113,7 +113,7 @@ uint8_t evaluate_boolean_binary_op(BinaryOpType op, uint8_t left, uint8_t right)
     }
 }
 
-uint8_t evaluate_string_condition_op(CondOpType op, const char *left, const char *right)
+u_int8_t evaluate_string_condition_op(CondOpType op, const char *left, const char *right)
 {
     switch (op)
     {
@@ -153,7 +153,7 @@ int evaluate_condition_op(CondOpType op, int left, int right)
 /**
  * TODO: Možná void pointer jako v evaluate_condition_op a pak je mergnout?
  */
-uint8_t evaluate_boolean_condition_op(CondOpType op, uint8_t left, uint8_t right)
+u_int8_t evaluate_boolean_condition_op(CondOpType op, u_int8_t left, u_int8_t right)
 {
     switch (op)
     {

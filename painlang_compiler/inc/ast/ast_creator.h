@@ -114,7 +114,7 @@ ASTNode *create_string_node(char *value)
     return node;
 }
 
-ASTNode *create_boolean_node(uint8_t value)
+ASTNode *create_boolean_node(u_int8_t value)
 {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
     node->type = NODE_BOOLEAN;

@@ -24,7 +24,7 @@ IROperand ir_literal(int value)
     return operand;
 }
 
-IROperand ir_boolean_literal(uint8_t value)
+IROperand ir_boolean_literal(u_int8_t value)
 {
     IROperand operand;
     operand.type = OPERAND_BOOLEAN_LITERAL;

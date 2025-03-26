@@ -438,9 +438,9 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
                  node->data.condition.right->type == NODE_BOOLEAN)
         {
 
-            uint8_t left = node->data.condition.left->data.boolean.value;
-            uint8_t right = node->data.condition.right->data.boolean.value;
-            uint8_t result = evaluate_boolean_condition_op(node->data.condition.op, left, right);
+            u_int8_t left = node->data.condition.left->data.boolean.value;
+            u_int8_t right = node->data.condition.right->data.boolean.value;
+            u_int8_t result = evaluate_boolean_condition_op(node->data.condition.op, left, right);
 
             ASTNode *boolean_node = create_boolean_node(result);
 

@@ -46,6 +46,10 @@ run:
 	nasm -f elf64 output.asm -o output.o && gcc -no-pie output.o -o output && ./output
 
 
+run_full:
+	make clean
+	make parser
+	make run
 
 test_ok:
 	@./$(BINDIR)/$(PARSER_BIN) $(TESTDIR)/$(TEST_OK_FILE) >$(BINDIR)/$(TEST_OK_FILE).report

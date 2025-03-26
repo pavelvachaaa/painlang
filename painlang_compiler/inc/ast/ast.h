@@ -123,7 +123,7 @@ struct ASTNode
 
         struct
         {
-            uint8_t value;
+            u_int8_t value;
         } boolean;
 
         struct
@@ -184,7 +184,7 @@ ASTNode *create_variable_node(char *name);
 
 ASTNode *create_number_node(int value);
 ASTNode *create_string_node(char *value);
-ASTNode *create_boolean_node(uint8_t value);
+ASTNode *create_boolean_node(u_int8_t value);
 
 ASTNode *create_condition_node(CondOpType op, ASTNode *left, ASTNode *right);
 ASTNode *create_for_loop_node(ASTNode *init_expression, ASTNode *condition, ASTNode *update, ASTNode *body);

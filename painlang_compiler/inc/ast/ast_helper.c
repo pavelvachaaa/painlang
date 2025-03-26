@@ -24,7 +24,7 @@ DataType get_node_data_type(SymbolTable *table, ASTNode *node)
     }
 }
 
-uint8_t is_literal_node(ASTNode *node)
+u_int8_t is_literal_node(ASTNode *node)
 {
     return node && (node->type == NODE_NUMBER ||
                     node->type == NODE_STRING ||

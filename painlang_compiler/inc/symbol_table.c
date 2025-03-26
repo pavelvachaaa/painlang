@@ -225,7 +225,7 @@ void set_variable(SymbolTable *table, const char *name, void *value, int is_init
         {
             debug_print("I have set boolean");
 
-            entry->boolean_value = *(uint8_t *)value;
+            entry->boolean_value = *(u_int8_t *)value;
         }
     }
     else
@@ -254,7 +254,7 @@ void set_variable(SymbolTable *table, const char *name, void *value, int is_init
             else if (data_type == TYPE_BOOLEAN)
             {
                 debug_print("I have set boolean");
-                entry->boolean_value = *(uint8_t *)value;
+                entry->boolean_value = *(u_int8_t *)value;
             }
         }
         else
@@ -285,7 +285,7 @@ void set_variable(SymbolTable *table, const char *name, void *value, int is_init
             else if (data_type == TYPE_BOOLEAN)
             {
                 debug_print("I have set boolean");
-                entry->boolean_value = *(uint8_t *)value;
+                entry->boolean_value = *(u_int8_t *)value;
             }
 
             table->count++;
