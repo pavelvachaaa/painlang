@@ -1,23 +1,21 @@
 goto L0
-L0:
-t0 = 'pavel' == 'pavel'
-if t0 == 0 goto L1
-t1 = 'kauba' == 'kuba'
-if t1 == 0 goto L3
-print 'a je pavel a b je kuba'
-goto L4
-L3:
-print 'a je pavel a b není kuba'
-L4:
-print 'A je pavel'
-goto L2
 L1:
-t2 = 'kauba' == 'kuba'
-if t2 == 0 goto L5
-print 'a je kuba a b je kuba'
-goto L6
-L5:
-print 'a je kuba a b není kuba'
-L6:
-print 'A není kuba'
+function numToString(1):
+param a
+t0 = a == 1
+if t0 == 0 goto L2
+return 'jednicka'
 L2:
+L3:
+t1 = a == 2
+if t1 == 0 goto L4
+return 'dvojka'
+L4:
+L5:
+return 'other'
+end function numToString
+L0:
+arg 39
+t2 = call numToString, 1
+x = t2
+print x

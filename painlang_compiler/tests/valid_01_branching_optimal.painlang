@@ -1,5 +1,5 @@
-let x = 128;
-let y = 256;
+let x : number = 128;
+let y : number = 256;
 
 if ( x+y > 2 ) {
     if (y > 3 ) {

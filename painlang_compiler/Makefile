@@ -39,6 +39,12 @@ parser:
 	$(GCC) -I$(INCDIR) -c $(INCFILES) lex.yy.c y.tab.c
 	$(GCC) -o $(PARSER_BIN) *.o
 	@mv $(PARSER_BIN) $(BINDIR)/
+	# Přesun všech do bin diru
+	@mv *.o $(BINDIR) 
+
+run:
+	nasm -f elf64 output.asm -o output.o && gcc -no-pie output.o -o output && ./output
+
 
 
 test_ok:

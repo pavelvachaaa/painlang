@@ -1,21 +1,15 @@
-let a : string = "pavel";
-let b : string = "kauba";
-let c : string = "pavel";
-
-if(a == c) {
-    if(b == "kuba" ) {
-        print("a je pavel a b je kuba");
-    } else {
-        print("a je pavel a b není kuba");
+function numToString(a: number) -> string {
+    if (a==1) {
+        return "jednicka";
     }
-    print("A je pavel");
 
-
-} else {
-     if(b == "kuba" ) {
-        print("a je kuba a b je kuba");
-    } else {
-        print("a je kuba a b není kuba");
+    if (a==2) {
+        return "dvojka";
     }
-    print("A není kuba");
+
+    return "other";
 }
+
+let x : string = numToString(39);
+
+print(x);
