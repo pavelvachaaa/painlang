@@ -2,28 +2,22 @@
 MAKE=make
 GCC=gcc
 
+CFLAGS=-no-pie
+
+DEFAULT_TEST_FILE="./tests/valid_01.painlang"
+
 FILENAME=pl
 PRINT_OUTPUT="y"
 
 PARSER_BIN="painlang_parser"
+PARSER_OUTPUT="output"
 
 ROOT_DIR=$(shell pwd)
 INCDIR=$(ROOT_DIR)/inc
 INCFILES := $(shell find $(INCDIR) -type f -name "*.c")
-#LIBOBJS = $(wildcard $(LIBDIR)/*.o)
-#LIBNAMES = $(shell basename -s ".o" $(LIBOBJS))
-#LIBS = $(addprefix -l, $(LIBNAMES))
 
 BINDIR="./bin"
 TESTDIR="./tests"
-TEST_OK_FILE="valid_01.painlang"
-TEST_NOOK_FILE="invalid_01.painlang"
-
-.PHONY: parser test_ok test_nook subclean clean all
-
-all: clean parser test_ok test_nook
-	@if [ $(PRINT_OUTPUT) ]; then cat $(BINDIR)/$(TEST_OK_FILE).report; fi
-	@if [ $(PRINT_OUTPUT) ]; then cat $(BINDIR)/$(TEST_NOOK_FILE).report; fi
 
 test:
 	echo $(ROOT_DIR)
@@ -39,27 +33,34 @@ parser:
 	$(GCC) -I$(INCDIR) -c $(INCFILES) lex.yy.c y.tab.c
 	$(GCC) -o $(PARSER_BIN) *.o
 	@mv $(PARSER_BIN) $(BINDIR)/
-	# Přesun všech do bin diru
 	@mv *.o $(BINDIR) 
 
-run:
-	nasm -f elf64 output.asm -o output.o && gcc -no-pie output.o -o output && ./output
+# Intermidiate kód
+run_ir:
+	$(BINDIR)/$(PARSER_BIN)  -i $(DEFAULT_TEST_FILE) -O
 
+# Tvorba binárky a spuštění
+run:
+	nasm -f elf64 $(PARSER_OUTPUT).asm -o $(PARSER_OUTPUT).o && $(GCC) $(CFLAGS) $(PARSER_OUTPUT).o -o $(PARSER_OUTPUT) && ./$(PARSER_OUTPUT)
 
 run_full:
 	make clean
 	make parser
+	make run_ir
 	make run
 
-test_ok:
-	@./$(BINDIR)/$(PARSER_BIN) $(TESTDIR)/$(TEST_OK_FILE) >$(BINDIR)/$(TEST_OK_FILE).report
-test_nook:
-	@./$(BINDIR)/$(PARSER_BIN) $(TESTDIR)/$(TEST_NOOK_FILE) >$(BINDIR)/$(TEST_NOOK_FILE).report
+debug:
+	clear
+	make clean
+	make parser
+	make run_ir
+
 
 subclean:
 	@rm -rf lex.yy.c
 	@rm -rf y.tab.h y.tab.c
 
+.PHONY: clean
+
 clean: subclean
 	@rm -rf $(BINDIR)/* *.o
-
