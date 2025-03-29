@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
 %type <arg_list> argumentList arguments
 %type <num> typeRule
 
-
+%right UNARY_MINUS
 %left '+' '-'
 %left '*' '/'
 
@@ -381,23 +381,8 @@ expression: expression '+' term
     {
         $$ = $1;
     }
-    // Díky tomuhle můžeme spočítat hned hodnotu a nečekat
-    | NUMBER '+' NUMBER
-    {
-        $$ = create_number_node($1 + $3);
-    }
-    | NUMBER '-' NUMBER
-    {
-        $$ = create_number_node($1 - $3);
-    }
-    | NUMBER '*' NUMBER
-    {
-        $$ = create_number_node($1 * $3);
-    }
-    | NUMBER '/' NUMBER
-    {
-        $$ = create_number_node($1 / $3);
-    }
+
+
     ;
 
 term: term '*' factor
@@ -445,6 +430,12 @@ factor: NUMBER
         $$ = create_unary_op_node(OP_LOGICAL_NOT, $2);
         debug_print("Created UNARY_OP_NOT node\n");
     }
+     | '-' factor %prec UNARY_MINUS
+    {
+        $$ = create_unary_op_node(OP_UNARY_MINUS, $2);
+        debug_print("Created UNARY_OP_MINUS node\n");
+    }
+ 
     | IDENTIFIER
     {
         $$ = create_variable_node($1);
@@ -454,7 +445,7 @@ factor: NUMBER
     {
         $$ = $2;
     }
-     | functionCall 
+    | functionCall 
     {
         $$ = $1;
     }
@@ -600,3 +591,4 @@ returnStatement: RETURN expression
 empty: 
     ;
 %%
+

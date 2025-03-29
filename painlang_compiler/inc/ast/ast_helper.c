@@ -13,6 +13,8 @@ DataType get_node_data_type(SymbolTable *table, ASTNode *node)
         return TYPE_NUMBER;
     case NODE_BOOLEAN:
         return TYPE_BOOLEAN;
+    case NODE_BINARY_OP:
+        return TYPE_UNKNOWN; // Jelikož nevíme jaký bude výsledek (a optimalizace zatím neumí evaluovat funkce)
     case NODE_FUNCTION_CALL:
     {
         FunctionEntry *func = lookup_function(table, node->data.function_call.func_name);
@@ -97,6 +99,13 @@ void set_variable_from_node(SymbolTable *table, const char *name, ASTNode *value
     case NODE_BOOLEAN:
         set_variable(table, name, &(value_node->data.boolean.value), 1, TYPE_BOOLEAN);
         break;
+    case NODE_BINARY_OP:
+    {
+        int value = 0;
+        set_variable_in_use(table, name, &value, 1, value_node->type_annotation);
+    }
+    break;
+
     case NODE_FUNCTION_CALL:
     {
         char *func_name = value_node->data.function_call.func_name;

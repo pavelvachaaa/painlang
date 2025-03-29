@@ -154,6 +154,7 @@ ASTNode *create_unary_op_node(UnaryOpType op, ASTNode *value)
 {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
     node->type = NODE_UNARY_OP;
+    node->data.unary_op.op = op;
     node->data.unary_op.value = value;
     return node;
 }

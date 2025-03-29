@@ -44,7 +44,8 @@ typedef enum
 {
     OP_LOGICAL_NOT,
     OP_INCREMENT, // TODO: Pak upravit z předchozí double plus na op_increment kvůli optimalizaci instrukcí (dec, inc) místo x + 1 = > ...
-    OP_DECREMENT
+    OP_DECREMENT,
+    OP_UNARY_MINUS
 } UnaryOpType;
 
 typedef enum

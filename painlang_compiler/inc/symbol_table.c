@@ -184,16 +184,24 @@ SymbolEntry *lookup_variable_all_scopes(SymbolTable *table, const char *name)
     }
     return NULL;
 }
-void set_is_used(SymbolTable *table, const char *name)
-{
+
+void set_is_used(SymbolTable *table, const char* name) {
+   
     SymbolEntry *entry = lookup_variable(table, name);
-    if (!entry)
-    {
+    if(!entry) {
         fprintf(stderr, "Error: proměnná neexistuje");
-        set_variable(table, name, 0, 0, entry->data_type);
         return;
     }
+   
+    if (entry)
+    {
+        entry->is_used = 1;
+        entry->is_modified_in_loop = 1;
+    }
+}
 
+void set_variable_in_use(SymbolTable *table, const char *name, void *value, int is_initialized, DataType data_type) {
+    set_variable(table,name, value, is_initialized,data_type);
     set_is_used(table, name);
 }
 

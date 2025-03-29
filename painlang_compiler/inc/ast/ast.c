@@ -53,6 +53,16 @@ ASTNode *replace_variables(ASTNode *node, SymbolTable *table)
     if (!node)
         return NULL;
 
+    if (node->type == NODE_FUNCTION_CALL)
+    {
+        for (int i = 0; i < node->data.function_call.argument_count; i++)
+        {
+            node->data.function_call.arguments[i] = replace_variables(
+                node->data.function_call.arguments[i], table);
+        }
+        return node;
+    }
+
     node = evaluate_expression(node, table);
 
     // nahrazujeme v ifu proměnné za literály
@@ -103,10 +113,10 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
             find_and_set_variables(node->data.statement_list.statements[i], table);
         }
         break;
-    
-    // case NODE_IMPORT_STATEMENT: 
-    //     find_and_set_variables(node->data.import_statement.imported_ast, table);
-    // break;
+
+        // case NODE_IMPORT_STATEMENT:
+        //     find_and_set_variables(node->data.import_statement.imported_ast, table);
+        // break;
 
     case NODE_VAR_DECLARATION:
         if (!lookup_variable(table, node->data.var_declaration.var_name))
@@ -196,7 +206,6 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
         find_and_set_variables(node->data.unary_op.value, table);
         break;
 
-
     case NODE_CONDITION:
         find_and_set_variables(node->data.condition.left, table);
         find_and_set_variables(node->data.condition.right, table);
@@ -285,6 +294,13 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
     case NODE_VAR_DECLARATION:
         if (node->data.var_declaration.init_expr)
         {
+            ASTNode *expr = node->data.var_declaration.init_expr;
+            if (expr->type == NODE_BINARY_OP && (expr->data.binary_op.left->type == NODE_FUNCTION_CALL || expr->data.binary_op.right->type == NODE_FUNCTION_CALL))
+            {
+                set_variable_from_node(table, node->data.var_declaration.var_name, node->data.var_declaration.init_expr, 1);
+                return node;
+            }
+
             node->data.var_declaration.init_expr = optimize_ast(node->data.var_declaration.init_expr, table);
             set_variable_from_node(table, node->data.var_declaration.var_name, node->data.var_declaration.init_expr, 1);
         }
@@ -370,7 +386,12 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         break;
 
     case NODE_BINARY_OP:
-        return evaluate_binary_op_node(node, table);
+        if (node->data.binary_op.left->type != NODE_FUNCTION_CALL &&
+            node->data.binary_op.right->type != NODE_FUNCTION_CALL)
+        {
+            return evaluate_binary_op_node(node, table);
+        }
+
         break;
 
     case NODE_VARIABLE:
@@ -478,8 +499,6 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         {
             mark_modified_variables(node->data.for_loop.body, &loop_table);
         }
-
-        update_loop_modified_variables(table, &loop_table);
 
         remove_unused_variables(node->data.for_loop.body, &loop_table);
         break;
@@ -601,6 +620,11 @@ void mark_modified_variables(ASTNode *node, SymbolTable *table)
         }
 
         mark_modified_variables(node->data.assignment.value, table);
+        if (node->data.assignment.value && node->data.assignment.value->type == NODE_BINARY_OP)
+        {
+            mark_modified_variables(node->data.assignment.value->data.binary_op.left, table);
+            mark_modified_variables(node->data.assignment.value->data.binary_op.right, table);
+        }
     }
     break;
 
@@ -637,6 +661,7 @@ void mark_modified_variables(ASTNode *node, SymbolTable *table)
 
         if (node->data.var_declaration.init_expr)
         {
+
             mark_modified_variables(node->data.var_declaration.init_expr, table);
         }
     }
@@ -681,6 +706,7 @@ void mark_modified_variables(ASTNode *node, SymbolTable *table)
         break;
 
     case NODE_BINARY_OP:
+
         mark_modified_variables(node->data.binary_op.left, table);
         mark_modified_variables(node->data.binary_op.right, table);
         break;
@@ -688,6 +714,12 @@ void mark_modified_variables(ASTNode *node, SymbolTable *table)
     case NODE_CONDITION:
         mark_modified_variables(node->data.condition.left, table);
         mark_modified_variables(node->data.condition.right, table);
+        break;
+    case NODE_FUNCTION_CALL:
+        for (int i = 0; i < node->data.function_call.argument_count; i++)
+        {
+            mark_modified_variables(node->data.function_call.arguments[i], table);
+        }
         break;
 
     case NODE_PRINT:
@@ -754,7 +786,7 @@ void remove_unused_variables(ASTNode *node, SymbolTable *table)
         {
             ASTNode *stmt = node->data.statement_list.statements[i];
             // stmt->data.var_declaration.init_expr->type != NODE_FUNCTION_CALL automaticky in-used když se deklaruješ z function callu
-            if (stmt->type == NODE_VAR_DECLARATION && stmt->data.var_declaration.init_expr->type != NODE_FUNCTION_CALL)
+            if (stmt->type == NODE_VAR_DECLARATION && (stmt->data.var_declaration.init_expr->type != NODE_FUNCTION_CALL))
             {
                 SymbolEntry *entry = lookup_variable(table, stmt->data.var_declaration.var_name);
                 if (entry && entry->is_used)

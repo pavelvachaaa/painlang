@@ -419,7 +419,6 @@ static void generate_print(FILE *file, IRInstruction *instr)
 {
     char arg1_str[64];
     get_nasm_operand(instr->arg1, arg1_str, 0);
-    print_ir_instruction(*instr);
     if (instr->arg1.type == OPERAND_STRING_LITERAL)
     {
         fprintf(file, "    ; Vypiš string hodnotu \n");
@@ -536,8 +535,6 @@ void generate_param(FILE *file, IRInstruction *instr)
     }
     else
     {
-        printf("Type: %d\n", instr->arg1.type);
-        print_ir_instruction(*instr);
     }
 }
 
@@ -545,7 +542,6 @@ void generate_arg(FILE *file, IRInstruction *instr)
 {
     int arg_index = instr->arg2.value.literal;
 
-    print_ir_instruction(*instr);
 
     if (instr->arg1.type != OPERAND_NONE)
     {
@@ -706,7 +702,6 @@ void generate_nasm_from_ir(IRProgram *program, SymbolTable *table, const char *o
     for (int i = 0; i < program->instruction_count; i++)
     {
         IRInstruction *instr = &program->instructions[i];
-        print_ir_instruction(*instr);
         if (instr->arg1.type == OPERAND_STRING_LITERAL)
         {
             char literal_name[64];

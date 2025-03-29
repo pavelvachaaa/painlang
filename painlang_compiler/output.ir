@@ -97,50 +97,27 @@ return false
 L22:
 end function isOdd
 L0:
-x = 0
-r = 0
+bi = 0
 L23:
-t19 = r < 10
+t19 = bi < 10
 if t19 == 0 goto L24
 arg 2
-arg r
+arg 10
 t20 = call pow, 2
-x = t20
-print x
-t21 = r + 1
-r = t21
+t21 = 2 * t20
+t22 = t21 * bi
+res1 = t22
+print res1
+t23 = bi + 1
+bi = t23
 goto L23
 L24:
-arg 3
-arg base
-t22 = call modulo, 2
-res = t22
-print 'Modulo test:'
-print res
-print 'isEven test:'
-arg 1
-t23 = call isEven, 1
-resVen = t23
-print resVen
-arg 44
-t24 = call isEven, 1
-resVen = t24
-print resVen
-arg 43
-t25 = call isEven, 1
-resVen = t25
-print resVen
-print 'isOdd test:'
-arg 1
-t26 = call isOdd, 1
-resVen = t26
-print resVen
-print 'isPrime'
-arg 13
-t27 = call isPrime, 1
-primeTest = t27
-print primeTest
+print -15
+print -15
+print 15
+print -4
+print 0
+arg 2
 arg 10
-t28 = call isPrime, 1
-primeTest2 = t28
-print primeTest2
+t24 = call pow, 2
+print t24

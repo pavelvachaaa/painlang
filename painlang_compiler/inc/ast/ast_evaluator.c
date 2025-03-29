@@ -2,7 +2,6 @@
 
 ASTNode *evaluate_unary_op_node(ASTNode *node, SymbolTable *table)
 {
-
     node->data.unary_op.value = evaluate_expression(node->data.unary_op.value, table);
 
     if (node->data.unary_op.value->type == NODE_BOOLEAN)
@@ -28,6 +27,10 @@ ASTNode *evaluate_unary_op_node(ASTNode *node, SymbolTable *table)
         {
             result = value - 1;
         }
+        else if (node->data.unary_op.op == OP_UNARY_MINUS)
+        {
+            result = -value;
+        }
 
         free_ast(node->data.unary_op.value);
         return create_number_node(result);
@@ -36,9 +39,18 @@ ASTNode *evaluate_unary_op_node(ASTNode *node, SymbolTable *table)
 
 ASTNode *evaluate_binary_op_node(ASTNode *node, SymbolTable *table)
 {
+    if (!node || node->type != NODE_BINARY_OP)
+        return node;
+
     // evalujeme dokud nám nezbyde vlastně jen čísla, na kterých můžeme operovat
     node->data.binary_op.left = evaluate_expression(node->data.binary_op.left, table);
     node->data.binary_op.right = evaluate_expression(node->data.binary_op.right, table);
+
+    if (node->data.binary_op.left->type == NODE_FUNCTION_CALL ||
+        node->data.binary_op.right->type == NODE_FUNCTION_CALL)
+    {
+        return node;
+    }
 
     if (node->data.binary_op.left->type == NODE_NUMBER && node->data.binary_op.right->type == NODE_NUMBER)
     {
@@ -59,7 +71,7 @@ ASTNode *evaluate_binary_op_node(ASTNode *node, SymbolTable *table)
 
         free_ast(node->data.binary_op.left);
         free_ast(node->data.binary_op.right);
-        
+
         return create_boolean_node(result);
     }
 
