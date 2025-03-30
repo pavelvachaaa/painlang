@@ -1,3 +1,4 @@
+#pragma once
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -63,6 +64,5 @@ void copy_symbol_table(SymbolTable *dest, SymbolTable *src);
 void update_loop_modified_variables(SymbolTable *main_table, SymbolTable *loop_table);
 void set_variable_in_use(SymbolTable *table, const char *name, void *value, int is_initialized, DataType data_type);
 
-
-
 void free_symbol_table(SymbolTable *table);
+void merge_symbol_table(SymbolTable *loop_table, SymbolTable *main_table);

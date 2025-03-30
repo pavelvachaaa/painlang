@@ -234,6 +234,7 @@ void find_and_set_variables(ASTNode *node, SymbolTable *table)
         }
 
         update_loop_modified_variables(table, &loop_table);
+        merge_symbol_table(&loop_table, table);
     }
 
     break;
@@ -292,17 +293,18 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         break;
 
     case NODE_VAR_DECLARATION:
+
         if (node->data.var_declaration.init_expr)
         {
             ASTNode *expr = node->data.var_declaration.init_expr;
-            if (expr->type == NODE_BINARY_OP && (expr->data.binary_op.left->type == NODE_FUNCTION_CALL || expr->data.binary_op.right->type == NODE_FUNCTION_CALL))
+            if ((expr->type == NODE_FUNCTION_CALL) || (expr->type == NODE_BINARY_OP && (expr->data.binary_op.left->type == NODE_FUNCTION_CALL || expr->data.binary_op.right->type == NODE_FUNCTION_CALL)))
             {
                 set_variable_from_node(table, node->data.var_declaration.var_name, node->data.var_declaration.init_expr, 1);
                 return node;
             }
 
             node->data.var_declaration.init_expr = optimize_ast(node->data.var_declaration.init_expr, table);
-            set_variable_from_node(table, node->data.var_declaration.var_name, node->data.var_declaration.init_expr, 1);
+            set_variable_from_node(table, node->data.var_declaration.var_name, node->data.var_declaration.init_expr, 0);
         }
         break;
 
@@ -386,12 +388,14 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         break;
 
     case NODE_BINARY_OP:
+        node->data.binary_op.left = optimize_ast(node->data.binary_op.left, table);
+        node->data.binary_op.right = optimize_ast(node->data.binary_op.right, table);
+
         if (node->data.binary_op.left->type != NODE_FUNCTION_CALL &&
             node->data.binary_op.right->type != NODE_FUNCTION_CALL)
         {
             return evaluate_binary_op_node(node, table);
         }
-
         break;
 
     case NODE_VARIABLE:
@@ -501,6 +505,7 @@ ASTNode *optimize_ast(ASTNode *node, SymbolTable *table)
         }
 
         remove_unused_variables(node->data.for_loop.body, &loop_table);
+        merge_symbol_table(&loop_table, table);
         break;
     }
     case NODE_STRING:
@@ -593,8 +598,10 @@ void mark_modified_variables(ASTNode *node, SymbolTable *table)
         SymbolEntry *entry = lookup_variable(table, node->data.assignment.var_name);
         if (entry)
         {
+
             entry->is_modified_in_loop = 1;
-            entry->is_initialized = 0;
+            entry->is_initialized = 1;
+            entry->is_used = 1;
         }
         else
         {
@@ -630,34 +637,7 @@ void mark_modified_variables(ASTNode *node, SymbolTable *table)
 
     case NODE_VAR_DECLARATION:
     {
-        SymbolEntry *entry = lookup_variable(table, node->data.var_declaration.var_name);
-        if (entry)
-        {
-            entry->is_modified_in_loop = 1;
-            entry->is_initialized = 0;
-        }
-        else
-        {
-            if (entry->data_type == TYPE_STRING)
-            {
-                set_variable(table, node->data.var_declaration.var_name, node->data.var_declaration.init_expr->data.string.value, 0, TYPE_STRING);
-            }
-            else if (entry->data_type == TYPE_BOOLEAN)
-            {
-                set_variable(table, node->data.var_declaration.var_name, &(node->data.var_declaration.init_expr->data.boolean.value), 0, TYPE_BOOLEAN);
-            }
-            else
-            {
-                int value = 0;
-                set_variable(table, node->data.var_declaration.var_name, &value, 0, TYPE_NUMBER);
-            }
-
-            entry = lookup_variable(table, node->data.var_declaration.var_name);
-            if (entry)
-            {
-                entry->is_modified_in_loop = 1;
-            }
-        }
+        set_variable_from_node(table, node->data.var_declaration.var_name, node->data.var_declaration.init_expr, 1);
 
         if (node->data.var_declaration.init_expr)
         {

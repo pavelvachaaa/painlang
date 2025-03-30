@@ -2,10 +2,14 @@ include "stdlib/math"
 
 let a: number = 3;
 let res1: number = 0;
+
 // Ve for loopu nefunguje replace_variable (tipuju to na loop_table, která nepracuje správně)
 for (let bi : number = 0; bi < 10; bi++) {
-    res1 = 2*pow(2,10)*bi;
-    print(res1);
+    let znamenko : number = 2;
+    print(znamenko);
+    res1 = 2*bi;
+  //  print(res1);
+
 }
 
 print(-(-(a+2))*-a); // Očekávám: -15
@@ -15,4 +19,4 @@ print((5 + 3) * (-2) / 4); // Očekávám: -4
 print(res1);
 
 let z: number = 10;
-print(pow(2,z));
+print(pow(2,z)*2);

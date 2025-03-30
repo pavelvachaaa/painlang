@@ -5,6 +5,7 @@
 #include "prints.h"
 #include "./inc/ast/ast.h"
 #include "./inc/printers/ast/ast_printer.h"
+#include "./inc/printers/symbol/symbol_printer.h"
 #include "./inc/ir/ir.h"
 #include <unistd.h>
 #include "lexer.h"
@@ -104,6 +105,8 @@ int main(int argc, char **argv) {
     print_ast(ast_root);
     printf("============ AST_TREE_END ============ \n");
 
+
+    print_symbol_table(table);
     // IR reprezentace a struktura
     IRProgram *program = malloc(sizeof(IRProgram));
     if (!program) {

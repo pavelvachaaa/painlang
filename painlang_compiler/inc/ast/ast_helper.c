@@ -134,9 +134,15 @@ void set_variable_from_node(SymbolTable *table, const char *name, ASTNode *value
     }
     default:
     {
+        fprintf(stderr, "[set_variable_from_node] default for %s\n", name);
         int value = 0;
         set_variable(table, name, &value, 0, TYPE_NUMBER);
         break;
     }
+    }
+
+    if (is_modified_in_loop)
+    {
+        set_is_used(table, name);
     }
 }

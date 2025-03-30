@@ -678,12 +678,10 @@ void generate_nasm_from_ir(IRProgram *program, SymbolTable *table, const char *o
 
                 if (op->data_type == TYPE_STRING)
                 {
-                    printf("Prosím: %s\n", temp_name);
                     add_variable_to_list(&string_literals, temp_name, op->data_type); // Store string temporaries separately
                 }
                 else
                 {
-                    printf("Prosím2: %s\n", temp_name);
                     add_variable_to_list(&variables, temp_name, op->data_type); // Store as general temporary
                 }
             }

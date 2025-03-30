@@ -123,12 +123,15 @@ void exit_scope(SymbolTable *table)
 // Takže to pak dát někde při setování...
 void update_loop_modified_variables(SymbolTable *main_table, SymbolTable *loop_table)
 {
-    for (int i = 0; i < loop_table->count; i++) {
-        if (loop_table->entries[i].is_modified_in_loop) {
-                            // TODO: Promyslet to s těma zasranejme scopama a vnitřní tabulkou for loopu
+    for (int i = 0; i < loop_table->count; i++)
+    {
+        if (loop_table->entries[i].is_modified_in_loop)
+        {
+            // TODO: Promyslet to s těma zasranejme scopama a vnitřní tabulkou for loopu
 
             SymbolEntry *main_entry = lookup_variable(main_table, loop_table->entries[i].name);
-            if (main_entry) {
+            if (main_entry)
+            {
                 main_entry->is_modified_in_loop = 1;
                 main_entry->is_used = 1;
                 main_entry->is_initialized = 0; // TODO: O tomhle popřemýšlet..
@@ -137,33 +140,55 @@ void update_loop_modified_variables(SymbolTable *main_table, SymbolTable *loop_t
     }
 }
 
-void copy_symbol_table(SymbolTable *dest, SymbolTable *src)
+void merge_symbol_table(SymbolTable *loop_table, SymbolTable *main_table)
 {
-    if (!dest || !src) return;
-    
-    init_symbol_table(dest);
-    
-    for (int i = 0; i < src->count; i++) {
-        if (src->entries[i].data_type == TYPE_STRING) {
-            set_variable(dest, src->entries[i].name,
-                        src->entries[i].string_value,
-                        src->entries[i].is_initialized, TYPE_STRING);
-        } else if (src->entries[i].data_type == TYPE_BOOLEAN) {
-            set_variable(dest, src->entries[i].name,
-                        &(src->entries[i].boolean_value),
-                        src->entries[i].is_initialized, TYPE_BOOLEAN);
-        } else {
-            set_variable(dest, src->entries[i].name,
-                        &(src->entries[i].value),
-                        src->entries[i].is_initialized, TYPE_NUMBER);
+    for (int i = 0; i < loop_table->count; i++)
+    {
+        SymbolEntry *loop_entry = &loop_table->entries[i];
+        SymbolEntry *main_entry = lookup_variable(main_table, loop_entry->name);
+
+        if (main_entry)
+        { // Merguj, když existuje o téhle variable záznam i v mainu
+
+            main_entry->is_modified_in_loop = loop_entry->is_modified_in_loop;
+            main_entry->is_used = loop_entry->is_used;
         }
     }
 }
 
+void copy_symbol_table(SymbolTable *dest, SymbolTable *src)
+{
+    if (!dest || !src)
+        return;
 
+    init_symbol_table(dest);
+
+    for (int i = 0; i < src->count; i++)
+    {
+        if (src->entries[i].data_type == TYPE_STRING)
+        {
+            set_variable(dest, src->entries[i].name,
+                         src->entries[i].string_value,
+                         src->entries[i].is_initialized, TYPE_STRING);
+        }
+        else if (src->entries[i].data_type == TYPE_BOOLEAN)
+        {
+            set_variable(dest, src->entries[i].name,
+                         &(src->entries[i].boolean_value),
+                         src->entries[i].is_initialized, TYPE_BOOLEAN);
+        }
+        else
+        {
+            set_variable(dest, src->entries[i].name,
+                         &(src->entries[i].value),
+                         src->entries[i].is_initialized, TYPE_NUMBER);
+        }
+    }
+}
 
 SymbolEntry *lookup_variable(SymbolTable *table, const char *name)
 {
+
     for (int i = table->count - 1; i >= 0; i--) // Prioritizujeme vnitřní scope
     {
         if (strcmp(table->entries[i].name, name) == 0 && table->entries[i].scope_level == table->current_scope)
@@ -171,7 +196,7 @@ SymbolEntry *lookup_variable(SymbolTable *table, const char *name)
             return &table->entries[i];
         }
     }
-    return NULL;
+    return 0;
 }
 SymbolEntry *lookup_variable_all_scopes(SymbolTable *table, const char *name)
 {
@@ -185,14 +210,16 @@ SymbolEntry *lookup_variable_all_scopes(SymbolTable *table, const char *name)
     return NULL;
 }
 
-void set_is_used(SymbolTable *table, const char* name) {
-   
+void set_is_used(SymbolTable *table, const char *name)
+{
+
     SymbolEntry *entry = lookup_variable(table, name);
-    if(!entry) {
+    if (!entry)
+    {
         fprintf(stderr, "Error: proměnná neexistuje");
         return;
     }
-   
+
     if (entry)
     {
         entry->is_used = 1;
@@ -200,17 +227,17 @@ void set_is_used(SymbolTable *table, const char* name) {
     }
 }
 
-void set_variable_in_use(SymbolTable *table, const char *name, void *value, int is_initialized, DataType data_type) {
-    set_variable(table,name, value, is_initialized,data_type);
+void set_variable_in_use(SymbolTable *table, const char *name, void *value, int is_initialized, DataType data_type)
+{
+    set_variable(table, name, value, is_initialized, data_type);
     set_is_used(table, name);
 }
 
 void set_variable(SymbolTable *table, const char *name, void *value, int is_initialized, DataType data_type)
 {
     SymbolEntry *entry = lookup_variable(table, name);
-    debug_print("I m setting variable %s data_type:%d \n ", name, data_type);
 
-    if (entry)
+    if (entry) // Jsi v hlavním scopu?
     {
         entry->is_initialized = is_initialized;
 
@@ -236,7 +263,7 @@ void set_variable(SymbolTable *table, const char *name, void *value, int is_init
             entry->boolean_value = *(u_int8_t *)value;
         }
     }
-    else
+    else // Není v aktuálním scopu? Podívej se do outer scopu
     {
         entry = lookup_variable_all_scopes(table, name);
 
@@ -265,7 +292,7 @@ void set_variable(SymbolTable *table, const char *name, void *value, int is_init
                 entry->boolean_value = *(u_int8_t *)value;
             }
         }
-        else
+        else // Není ani v outerscopu, vytvoříme pro tebe místo
         {
             table->entries = realloc(table->entries, sizeof(SymbolEntry) * (table->count + 1));
             if (!table->entries)
@@ -292,7 +319,6 @@ void set_variable(SymbolTable *table, const char *name, void *value, int is_init
             }
             else if (data_type == TYPE_BOOLEAN)
             {
-                debug_print("I have set boolean");
                 entry->boolean_value = *(u_int8_t *)value;
             }
 

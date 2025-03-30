@@ -1,3 +1,2 @@
-print("Retardované");
-print("Ale naprosto");
-let a : number = 3;
+let z : bool = !false && true;
+print(z);
