@@ -43,7 +43,7 @@ print(false || true);
 print(!(true && false));
 
 let z : number= 3;
-print(z)
+print(z);
 z++;
 print(z);
 
