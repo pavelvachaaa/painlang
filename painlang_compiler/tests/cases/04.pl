@@ -13,5 +13,9 @@ while (j < 10) {
     j++;
 }
 
+let z: number = 0;
+for(let i: number = 0; i < 10; i++) {
+    z += i;
+}
 
-
+print(z);
