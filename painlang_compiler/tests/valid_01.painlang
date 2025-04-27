@@ -1,94 +1,62 @@
-let x : number = 128;
-let y : number = 256;
-
-if ( x+y > 2 ) {
-    if (y > 3 ) {
-        print(123);
-    } else {
-        print(288);
-    }
-    print(999);
-} else {
-    print(666);
-}
-
-let ba: string = "škola";
-if (ba == "škola") {
-    print("Smrdí");
-} else {
-    print("Je super");
-}
-
-
+// Jednoduché aritmetiky
 let a: number = 5;
-if (a > 3) {
-    print(10);
-} else {
-    print(20);
-}
+let b: number = 2;
+let c: number = 3;
 
-let b: string = "hello";
-if (b == "world") {
-    print("Planet");
-} else {
-    print("Not Planet");
-}
+print(a + b * c); // expected 11
 
-let c: number = 0;
-if (c == 0) {
-    print(1000);
-} else {
-    print(2000);
-}
+print((a + b) * c); // expected 21
 
-let d: bool = true;
-if (d == true) {
-    print(1);
-} else {
-    print(0);
-}
+let d: number = a * b - c;
+print(d); // expected 7
 
-let e: number = 42;
-if (e < 100) {
-    print(1234);
-} else {
-    print(4321);
-}
+let e: number = a * (b - c);
+print(e); // expected -5
 
-let f: string = "apple";
-if (f != "banana") {
-    print("Not banana");
-} else {
-    print("Banana");
-}
+print(a - b * c + a); // expected 4
+
+print((a - b) * (c + a)); // expected 24
+
+let f: number = b * b * c;
+print(f); // expected 12
+
+let g: number = a - (b - c) * a;
+print(g); // expected 10
+
+print(a * b - a * c); // expected -5
+
+print((a * (b - c)) * (a - b)); // expected -15
+
+// Jednoduchá unarita
+let a1: number = 5;
+let b1 : number= 2;
+let c1:  number = 7;
+
+print(-a1 + b1 * c1);
+
+print(a1 + -b1* c1);
 
 
-let g: number = 100;
-if (g == 100) {
-    print("Exactly 100");
-} else {
-    print("Not 100");
-}
+print(!false);
+print(false && false);
+print(false || true);
+print(!(true && false));
 
-let h: string = "123";
-if (h == "123") {
-    print("String 123");
-} else {
-    print("Not 123");
-}
+let z : number= 3;
+z++;
+print(z);
+z--;
+z--;
+print(z);
 
-let i: bool = false;
-if (i == false) {
-    print("False confirmed");
-} else {
-    print("Unexpected true");
-}
+// Syntax sugar test
 
+let pavel : number = 3;
+pavel += 5;
+print(pavel);
 
-
-let k: string = "false";
-if (k == "false") {
-    print("String false");
-} else {
-    print("Different string");
-}
+pavel -= 8;
+print(pavel);
+pavel++;
+pavel *=7;
+print(pavel);

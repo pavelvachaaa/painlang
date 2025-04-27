@@ -43,20 +43,13 @@ print(false || true);
 print(!(true && false));
 
 let z : number= 3;
+print(z)
 z++;
 print(z);
-z--;
-z--;
-print(z);
+
 
 // Syntax sugar test
 
 let pavel : number = 3;
 pavel += 5;
-print(pavel);
-
-pavel -= 8;
-print(pavel);
-pavel++;
-pavel *=7;
 print(pavel);

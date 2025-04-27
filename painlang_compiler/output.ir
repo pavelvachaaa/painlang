@@ -1,61 +1,30 @@
 goto L0
 L0:
-print 123
-print 999
-if false == 0 goto L1
-print 1
-goto L2
-L1:
-print 2
-L2:
-t0 = 'škola' == 'škola'
-if t0 == 0 goto L3
-print 'Smrdí'
-goto L4
-L3:
-print 'Je super'
-L4:
+print 11
+print 21
+print 7
+print -5
+print 4
+print 24
+print 12
 print 10
-t1 = 'hello' == 'world'
-if t1 == 0 goto L5
-print 'Planet'
-goto L6
-L5:
-print 'Not Planet'
-L6:
-print 1000
-if true == 0 goto L7
-print 1
-goto L8
-L7:
+print -5
+print -15
+print 9
+print -9
+print true
+print false
+print true
+print true
+z = 4
+print 4
+z = 3
+z = 2
+print 2
+pavel = 8
+print 8
+pavel = 0
 print 0
-L8:
-print 1234
-t2 = 'apple' != 'banana'
-if t2 == 0 goto L9
-print 'Not banana'
-goto L10
-L9:
-print 'Banana'
-L10:
-print 'Exactly 100'
-t3 = '123' == '123'
-if t3 == 0 goto L11
-print 'String 123'
-goto L12
-L11:
-print 'Not 123'
-L12:
-if true == 0 goto L13
-print 'False confirmed'
-goto L14
-L13:
-print 'Unexpected true'
-L14:
-t4 = 'false' == 'false'
-if t4 == 0 goto L15
-print 'String false'
-goto L16
-L15:
-print 'Different string'
-L16:
+pavel = 1
+pavel = 7
+print 7
