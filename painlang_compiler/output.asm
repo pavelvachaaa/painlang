@@ -9,9 +9,6 @@ section .data
     format_str db "%s", 10, 0  ; Formát pro řetězce
 
 section .bss
-    a resq 1
-    b resq 1
-    c resq 1
 
 section .text
     global main
@@ -98,76 +95,9 @@ L0:
     xor rax, rax
     call printf wrt ..plt
 
-    ; IR: a = 5
-    ; Načti konstantu 5
-    mov rax, 5
-    ; Ulož do [a]
-    mov [a], rax
-
-    ; IR: b = 2
-    ; Načti konstantu 2
-    mov rax, 2
-    ; Ulož do [b]
-    mov [b], rax
-
-    ; IR: c = 7
-    ; Načti konstantu 7
-    mov rax, 7
-    ; Ulož do [c]
-    mov [c], rax
-
-    ; IR: print 9
+    ; IR: print -5
     ; Vypiš hodnotu 
-    mov rsi, 9
-    mov rdi, format_int
-    xor rax, rax
-    call printf wrt ..plt
-
-    ; IR: print -9
-    ; Vypiš hodnotu 
-    mov rsi, -9
-    mov rdi, format_int
-    xor rax, rax
-    call printf wrt ..plt
-
-    ; IR: print -49
-    ; Vypiš hodnotu 
-    mov rsi, -49
-    mov rdi, format_int
-    xor rax, rax
-    call printf wrt ..plt
-
-    ; IR: print 17
-    ; Vypiš hodnotu 
-    mov rsi, 17
-    mov rdi, format_int
-    xor rax, rax
-    call printf wrt ..plt
-
-    ; IR: print -45
-    ; Vypiš hodnotu 
-    mov rsi, -45
-    mov rdi, format_int
-    xor rax, rax
-    call printf wrt ..plt
-
-    ; IR: print 0
-    ; Vypiš hodnotu 
-    mov rsi, 0
-    mov rdi, format_int
-    xor rax, rax
-    call printf wrt ..plt
-
-    ; IR: print 25
-    ; Vypiš hodnotu 
-    mov rsi, 25
-    mov rdi, format_int
-    xor rax, rax
-    call printf wrt ..plt
-
-    ; IR: print 4
-    ; Vypiš hodnotu 
-    mov rsi, 4
+    mov rsi, -5
     mov rdi, format_int
     xor rax, rax
     call printf wrt ..plt
