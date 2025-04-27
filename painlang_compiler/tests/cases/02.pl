@@ -35,3 +35,28 @@ let c1:  number = 7;
 print(-a1 + b1 * c1);
 
 print(a1 + -b1* c1);
+
+
+print(!false);
+print(false && false);
+print(false || true);
+print(!(true && false));
+
+let z : number= 3;
+z++;
+print(z);
+z--;
+z--;
+print(z);
+
+// Syntax sugar test
+
+let pavel : number = 3;
+pavel += 5;
+print(pavel);
+
+pavel -= 8;
+print(pavel);
+pavel++;
+pavel *=7;
+print(pavel);

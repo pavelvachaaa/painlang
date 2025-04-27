@@ -1,0 +1,13 @@
+123
+999
+Smrdí
+10
+Not Planet
+1000
+1
+1234
+Not banana
+Exactly 100
+String 123
+False confirmed
+String false

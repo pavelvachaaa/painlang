@@ -2,6 +2,14 @@
 
 Cílem je vytvořit takový základ jazyka, abych mohl vzít ten jazyk a vytvořit v něm překladač pro tento jazyk. 
 
+## Testování
+Je nutné nejdříve vyčistit projekt a zkompilovat parser.
+```bash
+make clean
+make parser
+python3 test_runner.py
+```
+
 ## Použití
 
 ```bash
