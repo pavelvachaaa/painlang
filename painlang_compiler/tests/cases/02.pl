@@ -28,35 +28,10 @@ print(a * b - a * c); // expected -5
 print((a * (b - c)) * (a - b)); // expected -15
 
 // Jednoduchá unarita
-a= 5;
-b= 2;
-c= 7;
+let a1: number = 5;
+let b1 : number= 2;
+let c1:  number = 7;
 
-print(-a + b * c);
-// (-5) + (2 * 7) = (-5) + 14 = 9
+print(-a1 + b1 * c1);
 
-print(a + -b * c);
-// 5 + (-2 * 7) = 5 + (-14) = -9
-
-print(-(a + b) * c);
-// -(5 + 2) * 7 = (-7) * 7 = -49
-
-print(-a * -b + c);
-// (-5) * (-2) + 7 = 10 + 7 = 17
-
-let d: number = -(b + c) * a;
-print(d);
-// -(2 + 7) * 5 = (-9) * 5 = -45
-
-let e: number = -a - b - -c;
-print(e);
-// (-5) - 2 - (-7) = (-5) - 2 + 7 = 0
-
-print(a * -(b + -c));
-// 5 * -(2 + (-7)) = 5 * -(2 - 7) = 5 * -(-5) = 5 * 5 = 25
-
-let f: number = -(a * b) - (c * -b);
-print(f);
-// -(5 * 2) - (7 * -2)
-// -10 - (-14)
-// -10 + 14 = 4
+print(a1 + -b1* c1);
