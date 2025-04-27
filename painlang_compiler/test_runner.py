@@ -4,6 +4,24 @@ import difflib
 from typing import Tuple, Optional
 from colorama import Fore, Style, init
 
+
+class DualLogger:
+    def __init__(self, file_path: str):
+        self.terminal = sys.stdout
+        self.log = open(file_path, "w", encoding="utf-8")
+
+    def write(self, message: str):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
+
+    def close(self):
+        self.log.close()
+
+
 init(autoreset=True)
 
 CASES_DIR = "tests/cases"    # Directory containing test case source files
@@ -77,8 +95,20 @@ def run_test(src_file: str, only_compare: bool = False) -> Optional[bool]:
                 print(line)
         return False
 
+import datetime
+
 def main(only_compare: bool = False) -> None:
     os.makedirs(OUTPUTS_DIR, exist_ok=True)
+
+    now = datetime.datetime.now().isoformat(timespec="seconds").replace(":", "-")
+    report_filename = f"report_{now}.txt"
+    report_path = os.path.join(OUTPUTS_DIR, report_filename)
+
+    logger = DualLogger(report_path)
+    sys.stdout = logger  # Redirect all prints to both console and file
+
+    print(f"Test Report - {datetime.datetime.now().isoformat()}")
+    print("=" * 30)
 
     passed = 0
     failed = 0
@@ -97,6 +127,10 @@ def main(only_compare: bool = False) -> None:
 
     print("\n" + "="*30)
     print(f"Summary: {Fore.GREEN}{passed} passed{Style.RESET_ALL}, {Fore.RED}{failed} failed{Style.RESET_ALL}, {Fore.YELLOW}{skipped} skipped{Style.RESET_ALL}")
+
+    sys.stdout = logger.terminal  # Restore normal print behavior
+    logger.close()
+    print(f"Report saved to {report_path}")
 
 if __name__ == "__main__":
     import sys
