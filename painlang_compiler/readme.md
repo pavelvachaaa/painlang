@@ -3,7 +3,7 @@
 Cílem je vytvořit takový základ jazyka, abych mohl vzít ten jazyk a vytvořit v něm překladač pro tento jazyk. 
 
 ## Testování
-Je nutné nejdříve vyčistit projekt a zkompilovat parser.
+Je nutné nejdříve vyčistit projekt a zkompilovat parser. `make test` toto udělá za vás, jinak by byla potřeba spustit: 
 ```bash
 make clean
 make parser

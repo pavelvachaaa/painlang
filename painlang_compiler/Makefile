@@ -20,10 +20,9 @@ BINDIR="./bin"
 TESTDIR="./tests"
 
 test:
-	echo $(ROOT_DIR)
-	echo $(LIBOBJS)
-	echo $(LIBNAMES)
-	echo $(LIBS)
+	make clean
+	make parser
+	python3 test_runner.py
 
 #-p abychom vytvořili /bin když neexistuje
 parser:
