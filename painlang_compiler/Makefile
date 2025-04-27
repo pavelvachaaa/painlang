@@ -49,6 +49,10 @@ run_full:
 	make run_ir
 	make run
 
+run_code:
+	make run_ir
+	make run
+
 debug:
 	clear
 	make clean

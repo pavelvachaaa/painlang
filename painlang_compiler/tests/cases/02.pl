@@ -30,7 +30,7 @@ print((a * (b - c)) * (a - b)); // expected -15
 // Jednoduchá unarita
 a= 5;
 b= 2;
-c= 7;
+b= 7;
 
 print(-a + b * c);
 // (-5) + (2 * 7) = (-5) + 14 = 9

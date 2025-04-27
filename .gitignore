@@ -9,3 +9,4 @@ painlang_interpreter/*.tab.*
 **/*/*.yy.*
 painlang/inc/stack
 painlang/bin
+painlang_compiler/tests/outputs
