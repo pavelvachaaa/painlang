@@ -1,0 +1,47 @@
+{
+  "name": "painlang-highlighter",
+  "displayName": "painlang-highlighter",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "scripts": {
+    "install": "code --install-extension painlang-highlighter-0.0.1.vsix",
+    "yaml": "npx js-yaml syntaxes/pl.tmLanguage.yaml > syntaxes/pl.tmLanguage.json",
+    "package": "vsce package",
+    "full": "npm run yaml && npm run package && npm run install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://example.com/fake-repo.git"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "pl",
+        "aliases": [
+          "PainLang",
+          "pl"
+        ],
+        "extensions": [
+          ".pl"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "pl",
+        "scopeName": "source.pl",
+        "path": "./syntaxes/pl.tmLanguage.json"
+      }
+    ]
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}

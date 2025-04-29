@@ -30,5 +30,7 @@ print("isPrime");
 let primeTest:number = isPrime(13);
 print(primeTest);
 
+
+
 let primeTest2:number = isPrime(10);
 print(primeTest2);
