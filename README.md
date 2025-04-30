@@ -1,6 +1,6 @@
 # PainLang Compiler
 
-## Requirments
+## Requirments
 ```
 nasm
 gcc
@@ -8,7 +8,7 @@ yacc
 flex
 ```
 
-## Použití
+## Použití
 Po prvním naklonování repozitáře proveďte `make clean`.
 
  - Pro vytvoření jenom parseru provďte `make parser`.  
@@ -22,7 +22,7 @@ Instalace language-serveru. Je nutné mít nainstalovaný `node` a `npm package 
 
 Rozdíly optimalizace a bez optimalizace jsou krásně vidět v `output.ir` a `output.asm`. 
 
-## Testování
+## Testování
 Je nutné nejdříve vyčistit projekt a zkompilovat parser. `make test` toto udělá za vás, jinak by byla potřeba spustit: 
 ```bash
 make clean
@@ -30,7 +30,7 @@ make parser
 python3 test_runner.py
 ```
 
-### Ostatní informace (Good to know, ale nejsou potřeba)
+### Ostatní informace (Good to know, ale nejsou potřeba)
 
 Překladač zatím umí pouze `x86_64` pro získání executable a následné spuštění je nutné spustit tento příkaz:
 
