@@ -13,7 +13,7 @@
     "onLanguage:pl"
   ],
   "main": "./client.js",
-  "publisher": "Pavel Vácha",
+  "publisher": "pvacha",
   "scripts": {
     "install-ext": "code --install-extension painlang-highlighter-0.0.1.vsix",
     "yaml": "npx js-yaml syntaxes/pl.tmLanguage.yaml > syntaxes/pl.tmLanguage.json",
