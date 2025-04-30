@@ -1,10 +1,10 @@
-# Kámo tak makefile je hustá věc třeba
 MAKE=make
 GCC=gcc
 
 CFLAGS=-no-pie
 
-DEFAULT_TEST_FILE="./tests/valid_01.pl"
+# Use ?= so the default is used only if TEST_FILE is not provided in the command
+TEST_FILE ?= ./tests/valid_01.pl
 
 FILENAME=pl
 PRINT_OUTPUT="y"
@@ -16,48 +16,49 @@ ROOT_DIR=$(shell pwd)
 INCDIR=$(ROOT_DIR)/inc
 INCFILES := $(shell find $(INCDIR) -type f -name "*.c")
 
-BINDIR="./bin"
-TESTDIR="./tests"
+BINDIR=./bin
+TESTDIR=./tests
 
 test:
 	make clean
 	make parser
 	python3 test_runner.py
 
-#-p abychom vytvořili /bin když neexistuje
+# -p to create /bin if it doesn't exist
 parser:
-	@mkdir -p $(BINDIR) 
-	yacc -d $(FILENAME).y 
+	@mkdir -p $(BINDIR)
+	yacc -d $(FILENAME).y
 	flex $(FILENAME).l
 	$(GCC) -I$(INCDIR) -c $(INCFILES) lex.yy.c y.tab.c
 	$(GCC) -o $(PARSER_BIN) *.o
 	@mv $(PARSER_BIN) $(BINDIR)/
-	@mv *.o $(BINDIR) 
+	@mv *.o $(BINDIR)
 
-# Intermidiate kód
+# Intermediate representation generation
 run_ir:
-	$(BINDIR)/$(PARSER_BIN)  -i $(DEFAULT_TEST_FILE) -O
+	$(BINDIR)/$(PARSER_BIN) -i $(TEST_FILE) -O
 
-# Tvorba binárky a spuštění
+# Compile ASM to binary and run it
 run:
 	nasm -f elf64 $(PARSER_OUTPUT).asm -o $(PARSER_OUTPUT).o && $(GCC) $(CFLAGS) $(PARSER_OUTPUT).o -o $(PARSER_OUTPUT) && ./$(PARSER_OUTPUT)
 
+# Clean, build, run IR and execute
 run_full:
 	make clean
 	make parser
-	make run_ir
+	make run_ir TEST_FILE=$(TEST_FILE)
 	make run
 
+# Just IR and run
 run_code:
-	make run_ir
+	make run_ir TEST_FILE=$(TEST_FILE)
 	make run
 
 debug:
 	clear
 	make clean
 	make parser
-	make run_ir
-
+	make run_ir TEST_FILE=$(TEST_FILE)
 
 subclean:
 	@rm -rf lex.yy.c

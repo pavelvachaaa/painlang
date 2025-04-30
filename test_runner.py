@@ -30,7 +30,7 @@ BIN_OUTPUT = "output"         # Name of the binary that is run after compilation
 
 # Compile the IR from a given source file
 def compile_ir(src_file: str) -> None:
-    subprocess.run(["make", "run_ir", f"DEFAULT_TEST_FILE={src_file}"], check=True)
+    subprocess.run(["make", "run_code", f"TEST_FILE={src_file}"], check=True)
 
 
 # (TODO: Možná se zamyslet na spojením do jednoho příkazu v makefile code_run)
