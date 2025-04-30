@@ -11,7 +11,8 @@ if ( x+y > 2 ) {
     print(999);
 } else {
     print(666);
-}
+} 
+
 
 let ba: string = "škola";
 if (ba == "škola") {

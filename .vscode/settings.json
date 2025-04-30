@@ -9,5 +9,11 @@
         "ast_printer.h": "c",
         "instruction_printer.h": "c",
         "ast_evaluator.h": "c"
+    },
+    "github.copilot.enable": {
+        "*": false,
+        "plaintext": false,
+        "markdown": false,
+        "scminput": false
     }
 }

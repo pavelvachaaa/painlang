@@ -1,19 +1,24 @@
 {
   "name": "painlang-highlighter",
-  "displayName": "painlang-highlighter",
-  "description": "",
+  "displayName": "PainLang Language Support",
+  "description": "Language server and syntax highlighting for PainLang",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.99.0"
+    "vscode": "^1.60.0"
   },
   "categories": [
     "Programming Languages"
   ],
+  "activationEvents": [
+    "onLanguage:pl"
+  ],
+  "main": "./client.js",
   "scripts": {
-    "install": "code --install-extension painlang-highlighter-0.0.1.vsix",
+    "install-ext": "code --install-extension painlang-highlighter-0.0.1.vsix",
     "yaml": "npx js-yaml syntaxes/pl.tmLanguage.yaml > syntaxes/pl.tmLanguage.json",
     "package": "vsce package",
-    "full": "npm run yaml && npm run package && npm run install"
+    "full": "npm run yaml && npm run package && npm run install-ext",
+    "start-server": "node server.js"
   },
   "repository": {
     "type": "git",
@@ -42,6 +47,13 @@
     ]
   },
   "dependencies": {
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "vscode-languageclient": "^7.0.0",
+    "vscode-languageserver": "^7.0.0",
+    "vscode-languageserver-textdocument": "^1.0.4"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.7",
+    "@types/vscode": "^1.60.0"
   }
 }
