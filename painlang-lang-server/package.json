@@ -2,7 +2,7 @@
   "name": "painlang-highlighter",
   "displayName": "PainLang Language Support",
   "description": "Language server and syntax highlighting for PainLang",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.60.0"
   },
@@ -16,7 +16,7 @@
   "publisher": "pvacha",
    "icon": "./a_imresizer.jpg",
   "scripts": {
-    "install-ext": "code --install-extension painlang-highlighter-0.0.1.vsix",
+    "install-ext": "code --install-extension painlang-highlighter-0.0.2.vsix",
     "yaml": "npx js-yaml syntaxes/pl.tmLanguage.yaml > syntaxes/pl.tmLanguage.json",
     "package": "vsce package",
     "full": "npm run yaml && npm run package && npm run install-ext",
