@@ -10,3 +10,5 @@ painlang_interpreter/*.tab.*
 painlang/inc/stack
 painlang/bin
 painlang_compiler/tests/outputs
+output.asm
+output.ir

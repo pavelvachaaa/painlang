@@ -1,21 +1,8 @@
-let a : string = "nekuba";
-let b : string = "kubra";
+let a :number = 3;
+let b :number = 5;
 
-
-if(a == "pavel") {
-    if(b == "kuba" ) {
-        print("a je pavel a b je kuba");
-    } else {
-        print("a je pavel a b není kuba");
-    }
-    print("A je pavel");
-
-
+if(a > 2) {
+    print("Pavel");
 } else {
-     if(b == "kuba" ) {
-        print("a je kuba a b je kuba");
-    } else {
-        print("a je kuba a b není kuba");
-    }
-    print("A není kuba");
+    print("Kuba");
 }

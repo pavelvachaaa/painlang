@@ -19,6 +19,10 @@ INCFILES := $(shell find $(INCDIR) -type f -name "*.c")
 BINDIR=./bin
 TESTDIR=./tests
 
+languageServer:
+	cd ./painlang-lang-server && \
+	npm install --no-audit --no-fund && \
+	npm run full
 test:
 	make clean
 	make parser
