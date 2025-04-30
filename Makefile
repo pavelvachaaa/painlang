@@ -4,7 +4,7 @@ GCC=gcc
 
 CFLAGS=-no-pie
 
-DEFAULT_TEST_FILE="./tests/valid_01.painlang"
+DEFAULT_TEST_FILE="./tests/valid_01.pl"
 
 FILENAME=pl
 PRINT_OUTPUT="y"

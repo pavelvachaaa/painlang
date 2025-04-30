@@ -1,2 +1,0 @@
-hex_cislo = '0x' cislo {cislo}
-cislo = '0' | '1' |  '...' | 'a' | 'A' | '...' | 'f' | 'F'

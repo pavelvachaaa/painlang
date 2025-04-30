@@ -13,10 +13,6 @@ const keywords = [
     'true', 'false', 'string', 'number', 'bool', 'include'
 ];
 
-const operators = [
-    '=', '==', '!=', '>=', '<=', '>', '<', '++', '--', '+=', '-=', '*=', '/=', '->',
-    '||', '&&', '^', '!', '+', '-', '*', '/'
-];
 
 let symbolTable = {
     variables: new Map(),

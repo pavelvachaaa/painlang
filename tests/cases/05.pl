@@ -1,6 +1,5 @@
 include "stdlib/math"
 
-
 let x: number= 0; // todo: bug když není init, tak ve for loopu segfaultí?!
 for (let r : number = 0; r < 10; r++) {
     x = pow(2, r);
@@ -32,3 +31,4 @@ print(primeTest);
 
 let primeTest2:number = isPrime(10);
 print(primeTest2);
+

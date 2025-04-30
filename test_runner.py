@@ -130,7 +130,7 @@ def main(only_compare: bool = False) -> None:
 
     sys.stdout = logger.terminal  # Restore normal print behavior
     logger.close()
-    print(f"Report saved to {report_path}")
+    print(f"Report saved to ./tests/{report_path}")
 
 if __name__ == "__main__":
     import sys
