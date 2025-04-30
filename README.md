@@ -2,6 +2,8 @@
 
 ## Requirments
 ```
+npm + node v20+ (v případě buildění langauge-serveru )
+python (v případě spouštění testů)
 nasm
 gcc
 yacc
@@ -17,10 +19,18 @@ Po prvním naklonování repozitáře proveďte `make clean`.
  - Bez make filu a bez optimalizace `./bin/painlang_parser -i ./tests/valid_01.pl`
  - Bez make filu a s optimalizací `./bin/painlang_parser -i ./tests/valid_01.pl -O`
 
-Instalace language-serveru. Je nutné mít nainstalovaný `node` a `npm package manager`. Poté stačí spustit `make languageServer` a modlit se 🙏🏾🙏🏾🙏🏾.
-
 
 Rozdíly optimalizace a bez optimalizace jsou krásně vidět v `output.ir` a `output.asm`. 
+
+## Language server
+
+### Marketplace
+Language server si můžete najít na extension marketplace jako `PainLang` a nebo pomocí tohoto odkazu [PainLang Language Support](https://marketplace.visualstudio.com/items?itemName=pvacha.painlang-highlighter).
+
+
+### Ze zdroje
+V případě buildění language-serveru ze zdroje. Je nutné mít nainstalovaný `node` a `npm package manager`. Poté stačí spustit `make languageServer` a modlit se 🙏🏾🙏🏾🙏🏾.
+
 
 ## Testování
 Je nutné nejdříve vyčistit projekt a zkompilovat parser. `make test` toto udělá za vás, jinak by byla potřeba spustit: 
